@@ -853,6 +853,8 @@ packages:
   - build-essential
   - unzip
   - nginx
+  - python3
+  - python3-pip
 
 users:
   - name: machine
@@ -871,14 +873,16 @@ write_files:
       [Service]
       Type=simple
       User=machine
-      WorkingDirectory=/home/machine/machine
+      Group=machine
+      WorkingDirectory=/home/machine/machine/server
       Environment=NODE_ENV=production
       Environment=PORT=3001
-      Environment=PUBLIC_SERVER_URL=http://{{PUBLIC_IP}}:3001
       Environment=CORS_ORIGIN=*
-      ExecStart=/usr/bin/node server/dist/index.js
+      ExecStart=/usr/bin/node dist/index.js
       Restart=always
       RestartSec=10
+      StandardOutput=append:/var/log/machine-dashboard.log
+      StandardError=append:/var/log/machine-dashboard.log
       
       [Install]
       WantedBy=multi-user.target
@@ -894,6 +898,7 @@ write_files:
           location / {
               root /home/machine/machine/client/dist;
               try_files $uri $uri/ /index.html;
+              add_header Cache-Control "no-cache";
           }
           
           # Proxy API requests to backend
@@ -907,7 +912,7 @@ write_files:
               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
               proxy_cache_bypass $http_upgrade;
               
-              # SSE support
+              # SSE support for deployment logs
               proxy_buffering off;
               proxy_read_timeout 86400;
           }
@@ -931,42 +936,69 @@ write_files:
       echo "=== Installing Node.js 20 ==="
       curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
       sudo apt-get install -y nodejs
-      node --version
-      npm --version
+      echo "Node version: $(node --version)"
+      echo "NPM version: $(npm --version)"
       
       # Install Terraform
       echo "=== Installing Terraform ==="
       curl -fsSL https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip -o /tmp/terraform.zip
       sudo unzip -o /tmp/terraform.zip -d /usr/local/bin/
       rm /tmp/terraform.zip
-      terraform --version
+      echo "Terraform version: $(terraform --version)"
       
       # Clone Machine repository
       echo "=== Cloning Machine repository ==="
-      if [ -d "/home/machine/machine" ]; then
+      cd /home/machine
+      if [ -d "machine" ]; then
         echo "Directory exists, pulling latest..."
-        cd /home/machine/machine
-        git pull
+        cd machine
+        git fetch origin
+        git reset --hard origin/master
       else
-        git clone https://github.com/cypher-agi/machine.git /home/machine/machine
-        cd /home/machine/machine
+        git clone https://github.com/cypher-agi/machine.git machine
+        cd machine
       fi
+      
+      echo "=== Current directory: $(pwd) ==="
+      ls -la
       
       # Install dependencies
       echo "=== Installing npm dependencies ==="
-      npm ci
+      npm install
       
-      # Build the application
-      echo "=== Building application ==="
-      npm run build
+      # Build the shared package first
+      echo "=== Building shared package ==="
+      npm run build --workspace=shared
       
-      # Get public IP for service config
+      # Build the server
+      echo "=== Building server ==="
+      npm run build --workspace=server
+      
+      # Build the client
+      echo "=== Building client ==="
+      npm run build --workspace=client
+      
+      # Create data directory for SQLite
+      echo "=== Creating data directory ==="
+      mkdir -p /home/machine/machine/server/.data
+      chmod 755 /home/machine/machine/server/.data
+      
+      # Get public IP and update service config
       echo "=== Configuring service ==="
-      PUBLIC_IP=$(curl -s ifconfig.me)
+      PUBLIC_IP=$(curl -s --max-time 10 ifconfig.me || curl -s --max-time 10 api.ipify.org || echo "localhost")
       echo "Public IP: $PUBLIC_IP"
       
-      # Update systemd service with actual IP
-      sudo sed -i "s/{{PUBLIC_IP}}/$PUBLIC_IP/g" /etc/systemd/system/machine-dashboard.service
+      # Create environment file for the service
+      sudo tee /etc/machine-dashboard.env > /dev/null <<EOF
+      NODE_ENV=production
+      PORT=3001
+      PUBLIC_SERVER_URL=http://$PUBLIC_IP:3001
+      CORS_ORIGIN=*
+      EOF
+      
+      echo "=== Verifying build ==="
+      ls -la /home/machine/machine/server/dist/
+      ls -la /home/machine/machine/client/dist/
       
       echo "=== $(date) - Machine Dashboard Setup Complete ==="
     permissions: '0755'
@@ -978,17 +1010,50 @@ runcmd:
   
   # Run setup as machine user
   - chown machine:machine /home/machine/setup-machine.sh
+  - chmod +x /home/machine/setup-machine.sh
   - su - machine -c '/home/machine/setup-machine.sh'
+  
+  # Update systemd service to use environment file
+  - |
+    cat > /etc/systemd/system/machine-dashboard.service <<EOF
+    [Unit]
+    Description=Machine Dashboard API
+    After=network.target
+    
+    [Service]
+    Type=simple
+    User=machine
+    Group=machine
+    WorkingDirectory=/home/machine/machine/server
+    EnvironmentFile=/etc/machine-dashboard.env
+    ExecStart=/usr/bin/node dist/index.js
+    Restart=always
+    RestartSec=10
+    StandardOutput=append:/var/log/machine-dashboard.log
+    StandardError=append:/var/log/machine-dashboard.log
+    
+    [Install]
+    WantedBy=multi-user.target
+    EOF
   
   # Setup nginx
   - rm -f /etc/nginx/sites-enabled/default
   - ln -sf /etc/nginx/sites-available/machine /etc/nginx/sites-enabled/machine
   - nginx -t && systemctl restart nginx
   
+  # Create log file with correct permissions
+  - touch /var/log/machine-dashboard.log
+  - chown machine:machine /var/log/machine-dashboard.log
+  
   # Start the dashboard service
   - systemctl daemon-reload
   - systemctl enable machine-dashboard.service
   - systemctl start machine-dashboard.service
+  
+  # Wait and check status
+  - sleep 5
+  - systemctl status machine-dashboard.service || true
+  - curl -s http://localhost:3001/health || echo "API not responding yet"
   
   # Log completion
   - echo "Machine Dashboard deployed at $(date)" | tee -a /var/log/machine-bootstrap.log
