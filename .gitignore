@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Data and state
+server/.data/
+*.db
+*.sqlite
+.encryption_key
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform-workspaces/
+*.tfplan
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# Misc
+*.tgz

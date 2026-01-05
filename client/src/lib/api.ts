@@ -1,0 +1,302 @@
+import type {
+  ApiResponse,
+  Machine,
+  MachineCreateRequest,
+  MachineListFilter,
+  MachineServicesResponse,
+  MachineNetworking,
+  Deployment,
+  DeploymentListFilter,
+  ProviderAccount,
+  ProviderAccountCreateRequest,
+  ProviderOptions,
+  BootstrapProfile,
+  BootstrapProfileCreateRequest,
+  FirewallProfile,
+  AuditEvent,
+  AuditEventListFilter,
+  ProviderType,
+} from '@machine/shared';
+
+const API_BASE = '/api';
+
+async function fetchApi<T>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T> {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+
+  const data: ApiResponse<T> = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.error?.message || 'An error occurred');
+  }
+
+  return data.data as T;
+}
+
+// ============ Machines API ============
+
+export interface MachineListParams extends MachineListFilter {
+  page?: number;
+  per_page?: number;
+  sort_by?: string;
+  sort_dir?: 'asc' | 'desc';
+}
+
+export async function getMachines(params?: MachineListParams): Promise<Machine[]> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        searchParams.set(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<Machine[]>(`/machines${query ? `?${query}` : ''}`);
+}
+
+export async function getMachine(id: string): Promise<Machine> {
+  return fetchApi<Machine>(`/machines/${id}`);
+}
+
+export async function createMachine(
+  data: MachineCreateRequest
+): Promise<{ machine: Machine; deployment: Deployment }> {
+  return fetchApi<{ machine: Machine; deployment: Deployment }>('/machines', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function rebootMachine(id: string): Promise<{ deployment: Deployment }> {
+  return fetchApi<{ deployment: Deployment }>(`/machines/${id}/reboot`, {
+    method: 'POST',
+  });
+}
+
+export async function destroyMachine(id: string): Promise<{ deployment: Deployment }> {
+  return fetchApi<{ deployment: Deployment }>(`/machines/${id}/destroy`, {
+    method: 'POST',
+  });
+}
+
+export interface AgentMetrics {
+  machine_id: string;
+  agent_version: string;
+  hostname: string;
+  uptime_seconds: number;
+  load_average: [number, number, number];
+  memory_total_mb: number;
+  memory_used_mb: number;
+  disk_total_gb: number;
+  disk_used_gb: number;
+  last_heartbeat: string;
+}
+
+export async function getAgentMetrics(machineId: string): Promise<AgentMetrics | null> {
+  return fetchApi<AgentMetrics | null>(`/agent/metrics/${machineId}`);
+}
+
+export async function getMachineServices(id: string): Promise<MachineServicesResponse> {
+  return fetchApi<MachineServicesResponse>(`/machines/${id}/services`);
+}
+
+export async function restartMachineService(
+  machineId: string,
+  serviceName: string
+): Promise<{ service_name: string; deployment: Deployment }> {
+  return fetchApi<{ service_name: string; deployment: Deployment }>(
+    `/machines/${machineId}/services/${serviceName}/restart`,
+    { method: 'POST' }
+  );
+}
+
+export async function getMachineNetworking(id: string): Promise<MachineNetworking> {
+  return fetchApi<MachineNetworking>(`/machines/${id}/networking`);
+}
+
+// ============ Providers API ============
+
+export async function getProviders(): Promise<
+  { type: ProviderType; name: string; supported: boolean }[]
+> {
+  return fetchApi<{ type: ProviderType; name: string; supported: boolean }[]>('/providers');
+}
+
+export async function getProviderOptions(type: ProviderType): Promise<ProviderOptions> {
+  return fetchApi<ProviderOptions>(`/providers/${type}/options`);
+}
+
+export async function getProviderAccounts(): Promise<ProviderAccount[]> {
+  return fetchApi<ProviderAccount[]>('/providers/accounts');
+}
+
+export async function getProviderAccount(id: string): Promise<ProviderAccount> {
+  return fetchApi<ProviderAccount>(`/providers/accounts/${id}`);
+}
+
+export async function createProviderAccount(
+  type: ProviderType,
+  data: ProviderAccountCreateRequest
+): Promise<ProviderAccount> {
+  return fetchApi<ProviderAccount>(`/providers/${type}/accounts`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function verifyProviderAccount(id: string): Promise<ProviderAccount> {
+  return fetchApi<ProviderAccount>(`/providers/accounts/${id}/verify`, {
+    method: 'POST',
+  });
+}
+
+export async function deleteProviderAccount(id: string): Promise<{ deleted: boolean }> {
+  return fetchApi<{ deleted: boolean }>(`/providers/accounts/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+// ============ Deployments API ============
+
+export interface DeploymentListParams extends DeploymentListFilter {
+  page?: number;
+  per_page?: number;
+}
+
+export async function getDeployments(params?: DeploymentListParams): Promise<Deployment[]> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        searchParams.set(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<Deployment[]>(`/deployments${query ? `?${query}` : ''}`);
+}
+
+export async function getDeployment(id: string): Promise<Deployment> {
+  return fetchApi<Deployment>(`/deployments/${id}`);
+}
+
+export async function cancelDeployment(id: string): Promise<Deployment> {
+  return fetchApi<Deployment>(`/deployments/${id}/cancel`, {
+    method: 'POST',
+  });
+}
+
+export async function approveDeployment(id: string): Promise<Deployment> {
+  return fetchApi<Deployment>(`/deployments/${id}/approve`, {
+    method: 'POST',
+  });
+}
+
+// SSE for deployment logs
+export function streamDeploymentLogs(
+  deploymentId: string,
+  onLog: (log: { timestamp: string; level: string; message: string; source: string }) => void,
+  onComplete: (state: string) => void,
+  onError: (error: Error) => void
+): () => void {
+  const eventSource = new EventSource(
+    `${API_BASE}/deployments/${deploymentId}/logs?stream=true`
+  );
+
+  eventSource.addEventListener('log', (event) => {
+    try {
+      const log = JSON.parse(event.data);
+      onLog(log);
+    } catch (e) {
+      console.error('Failed to parse log event', e);
+    }
+  });
+
+  eventSource.addEventListener('complete', (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      onComplete(data.state);
+    } catch (e) {
+      console.error('Failed to parse complete event', e);
+    }
+    eventSource.close();
+  });
+
+  eventSource.onerror = (error) => {
+    onError(new Error('Connection lost'));
+    eventSource.close();
+  };
+
+  return () => eventSource.close();
+}
+
+// ============ Bootstrap API ============
+
+export async function getBootstrapProfiles(): Promise<BootstrapProfile[]> {
+  return fetchApi<BootstrapProfile[]>('/bootstrap/profiles');
+}
+
+export async function getBootstrapProfile(id: string): Promise<BootstrapProfile> {
+  return fetchApi<BootstrapProfile>(`/bootstrap/profiles/${id}`);
+}
+
+export async function createBootstrapProfile(
+  data: BootstrapProfileCreateRequest
+): Promise<BootstrapProfile> {
+  return fetchApi<BootstrapProfile>('/bootstrap/profiles', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateBootstrapProfile(
+  id: string,
+  data: Partial<BootstrapProfileCreateRequest>
+): Promise<BootstrapProfile> {
+  return fetchApi<BootstrapProfile>(`/bootstrap/profiles/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteBootstrapProfile(id: string): Promise<{ deleted: boolean }> {
+  return fetchApi<{ deleted: boolean }>(`/bootstrap/profiles/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function getFirewallProfiles(): Promise<FirewallProfile[]> {
+  return fetchApi<FirewallProfile[]>('/bootstrap/firewall-profiles');
+}
+
+// ============ Audit API ============
+
+export interface AuditListParams extends AuditEventListFilter {
+  page?: number;
+  per_page?: number;
+}
+
+export async function getAuditEvents(params?: AuditListParams): Promise<AuditEvent[]> {
+  const searchParams = new URLSearchParams();
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        searchParams.set(key, String(value));
+      }
+    });
+  }
+  const query = searchParams.toString();
+  return fetchApi<AuditEvent[]>(`/audit/events${query ? `?${query}` : ''}`);
+}
+
+
+

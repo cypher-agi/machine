@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+:root {
+  --color-bg: #000000;
+  --color-surface: #000000;
+  --color-elevated: #0a0a0a;
+  --color-border: #1a1a1a;
+  --color-neon-cyan: #00ffff;
+  --color-neon-green: #00ff88;
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #8b949e;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+html {
+  background: var(--color-bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Grid pattern background */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Subtle noise texture */
+.bg-noise {
+  position: relative;
+}
+
+.bg-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.02;
+  pointer-events: none;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--color-neon-cyan);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: rgba(0, 255, 255, 0.2);
+}
+
+/* Code / terminal text */
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-feature-settings: 'liga' on, 'calt' on;
+}
+
+/* Neon glow effects */
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+}
+
+.glow-green {
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.15);
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.text-glow-green {
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+/* Status indicator pulse */
+@keyframes status-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-pulse {
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+/* Button styles */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-lg transition-all duration-200;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-machine-bg;
+  }
+
+  .btn-primary {
+    @apply bg-neon-cyan text-machine-bg hover:bg-neon-cyan-dim;
+    @apply shadow-neon-cyan hover:shadow-none;
+  }
+
+  .btn-secondary {
+    @apply bg-machine-elevated text-text-primary border border-machine-border hover:border-neon-cyan hover:text-neon-cyan;
+  }
+
+  .btn-ghost {
+    @apply text-text-secondary hover:text-text-primary hover:bg-machine-elevated;
+  }
+
+  .btn-danger {
+    @apply bg-neon-red/10 text-neon-red border border-neon-red/30 hover:bg-neon-red/20;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  .btn-icon {
+    @apply p-2;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full px-3 py-2 bg-machine-surface border border-machine-border rounded-lg;
+    @apply text-text-primary placeholder:text-text-tertiary;
+    @apply focus:outline-none focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan;
+    @apply transition-colors duration-200;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-machine-surface border border-machine-border rounded-xl p-4;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full;
+  }
+
+  .badge-running {
+    @apply bg-status-running/10 text-status-running border border-status-running/30;
+  }
+
+  .badge-stopped {
+    @apply bg-status-stopped/10 text-status-stopped border border-status-stopped/30;
+  }
+
+  .badge-error {
+    @apply bg-status-error/10 text-status-error border border-status-error/30;
+  }
+
+  .badge-pending {
+    @apply bg-status-pending/10 text-status-pending border border-status-pending/30;
+  }
+
+  .badge-provisioning {
+    @apply bg-status-provisioning/10 text-status-provisioning border border-status-provisioning/30;
+  }
+}
+
