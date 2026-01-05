@@ -232,12 +232,25 @@ async function runTerraformCreate(
   firewallProfile?: any
 ) {
   const logListeners = deploymentLogListeners.get(deployment.deployment_id) || [];
+  const deploymentLogs: any[] = [];
   
   const onLog = (log: any) => {
-    logListeners.forEach(listener => listener({
+    const logEntry = {
       ...log,
       timestamp: new Date().toISOString()
-    }));
+    };
+    
+    // Store log for persistence
+    deploymentLogs.push(logEntry);
+    
+    // Persist logs to database
+    database.updateDeployment({
+      deployment_id: deployment.deployment_id,
+      logs: deploymentLogs
+    });
+    
+    // Send to connected listeners
+    logListeners.forEach(listener => listener(logEntry));
   };
 
   const tf = new TerraformService(machine.terraform_workspace, onLog);
@@ -290,6 +303,9 @@ async function runTerraformCreate(
       
       if (cloudInitTemplate) {
         onLog({ level: 'info', message: 'Bootstrap profile cloud-init will be applied to the machine', source: 'system' });
+        // Log first few lines of cloud-init for debugging
+        const cloudInitLines = cloudInitTemplate.split('\n').slice(0, 20);
+        onLog({ level: 'debug', message: `Cloud-init preview:\n${cloudInitLines.join('\n')}${cloudInitTemplate.split('\n').length > 20 ? '\n... (truncated)' : ''}`, source: 'system' });
       }
     } else if (providerType === 'aws') {
       // TODO: Add AWS module

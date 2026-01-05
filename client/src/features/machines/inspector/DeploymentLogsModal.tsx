@@ -53,11 +53,19 @@ export function DeploymentLogsModal({ deployment, onClose }: DeploymentLogsModal
   useEffect(() => {
     const isLive = ['queued', 'planning', 'applying', 'awaiting_approval'].includes(deployment.state);
     setIsStreaming(isLive);
+    
+    // Track seen log timestamps to avoid duplicates
+    const seenLogs = new Set<string>();
 
     const cleanup = streamDeploymentLogs(
       deployment.deployment_id,
       (log) => {
-        setLogs((prev) => [...prev, log]);
+        // Create unique key from timestamp and message
+        const logKey = `${log.timestamp}-${log.message}`;
+        if (!seenLogs.has(logKey)) {
+          seenLogs.add(logKey);
+          setLogs((prev) => [...prev, log]);
+        }
       },
       (state) => {
         setIsStreaming(false);

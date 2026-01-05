@@ -201,6 +201,11 @@ export async function approveDeployment(id: string): Promise<Deployment> {
   });
 }
 
+// Fetch deployment logs (non-streaming, for completed deployments)
+export async function getDeploymentLogs(deploymentId: string): Promise<{ timestamp: string; level: string; message: string; source: string }[]> {
+  return fetchApi<{ timestamp: string; level: string; message: string; source: string }[]>(`/deployments/${deploymentId}/logs`);
+}
+
 // SSE for deployment logs
 export function streamDeploymentLogs(
   deploymentId: string,
@@ -208,6 +213,15 @@ export function streamDeploymentLogs(
   onComplete: (state: string) => void,
   onError: (error: Error) => void
 ): () => void {
+  // First fetch existing logs via regular API
+  getDeploymentLogs(deploymentId)
+    .then(logs => {
+      logs.forEach(log => onLog(log));
+    })
+    .catch(err => {
+      console.warn('Failed to fetch existing logs:', err);
+    });
+
   const eventSource = new EventSource(
     `${API_BASE}/deployments/${deploymentId}/logs?stream=true`
   );
