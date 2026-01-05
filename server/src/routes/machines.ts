@@ -193,6 +193,11 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
     ? database.getBootstrapProfile(body.bootstrap_profile_id)
     : undefined;
 
+  // Get firewall profile if specified
+  const firewallProfile = body.firewall_profile_id 
+    ? database.getFirewallProfile(body.firewall_profile_id)
+    : undefined;
+
   // Prepare cloud-init template with machine-specific values
   let cloudInitTemplate = bootstrapProfile?.cloud_init_template;
   if (cloudInitTemplate) {
@@ -204,7 +209,7 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
   }
 
   // Start Terraform execution in background
-  runTerraformCreate(newMachine, deployment, credentials, providerAccount.provider_type, cloudInitTemplate).catch(err => {
+  runTerraformCreate(newMachine, deployment, credentials, providerAccount.provider_type, cloudInitTemplate, firewallProfile).catch(err => {
     console.error('Terraform execution failed:', err);
   });
 
@@ -222,7 +227,8 @@ async function runTerraformCreate(
   deployment: Deployment, 
   credentials: Record<string, string>,
   providerType: string,
-  cloudInitTemplate?: string
+  cloudInitTemplate?: string,
+  firewallProfile?: any
 ) {
   const logListeners = deploymentLogListeners.get(deployment.deployment_id) || [];
   
@@ -242,6 +248,33 @@ async function runTerraformCreate(
 
     if (providerType === 'digitalocean') {
       modulePath = 'digitalocean';
+      
+      // Convert firewall profile rules to Terraform format
+      let firewallEnabled = false;
+      let firewallInboundRules: { protocol: string; port_range: string; source_addresses: string[] }[] = [];
+      
+      if (firewallProfile && firewallProfile.rules && firewallProfile.rules.length > 0) {
+        firewallEnabled = true;
+        firewallInboundRules = firewallProfile.rules
+          .filter((rule: any) => rule.direction === 'inbound')
+          .map((rule: any) => ({
+            protocol: rule.protocol,
+            port_range: rule.port_range_start === rule.port_range_end 
+              ? String(rule.port_range_start)
+              : `${rule.port_range_start}-${rule.port_range_end}`,
+            source_addresses: rule.source_addresses || ['0.0.0.0/0', '::/0']
+          }));
+        
+        onLog({ level: 'info', message: `Firewall profile "${firewallProfile.name}" will be applied with ${firewallInboundRules.length} inbound rules`, source: 'system' });
+      } else {
+        // Default: just SSH if no firewall profile
+        firewallEnabled = true;
+        firewallInboundRules = [
+          { protocol: 'tcp', port_range: '22', source_addresses: ['0.0.0.0/0', '::/0'] }
+        ];
+        onLog({ level: 'info', message: 'No firewall profile selected, applying default SSH-only rules', source: 'system' });
+      }
+      
       vars = {
         do_token: credentials.api_token,
         name: machine.name,
@@ -249,7 +282,9 @@ async function runTerraformCreate(
         size: machine.size,
         image: machine.image,
         tags: Object.entries(machine.tags).map(([k, v]) => `${k}:${v}`),
-        user_data: cloudInitTemplate || ''
+        user_data: cloudInitTemplate || '',
+        firewall_enabled: firewallEnabled,
+        firewall_inbound_rules: firewallInboundRules
       };
       
       if (cloudInitTemplate) {

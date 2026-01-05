@@ -20,8 +20,12 @@ server/.data/
 *.tfstate
 *.tfstate.*
 .terraform/
+.terraform.lock.hcl
 terraform-workspaces/
+.terraform-workspaces/
+server/.terraform-workspaces/
 *.tfplan
+tfplan
 
 # Logs
 *.log

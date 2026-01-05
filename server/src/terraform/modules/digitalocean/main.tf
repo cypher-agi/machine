@@ -56,6 +56,24 @@ variable "user_data" {
   default     = ""
 }
 
+variable "firewall_enabled" {
+  description = "Whether to create a firewall"
+  type        = bool
+  default     = true
+}
+
+variable "firewall_inbound_rules" {
+  description = "List of inbound firewall rules"
+  type = list(object({
+    protocol         = string
+    port_range       = string
+    source_addresses = list(string)
+  }))
+  default = [
+    { protocol = "tcp", port_range = "22", source_addresses = ["0.0.0.0/0", "::/0"] }
+  ]
+}
+
 provider "digitalocean" {
   token = var.do_token
 }
@@ -76,46 +94,22 @@ resource "digitalocean_droplet" "main" {
 }
 
 resource "digitalocean_firewall" "main" {
+  count = var.firewall_enabled ? 1 : 0
+  
   name = "${var.name}-fw"
   
   droplet_ids = [digitalocean_droplet.main.id]
   
-  # SSH
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "22"
-    source_addresses = ["0.0.0.0/0", "::/0"]
+  dynamic "inbound_rule" {
+    for_each = var.firewall_inbound_rules
+    content {
+      protocol         = inbound_rule.value.protocol
+      port_range       = inbound_rule.value.port_range
+      source_addresses = inbound_rule.value.source_addresses
+    }
   }
   
-  # HTTP
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "80"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  
-  # HTTPS
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "443"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  
-  # The Grid
-  inbound_rule {
-    protocol         = "tcp"
-    port_range       = "36900"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  
-  # WireGuard VPN
-  inbound_rule {
-    protocol         = "udp"
-    port_range       = "51820"
-    source_addresses = ["0.0.0.0/0", "::/0"]
-  }
-  
-  # All outbound
+  # All outbound allowed
   outbound_rule {
     protocol              = "tcp"
     port_range            = "1-65535"
@@ -159,7 +153,7 @@ output "size" {
 }
 
 output "firewall_id" {
-  value = digitalocean_firewall.main.id
+  value = var.firewall_enabled ? digitalocean_firewall.main[0].id : null
 }
 
 
