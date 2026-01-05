@@ -91,6 +91,7 @@ db.exec(`
     terraform_state_status TEXT,
     provisioning_method TEXT,
     bootstrap_profile_id TEXT,
+    firewall_profile_id TEXT,
     agent_status TEXT DEFAULT 'not_installed'
   );
 
@@ -203,6 +204,13 @@ try {
   // Column already exists, ignore
 }
 
+// Add firewall_profile_id column if it doesn't exist
+try {
+  db.exec('ALTER TABLE machines ADD COLUMN firewall_profile_id TEXT');
+} catch (e) {
+  // Column already exists, ignore
+}
+
 // Prepared statements for better performance
 const statements = {
   // Machines
@@ -212,11 +220,11 @@ const statements = {
     INSERT INTO machines (machine_id, name, provider, provider_account_id, region, zone, size, image,
       desired_status, actual_status, public_ip, private_ip, provider_resource_id, vpc_id, subnet_id,
       created_at, updated_at, tags, terraform_workspace, terraform_state_status, provisioning_method,
-      bootstrap_profile_id, agent_status)
+      bootstrap_profile_id, firewall_profile_id, agent_status)
     VALUES (@machine_id, @name, @provider, @provider_account_id, @region, @zone, @size, @image,
       @desired_status, @actual_status, @public_ip, @private_ip, @provider_resource_id, @vpc_id, @subnet_id,
       @created_at, @updated_at, @tags, @terraform_workspace, @terraform_state_status, @provisioning_method,
-      @bootstrap_profile_id, @agent_status)
+      @bootstrap_profile_id, @firewall_profile_id, @agent_status)
   `),
   updateMachine: db.prepare(`
     UPDATE machines SET
@@ -374,6 +382,7 @@ export const database = {
       provider_resource_id: machine.provider_resource_id || null,
       vpc_id: machine.vpc_id || null,
       subnet_id: machine.subnet_id || null,
+      firewall_profile_id: machine.firewall_profile_id || null,
       tags: JSON.stringify(machine.tags || {}),
     });
   },

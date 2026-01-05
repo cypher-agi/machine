@@ -168,6 +168,7 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
     terraform_state_status: 'pending',
     provisioning_method: 'provider_api',
     bootstrap_profile_id: body.bootstrap_profile_id,
+    firewall_profile_id: body.firewall_profile_id,
     agent_status: 'not_installed'
   };
 
@@ -635,11 +636,44 @@ machinesRouter.get('/:id/networking', (req: Request, res: Response) => {
     throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${req.params.id} not found`);
   }
 
-  // Default provider rules based on terraform config
-  const providerRules: FirewallRule[] = [
-    { rule_id: 'pfr1', direction: 'inbound', protocol: 'tcp', port_range_start: 22, port_range_end: 22, source_addresses: ['0.0.0.0/0'], description: 'SSH', source: 'provider' },
-    { rule_id: 'pfr2', direction: 'inbound', protocol: 'tcp', port_range_start: 36900, port_range_end: 36900, source_addresses: ['0.0.0.0/0'], description: 'The Grid', source: 'provider' }
-  ];
+  // Get firewall profile rules if one was selected
+  let providerRules: FirewallRule[] = [];
+  let effectivePorts: number[] = [];
+  
+  if (machine.firewall_profile_id) {
+    const firewallProfile = database.getFirewallProfile(machine.firewall_profile_id);
+    if (firewallProfile && firewallProfile.rules) {
+      providerRules = firewallProfile.rules.map((rule: any, idx: number) => ({
+        rule_id: `pfr${idx + 1}`,
+        direction: rule.direction,
+        protocol: rule.protocol,
+        port_range_start: rule.port_range_start,
+        port_range_end: rule.port_range_end,
+        source_addresses: rule.source_addresses || ['0.0.0.0/0'],
+        description: rule.description,
+        source: 'provider'
+      }));
+      
+      // Calculate effective inbound ports
+      effectivePorts = firewallProfile.rules
+        .filter((rule: any) => rule.direction === 'inbound')
+        .flatMap((rule: any) => {
+          if (rule.port_range_start === rule.port_range_end) {
+            return [rule.port_range_start];
+          }
+          // For ranges, just show start and end
+          return [rule.port_range_start, rule.port_range_end];
+        })
+        .filter((v: number, i: number, a: number[]) => a.indexOf(v) === i) // unique
+        .sort((a: number, b: number) => a - b);
+    }
+  } else {
+    // Default SSH-only if no firewall profile
+    providerRules = [
+      { rule_id: 'pfr1', direction: 'inbound', protocol: 'tcp', port_range_start: 22, port_range_end: 22, source_addresses: ['0.0.0.0/0'], description: 'SSH (default)', source: 'provider' }
+    ];
+    effectivePorts = [22];
+  }
 
   const response: ApiResponse<MachineNetworking> = {
     success: true,
@@ -648,7 +682,7 @@ machinesRouter.get('/:id/networking', (req: Request, res: Response) => {
       provider_firewall_rules: providerRules,
       host_firewall_available: machine.agent_status === 'connected',
       open_ports_available: machine.agent_status === 'connected',
-      effective_inbound_ports: [22, 36900],
+      effective_inbound_ports: effectivePorts,
       last_updated: new Date().toISOString()
     }
   };
