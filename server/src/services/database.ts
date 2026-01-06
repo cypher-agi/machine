@@ -1053,6 +1053,17 @@ write_files:
               proxy_read_timeout 86400;
           }
           
+          # WebSocket support for terminal
+          location /ws/ {
+              proxy_pass http://127.0.0.1:3001;
+              proxy_http_version 1.1;
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection "upgrade";
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_read_timeout 86400;
+          }
+          
           # Health check
           location /health {
               proxy_pass http://127.0.0.1:3001/health;
@@ -1126,11 +1137,11 @@ write_files:
       
       # Create environment file for the service
       sudo tee /etc/machine-dashboard.env > /dev/null <<EOF
-      NODE_ENV=production
-      PORT=3001
-      PUBLIC_SERVER_URL=http://$PUBLIC_IP:3001
-      CORS_ORIGIN=*
-      EOF
+NODE_ENV=production
+PORT=3001
+PUBLIC_SERVER_URL=http://$PUBLIC_IP
+CORS_ORIGIN=*
+EOF
       
       echo "=== Verifying build ==="
       ls -la /home/machine/machine/server/dist/
