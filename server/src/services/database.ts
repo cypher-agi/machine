@@ -763,7 +763,7 @@ users:
     groups: sudo
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
-    home: /home/grid
+    homedir: /home/grid
 
 write_files:
   - path: /etc/systemd/system/the-grid.service
@@ -1017,7 +1017,7 @@ users:
     groups: sudo
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
-    home: /home/machine
+    homedir: /home/machine
 
 write_files:
   - path: /etc/systemd/system/machine-dashboard.service
