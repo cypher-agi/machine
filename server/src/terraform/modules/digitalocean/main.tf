@@ -20,6 +20,11 @@ variable "name" {
   type        = string
 }
 
+variable "machine_id" {
+  description = "Unique machine identifier used to avoid name collisions (e.g. firewall name)"
+  type        = string
+}
+
 variable "region" {
   description = "DigitalOcean region"
   type        = string
@@ -78,6 +83,25 @@ provider "digitalocean" {
   token = var.do_token
 }
 
+locals {
+  // DO firewall names must be unique within an account, and must also match DO's
+  // naming constraints. We sanitize user-provided droplet names to avoid 422 errors.
+  //
+  // Strategy:
+  // - lowercase
+  // - replace invalid chars with '-'
+  // - collapse multiple '-' and trim leading/trailing '-'
+  // - cap length (DO max is 64 chars)
+  // - always include a machine_id-derived suffix for uniqueness
+  name_lower         = lower(var.name)
+  name_sanitized_1   = regexreplace(local.name_lower, "[^a-z0-9-]", "-")
+  name_sanitized_2   = regexreplace(local.name_sanitized_1, "-{2,}", "-")
+  name_sanitized     = trim(local.name_sanitized_2, "-")
+  name_base          = length(local.name_sanitized) > 0 ? local.name_sanitized : "machine"
+  firewall_name_raw  = "${local.name_base}-fw-${substr(var.machine_id, 0, 12)}"
+  firewall_name      = trim(substr(local.firewall_name_raw, 0, 64), "-")
+}
+
 resource "digitalocean_droplet" "main" {
   name     = var.name
   region   = var.region
@@ -96,7 +120,7 @@ resource "digitalocean_droplet" "main" {
 resource "digitalocean_firewall" "main" {
   count = var.firewall_enabled ? 1 : 0
   
-  name = "${var.name}-fw"
+  name = local.firewall_name
   
   droplet_ids = [digitalocean_droplet.main.id]
   

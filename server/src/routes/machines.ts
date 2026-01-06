@@ -320,6 +320,7 @@ async function runTerraformCreate(
       vars = {
         do_token: credentials.api_token,
         name: machine.name,
+        machine_id: machine.machine_id,
         region: machine.region,
         size: machine.size,
         image: machine.image,
