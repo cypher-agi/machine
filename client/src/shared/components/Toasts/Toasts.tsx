@@ -1,8 +1,20 @@
 import { useEffect } from 'react';
 import { X, Check, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import clsx from 'clsx';
-import { useAppStore } from '@/store/appStore';
 import styles from './Toasts.module.css';
+
+export interface Toast {
+  id: string;
+  type: 'success' | 'error' | 'info' | 'warning';
+  title: string;
+  message?: string;
+  duration?: number;
+}
+
+export interface ToastsProps {
+  toasts: Toast[];
+  onRemove: (id: string) => void;
+}
 
 const iconMap = {
   success: Check,
@@ -11,34 +23,26 @@ const iconMap = {
   info: Info,
 };
 
-export function Toasts() {
-  const { toasts, removeToast } = useAppStore();
-
+export function Toasts({ toasts, onRemove }: ToastsProps) {
   return (
     <div className={styles.container}>
       {toasts.map((toast) => (
-        <Toast
+        <ToastItem
           key={toast.id}
           toast={toast}
-          onClose={() => removeToast(toast.id)}
+          onClose={() => onRemove(toast.id)}
         />
       ))}
     </div>
   );
 }
 
-interface ToastProps {
-  toast: {
-    id: string;
-    type: 'success' | 'error' | 'info' | 'warning';
-    title: string;
-    message?: string;
-    duration?: number;
-  };
+interface ToastItemProps {
+  toast: Toast;
   onClose: () => void;
 }
 
-function Toast({ toast, onClose }: ToastProps) {
+function ToastItem({ toast, onClose }: ToastItemProps) {
   const Icon = iconMap[toast.type];
   const duration = toast.duration ?? 4000;
 

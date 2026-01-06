@@ -1,0 +1,2 @@
+export { BootstrapDetail } from './BootstrapDetail';
+

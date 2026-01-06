@@ -1,0 +1,2 @@
+export { DeploymentDetail } from './DeploymentDetail';
+

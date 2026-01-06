@@ -1,0 +1,175 @@
+/* TerminalModal styles */
+.keySelectionContainer {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+.keySelectionContent {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.header {
+  text-align: center;
+}
+
+.iconContainer {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(156, 39, 176, 0.1));
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+}
+
+.icon {
+  color: var(--color-neon-cyan);
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8) 0;
+}
+
+.loadingText {
+  color: var(--color-text-secondary);
+}
+
+.keyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.keyButton {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.keyButton:hover {
+  border-color: var(--color-border-light);
+}
+
+.keyButtonSelected {
+  border-color: var(--color-neon-cyan);
+  background-color: rgba(0, 255, 255, 0.05);
+}
+
+.keyButtonContent {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.keyIcon {
+  color: var(--color-text-tertiary);
+}
+
+.keyIconSelected {
+  color: var(--color-neon-cyan);
+}
+
+.keyInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.keyName {
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+}
+
+.keyFingerprint {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.keyType {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.warningContainer {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: rgba(250, 204, 21, 0.05);
+  border: 1px solid rgba(250, 204, 21, 0.2);
+}
+
+.warningContent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.warningIcon {
+  color: var(--color-warning);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.warningTitle {
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.warningText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.warningHighlight {
+  color: var(--color-neon-cyan);
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.connectionInfo {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
+.connectionHost {
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+}
+

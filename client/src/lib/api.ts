@@ -128,6 +128,20 @@ export async function getMachineNetworking(id: string): Promise<MachineNetworkin
   return fetchApi<MachineNetworking>(`/machines/${id}/networking`);
 }
 
+export interface SyncResult {
+  machine_id: string;
+  name: string;
+  previous_status: string;
+  new_status: string;
+  action: string;
+}
+
+export async function syncMachines(): Promise<{ synced: number; results: SyncResult[] }> {
+  return fetchApi<{ synced: number; results: SyncResult[] }>('/machines/sync', {
+    method: 'POST',
+  });
+}
+
 // ============ Providers API ============
 
 export async function getProviders(): Promise<

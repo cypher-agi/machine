@@ -4,12 +4,12 @@ import { AppLayout } from './app/layouts';
 import styles from './App.module.css';
 
 // Lazy-loaded route components for code-splitting
-const MachinesPage = lazy(() => import('./features/machines/MachinesPage'));
-const ProvidersPage = lazy(() => import('./features/providers/ProvidersPage'));
-const KeysPage = lazy(() => import('./features/keys/KeysPage'));
-const DeploymentsPage = lazy(() => import('./features/deployments/DeploymentsPage'));
-const BootstrapPage = lazy(() => import('./features/bootstrap/BootstrapPage'));
-const SettingsPage = lazy(() => import('./features/settings/SettingsPage'));
+const MachinesPage = lazy(() => import('./apps/machines/MachinesPage'));
+const ProvidersPage = lazy(() => import('./apps/providers/ProvidersPage'));
+const KeysPage = lazy(() => import('./apps/keys/KeysPage'));
+const DeploymentsPage = lazy(() => import('./apps/deployments/DeploymentsPage'));
+const BootstrapPage = lazy(() => import('./apps/bootstrap/BootstrapPage'));
+const SettingsPage = lazy(() => import('./apps/settings/SettingsPage'));
 
 function PageLoader() {
   return (

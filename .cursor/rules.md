@@ -24,32 +24,48 @@ STATE & EFFECTS
 ARCHITECTURE
 - Separate data orchestration from presentation
 - Shared UI must not know about routing, global stores, or backend
-- Feature components may depend on app concerns
+- Apps own their pages, data fetching, and domain logic
+- Features provide reusable functionality across apps
+- Feature components may depend on app store but not app components
 
 FOLDER STRUCTURE RULES
-- Organize by feature first
+- Organize by app first, then by feature
+- apps are top-level sections visible in the sidebar (Machines, Providers, Keys, Deployments, Bootstrap)
+- features are cross-cutting functionality used by multiple apps (Terminal, Sidekick)
+- apps may depend on features and shared
 - features may depend on shared
-- shared must not depend on features
-- If a component is used only once, keep it in the feature
+- shared must not depend on apps or features
+- If a component is used only once, keep it in the app
 
-EXPECTED STRUCTURE
+EXPECTED FRONT-END STRUCTURE
 src
-  app
-  features
-    feature
+  app                    # App shell, layouts, routing
+  apps                   # Top-level sidebar sections
+    machines
       components
       hooks
       api
+    providers
+    keys
+    deployments
+    bootstrap
+  features               # Cross-cutting functionality
+    terminal
+      components
+      hooks
+    sidekick
+      components
   shared
-    ui
-    components
+    ui                   # Generic UI primitives (Button, Modal, Input)
+    components           # Reusable composed components
     hooks
     lib
     styles
 
 COMPONENT STRUCTURE
-- Any non-trivial component uses a folder
+- Components must have their own folder
 - One component per file
+- Modular css per component
 - index.ts re-exports only
 
 EXPECTED COMPONENT FOLDER
@@ -61,13 +77,14 @@ Component
 
 STYLING
 - Styles are local by default (CSS Modules or Tailwind)
-- No inline styles
+- No inline styles except for dynamic values computed at runtime (e.g., width/height for resizable panels, progress bars, animation transforms)
 - Global CSS only for reset, typography, tokens, and theme
 - Use design tokens instead of hardcoded values
 
 NAMING
-- Feature components use domain-specific names
-- Shared UI uses generic names
+- App components use domain-specific names (MachineCard, ProviderList)
+- Feature components use functionality-specific names (TerminalPanel, SSHTerminal)
+- Shared UI uses generic names (Button, Modal, Card)
 - Do not genericize until reused
 
 TESTABILITY

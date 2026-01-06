@@ -1,4 +1,5 @@
 export { Toasts } from './Toasts';
+export type { Toast, ToastsProps } from './Toasts';
 export {
   ItemCard,
   ItemCardMeta,
@@ -8,5 +9,3 @@ export {
   ItemCardStatus,
 } from './ItemCard';
 export type { ItemCardProps } from './ItemCard';
-export { Sidekick } from './Sidekick';
-export type { SidekickProps } from './Sidekick';

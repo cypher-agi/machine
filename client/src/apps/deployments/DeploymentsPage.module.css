@@ -1,0 +1,175 @@
+/* DeploymentsPage styles */
+.page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+}
+
+.header {
+  flex-shrink: 0;
+  height: 48px;
+  padding: 0 var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+}
+
+.count {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filterSelect {
+  width: 112px;
+  height: 28px;
+}
+
+.content {
+  flex: 1;
+  overflow: auto;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  padding: var(--space-2) var(--space-4);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast);
+}
+
+.row:hover {
+  background-color: var(--color-surface);
+}
+
+.stateIcon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stateQueued { color: var(--color-text-muted); }
+.statePlanning { color: var(--color-accent); }
+.stateAwaitingApproval { color: var(--color-warning); }
+.stateApplying { color: var(--color-accent); }
+.stateSucceeded { color: var(--color-success); }
+.stateFailed { color: var(--color-error); }
+.stateCancelled { color: var(--color-text-muted); }
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.infoTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.type {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+}
+
+.state {
+  font-size: var(--text-xs);
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.machineName {
+  font-family: var(--font-mono);
+}
+
+.planSummary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+}
+
+.planAdd { color: var(--color-success); }
+.planChange { color: var(--color-warning); }
+.planDestroy { color: var(--color-error); }
+
+.deploymentId {
+  font-size: var(--text-2xs);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 128px;
+}
+
+.emptyContent {
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-text-secondary);
+  margin: 0 auto var(--space-2);
+}
+
+.emptyText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 128px;
+}
+
+.loadingText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+

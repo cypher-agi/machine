@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { MachineListFilter, MachineListSort } from '@machina/shared';
+import type { Toast } from '@/shared/components';
 
 // Item types that can be selected and shown in the Sidekick
 export type SidekickItemType = 'machine' | 'provider' | 'key' | 'deployment' | 'bootstrap';
@@ -13,10 +14,6 @@ interface AppState {
   // Selected item for sidekick panel (generic)
   sidekickSelection: SidekickSelection | null;
   setSidekickSelection: (selection: SidekickSelection | null) => void;
-  
-  // Legacy: selectedMachineId for backwards compatibility during transition
-  selectedMachineId: string | null;
-  setSelectedMachineId: (id: string | null) => void;
 
   // Terminal panel state
   terminalMachineId: string | null;
@@ -35,22 +32,10 @@ interface AppState {
   deployWizardOpen: boolean;
   setDeployWizardOpen: (open: boolean) => void;
 
-  // Right menu state
-  rightMenuOpen: boolean;
-  setRightMenuOpen: (open: boolean) => void;
-
   // Toast notifications
   toasts: Toast[];
   addToast: (toast: Omit<Toast, 'id'>) => void;
   removeToast: (id: string) => void;
-}
-
-interface Toast {
-  id: string;
-  type: 'success' | 'error' | 'info' | 'warning';
-  title: string;
-  message?: string;
-  duration?: number;
 }
 
 const defaultFilters: MachineListFilter = {};
@@ -61,18 +46,8 @@ export const useAppStore = create<AppState>((set) => ({
   sidekickSelection: null,
   setSidekickSelection: (selection) => set({ 
     sidekickSelection: selection,
-    // Keep selectedMachineId in sync for backwards compatibility
-    selectedMachineId: selection?.type === 'machine' ? selection.id : null,
     // Open terminal when selecting a machine
     terminalMachineId: selection?.type === 'machine' ? selection.id : null
-  }),
-
-  // Legacy selected machine (synced with sidekickSelection)
-  selectedMachineId: null,
-  setSelectedMachineId: (id) => set({ 
-    selectedMachineId: id,
-    sidekickSelection: id ? { type: 'machine', id } : null,
-    terminalMachineId: id
   }),
 
   // Terminal panel
@@ -94,10 +69,6 @@ export const useAppStore = create<AppState>((set) => ({
   // Deploy wizard
   deployWizardOpen: false,
   setDeployWizardOpen: (open) => set({ deployWizardOpen: open }),
-
-  // Right menu
-  rightMenuOpen: false,
-  setRightMenuOpen: (open) => set({ rightMenuOpen: open }),
 
   // Toasts
   toasts: [],

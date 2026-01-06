@@ -736,6 +736,177 @@ machinesRouter.get('/:id/networking', (req: Request, res: Response) => {
   res.json(response);
 });
 
+// POST /machines/sync - Sync all machines with provider state
+machinesRouter.post('/sync', async (req: Request, res: Response) => {
+  const machines = database.getMachines();
+  const results: { machine_id: string; name: string; previous_status: string; new_status: string; action: string }[] = [];
+  
+  // Group machines by provider account
+  const machinesByAccount = new Map<string, Machine[]>();
+  for (const machine of machines) {
+    // Skip already terminated machines
+    if (machine.actual_status === 'terminated') continue;
+    
+    const existing = machinesByAccount.get(machine.provider_account_id) || [];
+    existing.push(machine);
+    machinesByAccount.set(machine.provider_account_id, existing);
+  }
+
+  for (const [accountId, accountMachines] of machinesByAccount) {
+    const credentials = getCredentials(accountId);
+    if (!credentials) {
+      // Mark machines as unknown if we can't check
+      for (const machine of accountMachines) {
+        results.push({
+          machine_id: machine.machine_id,
+          name: machine.name,
+          previous_status: machine.actual_status,
+          new_status: machine.actual_status,
+          action: 'skipped_no_credentials'
+        });
+      }
+      continue;
+    }
+
+    const providerAccount = database.getProviderAccount(accountId);
+    if (!providerAccount) continue;
+
+    if (providerAccount.provider_type === 'digitalocean') {
+      try {
+        // Fetch all droplets from DigitalOcean
+        const response = await fetch('https://api.digitalocean.com/v2/droplets?per_page=200', {
+          headers: {
+            'Authorization': `Bearer ${credentials.api_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`DigitalOcean API error: ${response.status}`);
+        }
+
+        const data = await response.json() as { droplets: { id: number; name: string; status: string; networks: { v4: { ip_address: string; type: string }[] } }[] };
+        const providerDroplets = new Map<string, any>();
+        
+        for (const droplet of data.droplets) {
+          providerDroplets.set(String(droplet.id), droplet);
+        }
+
+        // Check each machine against provider state
+        for (const machine of accountMachines) {
+          const previousStatus = machine.actual_status;
+          
+          if (!machine.provider_resource_id) {
+            // Machine never got a provider resource ID - likely failed during creation
+            if (machine.actual_status === 'provisioning' || machine.actual_status === 'pending') {
+              database.updateMachine({
+                machine_id: machine.machine_id,
+                actual_status: 'error',
+                terraform_state_status: 'unknown',
+                updated_at: new Date().toISOString()
+              });
+              results.push({
+                machine_id: machine.machine_id,
+                name: machine.name,
+                previous_status: previousStatus,
+                new_status: 'error',
+                action: 'marked_error_no_resource_id'
+              });
+            }
+            continue;
+          }
+
+          const droplet = providerDroplets.get(machine.provider_resource_id);
+          
+          if (!droplet) {
+            // Droplet no longer exists at provider
+            database.updateMachine({
+              machine_id: machine.machine_id,
+              actual_status: 'terminated',
+              terraform_state_status: 'drifted',
+              updated_at: new Date().toISOString()
+            });
+            results.push({
+              machine_id: machine.machine_id,
+              name: machine.name,
+              previous_status: previousStatus,
+              new_status: 'terminated',
+              action: 'marked_terminated_not_found'
+            });
+          } else {
+            // Droplet exists - sync status
+            let newStatus: string;
+            switch (droplet.status) {
+              case 'active':
+                newStatus = 'running';
+                break;
+              case 'off':
+                newStatus = 'stopped';
+                break;
+              case 'new':
+                newStatus = 'provisioning';
+                break;
+              default:
+                newStatus = machine.actual_status;
+            }
+
+            // Update IP addresses if changed
+            const publicIp = droplet.networks?.v4?.find((n: any) => n.type === 'public')?.ip_address;
+            const privateIp = droplet.networks?.v4?.find((n: any) => n.type === 'private')?.ip_address;
+
+            if (newStatus !== previousStatus || publicIp !== machine.public_ip || privateIp !== machine.private_ip) {
+              database.updateMachine({
+                machine_id: machine.machine_id,
+                actual_status: newStatus as any,
+                public_ip: publicIp || machine.public_ip,
+                private_ip: privateIp || machine.private_ip,
+                terraform_state_status: 'in_sync',
+                updated_at: new Date().toISOString()
+              });
+              results.push({
+                machine_id: machine.machine_id,
+                name: machine.name,
+                previous_status: previousStatus,
+                new_status: newStatus,
+                action: newStatus !== previousStatus ? 'status_updated' : 'ip_updated'
+              });
+            } else {
+              results.push({
+                machine_id: machine.machine_id,
+                name: machine.name,
+                previous_status: previousStatus,
+                new_status: newStatus,
+                action: 'no_change'
+              });
+            }
+          }
+        }
+      } catch (error: any) {
+        console.error('Sync error for account', accountId, error);
+        for (const machine of accountMachines) {
+          results.push({
+            machine_id: machine.machine_id,
+            name: machine.name,
+            previous_status: machine.actual_status,
+            new_status: machine.actual_status,
+            action: `sync_error: ${error.message}`
+          });
+        }
+      }
+    }
+  }
+
+  const response: ApiResponse<{ synced: number; results: typeof results }> = {
+    success: true,
+    data: {
+      synced: results.filter(r => r.action !== 'no_change' && !r.action.startsWith('skipped')).length,
+      results
+    }
+  };
+
+  res.json(response);
+});
+
 // Export for deployment log streaming
 export function addDeploymentLogListener(deploymentId: string, listener: (log: any) => void) {
   const listeners = deploymentLogListeners.get(deploymentId) || [];
