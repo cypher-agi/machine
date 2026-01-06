@@ -78,6 +78,16 @@ export default {
         'lg': '0 8px 16px rgba(0, 0, 0, 0.4)',
         'xl': '0 16px 32px rgba(0, 0, 0, 0.5)',
       },
+      ringColor: {
+        accent: {
+          blue: '#5E9EFF',
+        },
+      },
+      ringOffsetColor: {
+        cursor: {
+          bg: '#0F1115',
+        },
+      },
     },
   },
   plugins: [],
