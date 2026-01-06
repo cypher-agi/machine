@@ -281,7 +281,7 @@ echo "Bootstrap complete"`,
   );
 }
 
-export function BootstrapPage() {
+function BootstrapPage() {
   const { addToast } = useAppStore();
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
@@ -530,3 +530,4 @@ export function BootstrapPage() {
   );
 }
 
+export default BootstrapPage;

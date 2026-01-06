@@ -40,7 +40,7 @@ const providerIcons: Record<string, string> = {
   hetzner: '🏢',
 };
 
-export function KeysPage() {
+function KeysPage() {
   const { addToast } = useAppStore();
   const queryClient = useQueryClient();
   const [showGenerateModal, setShowGenerateModal] = useState(false);
@@ -404,4 +404,6 @@ export function KeysPage() {
     </div>
   );
 }
+
+export default KeysPage;
 

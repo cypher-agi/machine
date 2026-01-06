@@ -15,7 +15,7 @@ import { useAppStore } from '@/store/appStore';
 
 type SettingsTab = 'general' | 'security' | 'notifications' | 'terraform';
 
-export function SettingsPage() {
+function SettingsPage() {
   const { addToast } = useAppStore();
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
 
@@ -330,4 +330,6 @@ export function SettingsPage() {
     </div>
   );
 }
+
+export default SettingsPage;
 

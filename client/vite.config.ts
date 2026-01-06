@@ -18,6 +18,24 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React core
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // Data fetching & state
+          'vendor-data': ['@tanstack/react-query', 'zustand'],
+          // Terminal (xterm is heavy)
+          'vendor-terminal': ['@xterm/xterm', '@xterm/addon-fit', '@xterm/addon-web-links'],
+          // UI libraries
+          'vendor-ui': ['framer-motion', 'lucide-react'],
+          // Utilities
+          'vendor-utils': ['date-fns', 'clsx'],
+        },
+      },
+    },
+  },
 });
 
 

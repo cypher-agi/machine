@@ -7,7 +7,7 @@ import { MachineCard } from './MachineCard';
 import { DeployWizard } from './DeployWizard';
 import { MachineFilters } from './MachineFilters';
 
-export function MachinesPage() {
+function MachinesPage() {
   const { 
     machineFilters, 
     machineSort,
@@ -160,4 +160,6 @@ export function MachinesPage() {
     </div>
   );
 }
+
+export default MachinesPage;
 

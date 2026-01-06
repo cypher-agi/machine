@@ -38,7 +38,7 @@ const credentialStatusConfig: Record<CredentialStatus, { icon: typeof Check; cla
   unchecked: { icon: AlertCircle, class: 'text-text-tertiary', label: 'Unchecked' },
 };
 
-export function ProvidersPage() {
+function ProvidersPage() {
   const { addToast } = useAppStore();
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -287,4 +287,6 @@ export function ProvidersPage() {
     </div>
   );
 }
+
+export default ProvidersPage;
 

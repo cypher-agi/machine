@@ -34,7 +34,7 @@ const typeLabels: Record<DeploymentType, string> = {
   refresh: 'Refresh',
 };
 
-export function DeploymentsPage() {
+function DeploymentsPage() {
   const [filterState, setFilterState] = useState<DeploymentState | ''>('');
   const [filterType, setFilterType] = useState<DeploymentType | ''>('');
 
@@ -221,4 +221,6 @@ export function DeploymentsPage() {
     </div>
   );
 }
+
+export default DeploymentsPage;
 
