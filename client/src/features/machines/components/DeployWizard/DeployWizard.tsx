@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
@@ -52,6 +52,17 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
     firewall_profile_id: 'none',
     bootstrap_profile_id: 'none',
   });
+
+  // Height animation
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentHeight, setContentHeight] = useState<number | 'auto'>('auto');
+
+  useLayoutEffect(() => {
+    if (contentRef.current) {
+      const height = contentRef.current.scrollHeight;
+      setContentHeight(height);
+    }
+  }, [currentStep]);
 
   const { data: providerAccounts } = useQuery({
     queryKey: ['provider-accounts'],
@@ -241,7 +252,11 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
       </div>
 
       {/* Content */}
-      <div>
+      <div
+        className={styles.contentWrapper}
+        style={{ height: contentHeight }}
+      >
+        <div ref={contentRef}>
         {/* Provider Step */}
         {currentStep === 'provider' && (
           <div>
@@ -490,6 +505,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
             </div>
           </div>
         )}
+        </div>
       </div>
     </Modal>
   );

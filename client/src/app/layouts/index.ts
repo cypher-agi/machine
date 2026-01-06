@@ -1,4 +1,4 @@
 export { AppLayout } from './AppLayout';
-export { TopBar } from './TopBar';
+export { GlobalHeader } from './GlobalHeader';
 export { Sidebar } from './Sidebar';
 export { RightMenu } from './RightMenu';

@@ -108,7 +108,7 @@ export function AddProviderModal({ onClose }: AddProviderModalProps) {
                 style={{
                   padding: 'var(--space-2)',
                   borderRadius: 'var(--radius-md)',
-                  border: `1px solid ${selectedProvider === provider.type ? 'rgba(94, 158, 255, 0.3)' : 'var(--color-border)'}`,
+                  border: `1px solid ${selectedProvider === provider.type ? '#fff' : 'var(--color-border)'}`,
                   backgroundColor: selectedProvider === provider.type ? 'var(--color-elevated)' : 'var(--color-bg)',
                   textAlign: 'center',
                   cursor: provider.supported ? 'pointer' : 'not-allowed',

@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { TopBar } from './TopBar';
+import { GlobalHeader } from './GlobalHeader';
 import { Sidebar } from './Sidebar';
 import { RightMenu } from './RightMenu';
 import { useAppStore } from '@/store/appStore';
@@ -12,8 +12,8 @@ export function AppLayout() {
 
   return (
     <div className={styles.layout}>
-      {/* Top Bar - Always visible */}
-      <TopBar />
+      {/* Global Header - Always visible */}
+      <GlobalHeader />
 
       {/* Main Area with Sidebar */}
       <div className={styles.mainWrapper}>

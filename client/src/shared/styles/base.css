@@ -48,13 +48,13 @@ body {
 
 /* Focus styles */
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid #fff;
   outline-offset: 2px;
 }
 
 /* Selection */
 ::selection {
-  background: rgba(94, 158, 255, 0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Monospace utility */

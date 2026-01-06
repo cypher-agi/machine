@@ -20,7 +20,7 @@
 
 .select:focus,
 .select:focus-visible {
-  border-color: var(--color-accent);
+  border-color: #fff;
   outline: none;
 }
 

@@ -218,7 +218,7 @@
 }
 
 .searchBox:focus-within {
-  border-color: var(--color-accent);
+  border-color: #fff;
   background-color: var(--color-elevated);
 }
 

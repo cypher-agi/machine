@@ -5,15 +5,15 @@ import clsx from 'clsx';
 import { getMachine, getMachineServices, getMachineNetworking, getDeployments } from '@/lib/api';
 import type { MachineStatus } from '@machina/shared';
 import { Badge, Button } from '@/shared/ui';
-import { InspectorOverview } from './inspector/InspectorOverview';
-import { InspectorDeployments } from './inspector/InspectorDeployments';
-import { InspectorNetworking } from './inspector/InspectorNetworking';
-import { InspectorServices } from './inspector/InspectorServices';
-import { InspectorDetails } from './inspector/InspectorDetails';
+import { SidekickOverview } from './sidekick/SidekickOverview';
+import { SidekickDeployments } from './sidekick/SidekickDeployments';
+import { SidekickNetworking } from './sidekick/SidekickNetworking';
+import { SidekickServices } from './sidekick/SidekickServices';
+import { SidekickDetails } from './sidekick/SidekickDetails';
 import { TerminalModal } from '../../components/terminal/TerminalModal';
-import styles from './MachineInspector.module.css';
+import styles from './Sidekick.module.css';
 
-interface MachineInspectorProps {
+interface SidekickProps {
   machineId: string;
   onClose: () => void;
 }
@@ -45,7 +45,7 @@ const statusConfig: Record<MachineStatus, { label: string; variant: 'running' | 
   error: { label: 'Error', variant: 'error' },
 };
 
-export function MachineInspector({ machineId, onClose }: MachineInspectorProps) {
+export function Sidekick({ machineId, onClose }: SidekickProps) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [showTerminal, setShowTerminal] = useState(false);
 
@@ -75,7 +75,7 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
 
   if (isLoading) {
     return (
-      <div className={styles.inspector}>
+      <div className={styles.sidekick}>
         <div className={styles.loading}>
           <span className={styles.loadingText}>Loading...</span>
         </div>
@@ -85,7 +85,7 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
 
   if (!machine) {
     return (
-      <div className={styles.inspector}>
+      <div className={styles.sidekick}>
         <div className={styles.loading}>
           <span className={styles.loadingText}>Machine not found</span>
         </div>
@@ -96,7 +96,7 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
   const status = statusConfig[machine.actual_status] || statusConfig.error;
 
   return (
-    <div className={styles.inspector}>
+    <div className={styles.sidekick}>
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerTop}>
@@ -152,11 +152,11 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
 
       {/* Tab content */}
       <div className={styles.tabContent}>
-        {activeTab === 'overview' && <InspectorOverview machine={machine} />}
-        {activeTab === 'deployments' && <InspectorDeployments deployments={deployments || []} />}
-        {activeTab === 'networking' && <InspectorNetworking networking={networking} />}
-        {activeTab === 'services' && <InspectorServices machineId={machineId} services={services} />}
-        {activeTab === 'details' && <InspectorDetails machine={machine} />}
+        {activeTab === 'overview' && <SidekickOverview machine={machine} />}
+        {activeTab === 'deployments' && <SidekickDeployments deployments={deployments || []} />}
+        {activeTab === 'networking' && <SidekickNetworking networking={networking} />}
+        {activeTab === 'services' && <SidekickServices machineId={machineId} services={services} />}
+        {activeTab === 'details' && <SidekickDetails machine={machine} />}
       </div>
 
       {/* Terminal Modal */}
@@ -166,3 +166,4 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
     </div>
   );
 }
+

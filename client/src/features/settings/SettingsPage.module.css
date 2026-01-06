@@ -9,7 +9,6 @@
 .header {
   flex-shrink: 0;
   height: 48px;
-  border-bottom: 1px solid var(--color-border);
   padding: 0 var(--space-4);
   display: flex;
   align-items: center;
@@ -29,7 +28,6 @@
 
 .nav {
   width: 176px;
-  border-right: 1px solid var(--color-border);
   padding: var(--space-2);
 }
 
@@ -88,7 +86,6 @@
 .card {
   padding: var(--space-3);
   background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-4);
 }
@@ -185,12 +182,12 @@
 }
 
 .toggleInput:checked + .toggleSlider {
-  background-color: var(--color-accent);
+  background-color: #fff;
 }
 
 .toggleInput:checked + .toggleSlider::after {
   transform: translateX(16px);
-  background-color: white;
+  background-color: var(--color-bg);
 }
 
 .warningBox {

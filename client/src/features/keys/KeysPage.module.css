@@ -9,7 +9,6 @@
 .header {
   flex-shrink: 0;
   height: 48px;
-  border-bottom: 1px solid var(--color-border);
   padding: 0 var(--space-4);
   display: flex;
   align-items: center;
@@ -54,7 +53,6 @@
 
 .keyCard {
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
   overflow: hidden;
 }
 
@@ -242,7 +240,7 @@
 }
 
 .syncButton:hover {
-  border-color: var(--color-accent);
+  border-color: #fff;
 }
 
 .syncButton:disabled {

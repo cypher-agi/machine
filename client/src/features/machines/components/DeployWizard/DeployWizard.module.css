@@ -45,7 +45,7 @@
 }
 
 .stepButtonDone {
-  color: var(--color-success);
+  color: #fff;
 }
 
 .stepButtonDone:hover {
@@ -60,7 +60,12 @@
 }
 
 .stepDividerDone {
-  background-color: var(--color-success);
+  background-color: #fff;
+}
+
+.contentWrapper {
+  overflow: hidden;
+  transition: height 200ms ease-out;
 }
 
 .sectionTitle {
@@ -89,13 +94,13 @@
   cursor: pointer;
 }
 
-.providerButton:hover {
+.providerButton:hover:not(.providerButtonSelected) {
   border-color: var(--color-border-light);
 }
 
 .providerButtonSelected {
   background-color: var(--color-elevated);
-  border-color: rgba(94, 158, 255, 0.3);
+  border-color: #fff;
 }
 
 .providerIcon {
@@ -172,7 +177,7 @@
   cursor: pointer;
 }
 
-.sizeButton:hover:not(:disabled) {
+.sizeButton:hover:not(:disabled):not(.sizeButtonSelected) {
   border-color: var(--color-border-light);
 }
 
@@ -183,7 +188,7 @@
 
 .sizeButtonSelected {
   background-color: var(--color-elevated);
-  border-color: rgba(94, 158, 255, 0.3);
+  border-color: #fff;
 }
 
 .sizeSlug {
@@ -200,7 +205,7 @@
 
 .sizePrice {
   font-size: var(--text-2xs);
-  color: var(--color-accent);
+  color: var(--color-text-secondary);
   margin-top: 2px;
 }
 
@@ -216,13 +221,13 @@
   margin-bottom: var(--space-2);
 }
 
-.profileButton:hover {
+.profileButton:hover:not(.profileButtonSelected) {
   border-color: var(--color-border-light);
 }
 
 .profileButtonSelected {
   background-color: var(--color-elevated);
-  border-color: rgba(94, 158, 255, 0.3);
+  border-color: #fff;
 }
 
 .profileName {

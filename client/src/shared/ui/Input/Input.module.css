@@ -17,7 +17,7 @@
 
 .input:focus,
 .input:focus-visible {
-  border-color: var(--color-accent);
+  border-color: #fff;
   outline: none;
 }
 

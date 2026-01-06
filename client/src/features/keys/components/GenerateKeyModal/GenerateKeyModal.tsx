@@ -141,7 +141,7 @@ export function GenerateKeyModal({ onClose }: GenerateKeyModalProps) {
                   style={{
                     padding: 'var(--space-2)',
                     borderRadius: 'var(--radius-md)',
-                    border: `1px solid ${keyType === kt.type ? 'rgba(94, 158, 255, 0.3)' : 'var(--color-border)'}`,
+                    border: `1px solid ${keyType === kt.type ? '#fff' : 'var(--color-border)'}`,
                     backgroundColor: keyType === kt.type ? 'var(--color-elevated)' : 'var(--color-bg)',
                     textAlign: 'center',
                     cursor: 'pointer',
