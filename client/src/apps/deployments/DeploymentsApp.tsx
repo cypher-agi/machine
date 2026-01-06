@@ -17,7 +17,7 @@ import { DEPLOYMENT_STATE_CONFIG, DEPLOYMENT_TYPE_LABELS } from '@/shared/consta
 import type { DeploymentState, DeploymentType } from '@machina/shared';
 import styles from './DeploymentsApp.module.css';
 
-function DeploymentsApp() {
+export function DeploymentsApp() {
   const { sidekickSelection, setSidekickSelection } = useAppStore();
   const [filterState, setFilterState] = useState<DeploymentState | ''>('');
   const [filterType, setFilterType] = useState<DeploymentType | ''>('');
@@ -143,5 +143,4 @@ function DeploymentsApp() {
   );
 }
 
-export default DeploymentsApp;
 

@@ -3,7 +3,7 @@ import { X, Copy, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import { copyToClipboard } from '@/shared/lib';
 import { useAppStore } from '@/store/appStore';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './SidekickHeader.module.css';
 
 export interface SidekickHeaderProps {
   icon?: ReactNode;
@@ -94,4 +94,3 @@ export function SidekickHeader({
     </div>
   );
 }
-

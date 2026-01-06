@@ -1,0 +1,67 @@
+/* Section styles */
+.section {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+  overflow: hidden;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.sectionHeader {
+  width: 100%;
+  padding: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.sectionHeader:hover {
+  background-color: var(--color-elevated);
+}
+
+.sectionTitle {
+  font-size: var(--text-2xs);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.sectionChevron {
+  color: var(--color-text-muted);
+  transform: rotate(-90deg);
+  transition: transform 200ms ease;
+}
+
+.sectionChevronOpen {
+  transform: rotate(0deg);
+}
+
+.sectionContent {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease;
+}
+
+.sectionContentOpen {
+  grid-template-rows: 1fr;
+}
+
+.sectionContentInner {
+  overflow: hidden;
+  padding: 0 var(--space-3);
+}
+
+.sectionContentOpen .sectionContentInner {
+  padding: 0 var(--space-3) var(--space-3);
+}
+

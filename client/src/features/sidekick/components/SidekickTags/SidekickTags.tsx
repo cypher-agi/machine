@@ -1,4 +1,4 @@
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './SidekickTags.module.css';
 
 export interface SidekickTagsProps {
   tags: Record<string, string> | string[];
@@ -28,4 +28,3 @@ export function SidekickTags({ tags }: SidekickTagsProps) {
     </div>
   );
 }
-

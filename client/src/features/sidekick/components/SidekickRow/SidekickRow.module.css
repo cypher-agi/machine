@@ -1,0 +1,53 @@
+/* Row styles */
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-1-5) 0;
+  font-size: var(--text-xs);
+}
+
+.row:not(:last-child) {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.label {
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.value {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  text-align: right;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.valueAccent {
+  color: var(--color-accent);
+}
+
+.valueCopyable {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.copyButton {
+  padding: var(--space-1);
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast);
+  border-radius: var(--radius-md);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.copyButton:hover {
+  color: var(--color-text-primary);
+}
+

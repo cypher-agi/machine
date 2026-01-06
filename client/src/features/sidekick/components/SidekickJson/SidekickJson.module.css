@@ -1,0 +1,13 @@
+/* JSON preview */
+.jsonPreview {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+  background-color: var(--color-elevated);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  overflow: auto;
+  max-height: 160px;
+  margin: 0;
+}
+

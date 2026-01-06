@@ -13,7 +13,7 @@ import {
   SidekickGridItem,
   SidekickTags,
 } from '../../components';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './MachineDetail.module.css';
 
 interface MachineOverviewTabProps {
   machine: Machine;
@@ -143,4 +143,3 @@ export function MachineOverviewTab({ machine }: MachineOverviewTabProps) {
     </SidekickPanel>
   );
 }
-

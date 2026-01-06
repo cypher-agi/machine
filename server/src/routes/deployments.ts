@@ -15,8 +15,8 @@ export const deploymentsRouter = Router();
 deploymentsRouter.get('/', (req: Request, res: Response) => {
   const filters: DeploymentListFilter = {
     machine_id: req.query.machine_id as string,
-    type: req.query.type as any,
-    state: req.query.state as any,
+    type: req.query.type as DeploymentListFilter['type'],
+    state: req.query.state as DeploymentListFilter['state'],
     created_after: req.query.created_after as string,
     created_before: req.query.created_before as string
   };
@@ -95,8 +95,8 @@ deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
   }
 
   const stream = req.query.stream === 'true';
-  const rawLogs = (deployment as any).logs;
-  const logsArray: any[] = Array.isArray(rawLogs) ? rawLogs : [];
+  const rawLogs = deployment.logs;
+  const logsArray: DeploymentLog[] = Array.isArray(rawLogs) ? rawLogs : [];
 
   if (stream) {
     // SSE streaming for live logs
@@ -108,7 +108,7 @@ deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
     let logIndex = 0;
 
     // Send existing logs if any
-    logsArray.forEach((log: any) => {
+    logsArray.forEach((log) => {
       res.write(`id: ${logIndex++}\n`);
       res.write(`event: log\n`);
       res.write(`data: ${JSON.stringify(log)}\n\n`);
@@ -121,7 +121,7 @@ deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
       res.end();
     } else {
       // Register as a log listener for real-time updates
-      const logListener = (log: any) => {
+      const logListener = (log: { level: string; message: string; source: string }) => {
         res.write(`id: ${logIndex++}\n`);
         res.write(`event: log\n`);
         res.write(`data: ${JSON.stringify(log)}\n\n`);
@@ -150,10 +150,10 @@ deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
     // Regular JSON response
     const response: ApiResponse<DeploymentLog[]> = {
       success: true,
-      data: logsArray.map((log: any) => ({
+      data: logsArray.map((log) => ({
         ...log,
         deployment_id: deployment.deployment_id,
-      })) as DeploymentLog[]
+      }))
     };
 
     res.json(response);

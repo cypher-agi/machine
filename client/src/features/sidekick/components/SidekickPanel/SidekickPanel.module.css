@@ -1,0 +1,5 @@
+/* Panel styles */
+.panel {
+  padding: var(--space-3);
+}
+

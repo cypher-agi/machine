@@ -2,9 +2,9 @@ import React from 'react';
 import clsx from 'clsx';
 import styles from './Select.module.css';
 
-type SelectSize = 'sm' | 'md';
+export type SelectSize = 'sm' | 'md';
 
-interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
+export interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
   size?: SelectSize;
 }
 

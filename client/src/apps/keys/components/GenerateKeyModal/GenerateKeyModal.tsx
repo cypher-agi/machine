@@ -8,7 +8,7 @@ import type { SSHKeyType, SSHKeyGenerateResponse } from '@machina/shared';
 import clsx from 'clsx';
 import styles from './GenerateKeyModal.module.css';
 
-interface GenerateKeyModalProps {
+export interface GenerateKeyModalProps {
   onClose: () => void;
 }
 

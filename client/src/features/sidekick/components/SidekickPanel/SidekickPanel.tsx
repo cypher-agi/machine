@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './SidekickPanel.module.css';
 
 export interface SidekickPanelProps {
   children: ReactNode;
@@ -8,4 +8,3 @@ export interface SidekickPanelProps {
 export function SidekickPanel({ children }: SidekickPanelProps) {
   return <div className={styles.panel}>{children}</div>;
 }
-

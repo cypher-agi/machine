@@ -9,8 +9,66 @@ import {
   BootstrapProfile,
   FirewallProfile,
   AuditEvent,
-  SSHKey
+  SSHKey,
+  DeploymentLog
 } from '@machina/shared';
+
+// Raw database row types (before JSON parsing)
+interface MachineRow extends Omit<Machine, 'tags' | 'last_health_check'> {
+  tags: string;
+  last_health_check?: string | null;
+}
+
+interface DeploymentRow extends Omit<Deployment, 'plan_summary' | 'outputs' | 'logs'> {
+  plan_summary: string | null;
+  outputs: string | null;
+  logs: string | null;
+}
+
+interface BootstrapProfileRow extends Omit<BootstrapProfile, 'services_to_run' | 'config_schema' | 'tags' | 'is_system_profile'> {
+  services_to_run: string;
+  config_schema: string | null;
+  tags: string | null;
+  is_system_profile: number;
+}
+
+interface FirewallProfileRow extends Omit<FirewallProfile, 'rules'> {
+  rules: string;
+}
+
+interface AuditEventRow extends Omit<AuditEvent, 'details'> {
+  details: string | null;
+}
+
+interface SSHKeyRow extends Omit<SSHKey, 'provider_key_ids'> {
+  provider_key_ids: string;
+}
+
+interface AgentMetricsRow {
+  machine_id: string;
+  agent_version: string;
+  hostname: string;
+  uptime_seconds: number;
+  load_average: string | null;
+  memory_total_mb: number;
+  memory_used_mb: number;
+  disk_total_gb: number;
+  disk_used_gb: number;
+  last_heartbeat: string;
+}
+
+interface AgentMetrics {
+  machine_id: string;
+  agent_version: string;
+  hostname: string;
+  uptime_seconds: number;
+  load_average: [number, number, number] | null;
+  memory_total_mb: number;
+  memory_used_mb: number;
+  disk_total_gb: number;
+  disk_used_gb: number;
+  last_heartbeat: string;
+}
 
 // Database file location
 const DATA_DIR = path.join(process.cwd(), '.data');
@@ -393,15 +451,17 @@ const statements = {
 };
 
 // Helper to parse JSON fields from DB rows
-function parseMachine(row: any): Machine {
+function parseMachine(row: MachineRow): Machine {
+  const { tags, last_health_check, ...rest } = row;
   return {
-    ...row,
-    tags: JSON.parse(row.tags || '{}'),
+    ...rest,
+    tags: JSON.parse(tags || '{}'),
+    ...(last_health_check ? { last_health_check } : {})
   };
 }
 
-function parseDeployment(row: any): Deployment {
-  let logs: any = row.logs ? JSON.parse(row.logs) : undefined;
+function parseDeployment(row: DeploymentRow): Deployment {
+  let logs: DeploymentLog[] | undefined = row.logs ? JSON.parse(row.logs) : undefined;
   // Historical bug: logs were sometimes double-JSON-encoded, so JSON.parse(row.logs)
   // produced a string that itself contains JSON. Try to unwrap once more.
   if (typeof logs === 'string') {
@@ -419,14 +479,14 @@ function parseDeployment(row: any): Deployment {
   };
 }
 
-function serializeJsonField(value: any): string | null {
+function serializeJsonField(value: unknown): string | null {
   if (value === undefined || value === null) return null;
   // If callers provide a JSON string, assume it's already serialized.
   if (typeof value === 'string') return value;
   return JSON.stringify(value);
 }
 
-function parseBootstrapProfile(row: any): BootstrapProfile {
+function parseBootstrapProfile(row: BootstrapProfileRow): BootstrapProfile {
   return {
     ...row,
     services_to_run: JSON.parse(row.services_to_run || '[]'),
@@ -436,21 +496,21 @@ function parseBootstrapProfile(row: any): BootstrapProfile {
   };
 }
 
-function parseFirewallProfile(row: any): FirewallProfile {
+function parseFirewallProfile(row: FirewallProfileRow): FirewallProfile {
   return {
     ...row,
     rules: JSON.parse(row.rules || '[]'),
   };
 }
 
-function parseAuditEvent(row: any): AuditEvent {
+function parseAuditEvent(row: AuditEventRow): AuditEvent {
   return {
     ...row,
     details: row.details ? JSON.parse(row.details) : undefined,
   };
 }
 
-function parseSSHKey(row: any): SSHKey {
+function parseSSHKey(row: SSHKeyRow): SSHKey {
   return {
     ...row,
     provider_key_ids: JSON.parse(row.provider_key_ids || '{}'),
@@ -461,10 +521,10 @@ function parseSSHKey(row: any): SSHKey {
 export const database = {
   // Machines
   getMachines(): Machine[] {
-    return statements.getMachines.all().map(parseMachine);
+    return (statements.getMachines.all() as MachineRow[]).map(parseMachine);
   },
   getMachine(id: string): Machine | undefined {
-    const row = statements.getMachine.get(id);
+    const row = statements.getMachine.get(id) as MachineRow | undefined;
     return row ? parseMachine(row) : undefined;
   },
   insertMachine(machine: Machine): void {
@@ -479,14 +539,15 @@ export const database = {
       tags: JSON.stringify(machine.tags || {}),
     });
   },
-  updateMachine(machine: Partial<Machine> & { machine_id: string }): void {
+  updateMachine(machine: Partial<Machine> & { machine_id: string; last_health_check?: string }): void {
     const existing = this.getMachine(machine.machine_id);
     if (!existing) return;
+    const existingRow = statements.getMachine.get(machine.machine_id) as MachineRow | undefined;
     statements.updateMachine.run({
       ...existing,
       ...machine,
       tags: JSON.stringify(machine.tags || existing.tags || {}),
-      last_health_check: machine.last_health_check || (existing as any).last_health_check || null,
+      last_health_check: machine.last_health_check || existingRow?.last_health_check || null,
     });
   },
   deleteMachine(id: string): void {
@@ -494,8 +555,8 @@ export const database = {
   },
 
   // Agent metrics
-  getAgentMetrics(machineId: string): any {
-    const row = statements.getAgentMetrics.get(machineId) as any;
+  getAgentMetrics(machineId: string): AgentMetrics | null {
+    const row = statements.getAgentMetrics.get(machineId) as AgentMetricsRow | undefined;
     if (!row) return null;
     return {
       ...row,
@@ -522,13 +583,13 @@ export const database = {
 
   // Deployments
   getDeployments(): Deployment[] {
-    return statements.getDeployments.all().map(parseDeployment);
+    return (statements.getDeployments.all() as DeploymentRow[]).map(parseDeployment);
   },
   getDeploymentsByMachine(machineId: string): Deployment[] {
-    return statements.getDeploymentsByMachine.all(machineId).map(parseDeployment);
+    return (statements.getDeploymentsByMachine.all(machineId) as DeploymentRow[]).map(parseDeployment);
   },
   getDeployment(id: string): Deployment | undefined {
-    const row = statements.getDeployment.get(id);
+    const row = statements.getDeployment.get(id) as DeploymentRow | undefined;
     return row ? parseDeployment(row) : undefined;
   },
   insertDeployment(deployment: Deployment): void {
@@ -543,7 +604,7 @@ export const database = {
       logs: null,
     });
   },
-  updateDeployment(deployment: Partial<Deployment> & { deployment_id: string }): void {
+  updateDeployment(deployment: Partial<Deployment> & { deployment_id: string; logs?: DeploymentLog[] }): void {
     const existing = this.getDeployment(deployment.deployment_id);
     if (!existing) return;
     statements.updateDeployment.run({
@@ -554,9 +615,9 @@ export const database = {
       outputs: deployment.outputs ? JSON.stringify(deployment.outputs) : (existing.outputs ? JSON.stringify(existing.outputs) : null),
       error_message: deployment.error_message || existing.error_message || null,
       // Preserve existing logs unless explicitly provided.
-      logs: (deployment as any).logs !== undefined
-        ? serializeJsonField((deployment as any).logs)
-        : serializeJsonField((existing as any).logs),
+      logs: deployment.logs !== undefined
+        ? serializeJsonField(deployment.logs)
+        : serializeJsonField(existing.logs),
     });
   },
 
@@ -606,10 +667,10 @@ export const database = {
 
   // Bootstrap profiles
   getBootstrapProfiles(): BootstrapProfile[] {
-    return statements.getBootstrapProfiles.all().map(parseBootstrapProfile);
+    return (statements.getBootstrapProfiles.all() as BootstrapProfileRow[]).map(parseBootstrapProfile);
   },
   getBootstrapProfile(id: string): BootstrapProfile | undefined {
-    const row = statements.getBootstrapProfile.get(id);
+    const row = statements.getBootstrapProfile.get(id) as BootstrapProfileRow | undefined;
     return row ? parseBootstrapProfile(row) : undefined;
   },
   insertBootstrapProfile(profile: BootstrapProfile): void {
@@ -647,10 +708,10 @@ export const database = {
 
   // Firewall profiles
   getFirewallProfiles(): FirewallProfile[] {
-    return statements.getFirewallProfiles.all().map(parseFirewallProfile);
+    return (statements.getFirewallProfiles.all() as FirewallProfileRow[]).map(parseFirewallProfile);
   },
   getFirewallProfile(id: string): FirewallProfile | undefined {
-    const row = statements.getFirewallProfile.get(id);
+    const row = statements.getFirewallProfile.get(id) as FirewallProfileRow | undefined;
     return row ? parseFirewallProfile(row) : undefined;
   },
   insertFirewallProfile(profile: FirewallProfile): void {
@@ -662,7 +723,7 @@ export const database = {
 
   // Audit events
   getAuditEvents(): AuditEvent[] {
-    return statements.getAuditEvents.all().map(parseAuditEvent);
+    return (statements.getAuditEvents.all() as AuditEventRow[]).map(parseAuditEvent);
   },
   insertAuditEvent(event: AuditEvent): void {
     statements.insertAuditEvent.run({
@@ -673,14 +734,14 @@ export const database = {
 
   // SSH Keys
   getSSHKeys(): SSHKey[] {
-    return statements.getSSHKeys.all().map(parseSSHKey);
+    return (statements.getSSHKeys.all() as SSHKeyRow[]).map(parseSSHKey);
   },
   getSSHKey(id: string): SSHKey | undefined {
-    const row = statements.getSSHKey.get(id);
+    const row = statements.getSSHKey.get(id) as SSHKeyRow | undefined;
     return row ? parseSSHKey(row) : undefined;
   },
   getSSHKeyByFingerprint(fingerprint: string): SSHKey | undefined {
-    const row = statements.getSSHKeyByFingerprint.get(fingerprint);
+    const row = statements.getSSHKeyByFingerprint.get(fingerprint) as SSHKeyRow | undefined;
     return row ? parseSSHKey(row) : undefined;
   },
   insertSSHKey(key: SSHKey): void {

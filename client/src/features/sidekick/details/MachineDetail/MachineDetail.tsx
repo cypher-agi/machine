@@ -17,7 +17,7 @@ import { MachineNetworkingTab } from './MachineNetworkingTab';
 import { MachineServicesTab } from './MachineServicesTab';
 import { MachineDetailsTab } from './MachineDetailsTab';
 
-interface MachineDetailProps {
+export interface MachineDetailProps {
   machineId: string;
   onClose: () => void;
   onMinimize?: () => void;

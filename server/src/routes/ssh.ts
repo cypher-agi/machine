@@ -82,13 +82,13 @@ async function generateSSHKey(
 
           resolve({ publicKey, privateKey, fingerprint });
         });
-      } catch (error: any) {
+      } catch (error) {
         // Cleanup on error
         try {
           fs.unlinkSync(keyPath);
           fs.unlinkSync(`${keyPath}.pub`);
           fs.rmdirSync(tmpDir);
-        } catch (e) {
+        } catch {
           // Ignore cleanup errors
         }
         reject(error);
@@ -179,8 +179,9 @@ sshRouter.post('/keys/generate', async (req: Request, res: Response) => {
   let keyData;
   try {
     keyData = await generateSSHKey(keyType, keyBits, comment);
-  } catch (error: any) {
-    throw new AppError(500, 'KEY_GENERATION_FAILED', `Failed to generate SSH key: ${error.message}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new AppError(500, 'KEY_GENERATION_FAILED', `Failed to generate SSH key: ${errorMessage}`);
   }
 
   // Check for duplicate fingerprint
@@ -236,8 +237,9 @@ sshRouter.post('/keys/import', (req: Request, res: Response) => {
   try {
     fingerprint = calculateFingerprint(body.public_key);
     keyInfo = getKeyTypeFromPublicKey(body.public_key);
-  } catch (error: any) {
-    throw new AppError(400, 'INVALID_KEY', `Invalid public key format: ${error.message}`);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new AppError(400, 'INVALID_KEY', `Invalid public key format: ${errorMessage}`);
   }
 
   // Check for duplicate fingerprint
@@ -368,8 +370,9 @@ sshRouter.post('/keys/:id/sync/:providerAccountId', async (req: Request, res: Re
       };
 
       res.json(apiResponse);
-    } catch (error: any) {
-      throw new AppError(500, 'SYNC_FAILED', `Failed to sync key to DigitalOcean: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new AppError(500, 'SYNC_FAILED', `Failed to sync key to DigitalOcean: ${errorMessage}`);
     }
   } else {
     throw new AppError(501, 'NOT_IMPLEMENTED', `Provider ${providerAccount.provider_type} sync not yet implemented`);
@@ -420,9 +423,10 @@ sshRouter.delete('/keys/:id/sync/:providerType', async (req: Request, res: Respo
         const error = await response.json() as { message?: string };
         throw new Error(error.message || 'Failed to remove key from DigitalOcean');
       }
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof AppError) throw error;
-      throw new AppError(500, 'REMOVE_FAILED', `Failed to remove key from DigitalOcean: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new AppError(500, 'REMOVE_FAILED', `Failed to remove key from DigitalOcean: ${errorMessage}`);
     }
   }
 

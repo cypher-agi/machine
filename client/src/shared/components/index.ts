@@ -9,5 +9,9 @@ export {
   ItemCardStatus,
 } from './ItemCard';
 export type { ItemCardProps } from './ItemCard';
-export { PageLayout, PageEmptyState, PageList } from './PageLayout';
-export type { PageLayoutProps, PageEmptyStateProps } from './PageLayout';
+export { PageLayout } from './PageLayout';
+export type { PageLayoutProps } from './PageLayout';
+export { PageEmptyState } from './PageEmptyState';
+export type { PageEmptyStateProps } from './PageEmptyState';
+export { PageList } from './PageList';
+export type { PageListProps } from './PageList';

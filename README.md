@@ -58,16 +58,27 @@ Navigate to http://localhost:5173
 
 ```
 src/
-├── features/           # Feature-based modules
-│   ├── machines/       # Machine list, cards, inspector
+├── app/                # App-level concerns
+│   └── layouts/        # AppLayout, Topbar, Appbar
+├── apps/               # Page-level applications
+│   ├── machines/       # Machine list and deploy wizard
 │   ├── providers/      # Provider account management
+│   ├── keys/           # SSH key management
 │   ├── deployments/    # Deployment history
 │   ├── bootstrap/      # Bootstrap profiles
 │   └── settings/       # App settings
-├── layouts/            # App layout, sidebar
-├── lib/                # API client, utilities
+├── features/           # Feature modules
+│   ├── sidekick/       # Inspector side panel with detail views
+│   └── terminal/       # SSH terminal components
+├── shared/             # Shared resources
+│   ├── components/     # Reusable page components
+│   ├── ui/             # Design system primitives
+│   ├── lib/            # Utility functions
+│   ├── constants/      # App-wide constants
+│   └── styles/         # Global styles and tokens
+├── lib/                # API client
 ├── store/              # Zustand state management
-└── index.css           # Tailwind styles
+└── index.css           # Global styles
 ```
 
 ### Backend (`server/`)
@@ -79,9 +90,15 @@ src/
 │   ├── providers.ts    # Provider accounts, options
 │   ├── deployments.ts  # Deployment history, logs
 │   ├── bootstrap.ts    # Bootstrap profiles
+│   ├── ssh.ts          # SSH key management
 │   └── audit.ts        # Audit events
-├── data/               # Mock data store
+├── services/           # Business logic
+│   ├── database.ts     # SQLite database layer
+│   ├── terraform.ts    # Terraform execution
+│   └── machineOperations.ts  # Machine lifecycle operations
 ├── middleware/         # Error handling
+├── terraform/          # Terraform modules
+│   └── modules/        # Provider-specific modules
 └── index.ts            # Express app entry
 ```
 

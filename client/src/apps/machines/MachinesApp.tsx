@@ -11,7 +11,7 @@ import { PageLayout, PageEmptyState, PageList } from '@/shared/components';
 import clsx from 'clsx';
 import styles from './MachinesApp.module.css';
 
-function MachinesApp() {
+export function MachinesApp() {
   const {
     machineFilters,
     machineSort,
@@ -187,5 +187,4 @@ function MachinesApp() {
   );
 }
 
-export default MachinesApp;
 

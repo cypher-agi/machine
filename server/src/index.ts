@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
+import * as fs from 'fs';
 
 import { machinesRouter } from './routes/machines';
 import { providersRouter } from './routes/providers';
@@ -16,6 +17,10 @@ import { sshRouter } from './routes/ssh';
 import { errorHandler } from './middleware/errorHandler';
 import { setupTerminalWebSocket } from './services/terminal';
 import { getTerraformModulesDir, isTerraformAvailable } from './services/terraform';
+
+// Read package.json version at startup
+const packageJsonPath = path.join(__dirname, '../package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8')) as { version: string };
 
 dotenv.config();
 
@@ -44,13 +49,11 @@ app.use(express.json());
 
 // Health check
 app.get('/health', (_, res) => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const serverPkg = require('../package.json');
   const modulesDir = getTerraformModulesDir();
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: serverPkg.version,
+    version: packageJson.version,
     git_sha: process.env.GIT_SHA || null,
     terraform: {
       available: isTerraformAvailable(),

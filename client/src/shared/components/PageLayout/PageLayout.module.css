@@ -48,12 +48,6 @@
   padding: var(--space-2) var(--space-4);
 }
 
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
 /* Loading state */
 .loadingState {
   display: flex;
@@ -66,66 +60,3 @@
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
 }
-
-/* Empty state */
-.emptyState {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 128px;
-}
-
-.emptyStateLarge {
-  height: 256px;
-}
-
-.emptyContent {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  text-align: center;
-}
-
-.emptyIcon {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-lg);
-  background-color: var(--color-elevated);
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.emptyIconSimple {
-  color: var(--color-text-secondary);
-}
-
-.emptyIconMuted {
-  color: var(--color-text-muted);
-}
-
-.emptyText {
-  text-align: center;
-}
-
-.emptyTitle {
-  font-size: var(--text-lg);
-  font-weight: var(--font-medium);
-  color: var(--color-text-primary);
-  margin-bottom: var(--space-1);
-}
-
-.emptyDesc {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  margin-bottom: var(--space-4);
-}
-
-.emptyActions {
-  display: flex;
-  gap: var(--space-2);
-  justify-content: center;
-}
-

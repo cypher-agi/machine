@@ -2,9 +2,9 @@ import React from 'react';
 import clsx from 'clsx';
 import styles from './Badge.module.css';
 
-type BadgeVariant = 'running' | 'stopped' | 'error' | 'pending' | 'provisioning';
+export type BadgeVariant = 'running' | 'stopped' | 'error' | 'pending' | 'provisioning';
 
-interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant: BadgeVariant;
   pulse?: boolean;
 }

@@ -144,7 +144,7 @@ export function MachineCard({ machine }: MachineCardProps) {
           <>
             Are you sure you want to destroy <strong>{machine.name}</strong>?
             <br />
-            <span style={{ color: 'var(--color-danger)' }}>This action cannot be undone.</span>
+            <span className={styles.dangerText}>This action cannot be undone.</span>
           </>
         }
         confirmLabel="Destroy"

@@ -1,0 +1,14 @@
+/* Code block */
+.codeBlock {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+  background-color: var(--color-elevated);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  overflow: auto;
+  max-height: 200px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+

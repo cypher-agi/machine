@@ -1,4 +1,3 @@
-export { SSHTerminal } from './components/SSHTerminal';
-export { TerminalModal } from './components/TerminalModal';
-export { TerminalPanel } from './components/TerminalPanel';
+// Terminal feature exports
+export { SSHTerminal, TerminalModal, TerminalPanel } from './components';
 

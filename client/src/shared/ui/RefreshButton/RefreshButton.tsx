@@ -1,5 +1,6 @@
 import { RefreshCw } from 'lucide-react';
 import { Button } from '../Button';
+import styles from './RefreshButton.module.css';
 
 export interface RefreshButtonProps {
   /** Click handler */
@@ -27,8 +28,7 @@ export function RefreshButton({
       disabled={isRefreshing}
       title={title}
     >
-      <RefreshCw size={iconSize} className={isRefreshing ? 'animate-spin' : ''} />
+      <RefreshCw size={iconSize} className={isRefreshing ? styles.spinning : ''} />
     </Button>
   );
 }
-

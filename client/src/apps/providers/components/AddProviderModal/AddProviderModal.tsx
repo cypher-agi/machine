@@ -8,7 +8,7 @@ import type { ProviderType, ProviderCredentials } from '@machina/shared';
 import clsx from 'clsx';
 import styles from './AddProviderModal.module.css';
 
-interface AddProviderModalProps {
+export interface AddProviderModalProps {
   onClose: () => void;
 }
 

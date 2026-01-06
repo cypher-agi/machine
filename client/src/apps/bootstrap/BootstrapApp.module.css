@@ -1,2 +1,5 @@
-/* Bootstrap-specific styles (if needed) */
+/* Bootstrap-specific styles */
 
+.badgeIcon {
+  margin-right: 2px;
+}

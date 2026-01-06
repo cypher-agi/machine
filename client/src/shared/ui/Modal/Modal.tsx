@@ -4,7 +4,9 @@ import clsx from 'clsx';
 import { X } from 'lucide-react';
 import styles from './Modal.module.css';
 
-interface ModalProps {
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
+
+export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
@@ -16,7 +18,7 @@ interface ModalProps {
   contentClassName?: string;
   titleClassName?: string;
   initialFocusRef?: React.RefObject<HTMLElement>;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  size?: ModalSize;
   /** Enable animated height transitions when content changes */
   animateHeight?: boolean;
   /** Make modal take full available height */

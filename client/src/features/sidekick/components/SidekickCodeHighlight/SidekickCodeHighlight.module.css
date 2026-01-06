@@ -1,0 +1,6 @@
+/* Syntax highlighted code block */
+.codeHighlight {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+

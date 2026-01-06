@@ -3,7 +3,7 @@ import {
   SidekickPanel,
   SidekickEmpty,
 } from '../../components';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './MachineDetail.module.css';
 
 interface MachineServicesTabProps {
   services: MachineServicesResponse | undefined;

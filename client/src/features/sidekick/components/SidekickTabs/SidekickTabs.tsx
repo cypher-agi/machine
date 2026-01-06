@@ -1,6 +1,6 @@
 import { AnimatedTabs } from '@/shared/ui';
 import type { Tab } from '@/shared/ui';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './SidekickTabs.module.css';
 
 export interface SidekickTabsProps {
   tabs: Tab[];
@@ -18,4 +18,3 @@ export function SidekickTabs({ tabs, activeTab, onTabChange }: SidekickTabsProps
     />
   );
 }
-

@@ -10,3 +10,8 @@
 .copyButton:hover {
   opacity: 1;
 }
+
+/* Danger text styling */
+.dangerText {
+  color: var(--color-danger);
+}

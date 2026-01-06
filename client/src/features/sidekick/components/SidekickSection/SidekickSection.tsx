@@ -1,7 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './SidekickSection.module.css';
 
 export interface SidekickSectionProps {
   title: string;
@@ -37,4 +37,3 @@ export function SidekickSection({ title, icon, children, defaultOpen = true }: S
     </div>
   );
 }
-

@@ -23,18 +23,23 @@ export type { SidekickGridProps, SidekickGridItemProps } from './SidekickGrid';
 export { SidekickTags } from './SidekickTags';
 export type { SidekickTagsProps } from './SidekickTags';
 
-export { SidekickLoading, SidekickEmpty } from './SidekickStates';
-export type { SidekickLoadingProps, SidekickEmptyProps } from './SidekickStates';
+export { SidekickLoading } from './SidekickLoading';
+export type { SidekickLoadingProps } from './SidekickLoading';
 
-export { SidekickCode, SidekickCodeHighlight, SidekickFullCode, SidekickJson } from './SidekickCode';
-export type { 
-  CodeLanguage, 
-  SidekickCodeProps, 
-  SidekickCodeHighlightProps, 
-  SidekickFullCodeProps, 
-  SidekickJsonProps 
-} from './SidekickCode';
+export { SidekickEmpty } from './SidekickEmpty';
+export type { SidekickEmptyProps } from './SidekickEmpty';
+
+export { SidekickCode } from './SidekickCode';
+export type { SidekickCodeProps } from './SidekickCode';
+
+export { SidekickCodeHighlight } from './SidekickCodeHighlight';
+export type { CodeLanguage, SidekickCodeHighlightProps } from './SidekickCodeHighlight';
+
+export { SidekickFullCode } from './SidekickFullCode';
+export type { SidekickFullCodeProps } from './SidekickFullCode';
+
+export { SidekickJson } from './SidekickJson';
+export type { SidekickJsonProps } from './SidekickJson';
 
 export { SidekickActionBar } from './SidekickActionBar';
 export type { SidekickActionBarProps } from './SidekickActionBar';
-

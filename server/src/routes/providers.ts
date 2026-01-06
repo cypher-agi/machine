@@ -227,10 +227,11 @@ providersRouter.post('/:type/accounts', async (req: Request, res: Response) => {
         console.error('DigitalOcean API error:', response.status, errorBody);
         throw new AppError(400, 'INVALID_CREDENTIALS', 'DigitalOcean API token is invalid or expired');
       }
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof AppError) throw error;
       console.error('Credential verification error:', error);
-      throw new AppError(400, 'VALIDATION_FAILED', `Could not verify credentials: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new AppError(400, 'VALIDATION_FAILED', `Could not verify credentials: ${errorMessage}`);
     }
   }
 
@@ -368,9 +369,10 @@ providersRouter.post('/accounts/:id/verify', async (req: Request, res: Response)
         last_verified_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
-    } catch (error: any) {
+    } catch (error) {
       if (error instanceof AppError) throw error;
-      throw new AppError(400, 'VALIDATION_FAILED', `Could not verify credentials: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new AppError(400, 'VALIDATION_FAILED', `Could not verify credentials: ${errorMessage}`);
     }
   }
 

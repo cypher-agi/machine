@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import clsx from 'clsx';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './SidekickActionBar.module.css';
 
 export interface SidekickActionBarProps {
   children: ReactNode;
@@ -14,4 +14,3 @@ export function SidekickActionBar({ children, spread }: SidekickActionBarProps) 
     </div>
   );
 }
-

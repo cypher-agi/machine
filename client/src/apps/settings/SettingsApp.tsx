@@ -17,7 +17,7 @@ import styles from './SettingsApp.module.css';
 
 type SettingsTab = 'general' | 'security' | 'notifications' | 'terraform';
 
-function SettingsApp() {
+export function SettingsApp() {
   const { addToast } = useAppStore();
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
 
@@ -248,5 +248,4 @@ function SettingsApp() {
   );
 }
 
-export default SettingsApp;
 

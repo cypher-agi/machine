@@ -18,7 +18,7 @@ import { GenerateKeyModal } from './components/GenerateKeyModal';
 import { ImportKeyModal } from './components/ImportKeyModal';
 import { KEY_TYPE_LABELS, PROVIDER_LABELS } from '@/shared/constants';
 
-function KeysApp() {
+export function KeysApp() {
   const { sidekickSelection, setSidekickSelection } = useAppStore();
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -122,5 +122,4 @@ function KeysApp() {
   );
 }
 
-export default KeysApp;
 

@@ -14,8 +14,9 @@ import {
   ItemCardTypeBadge 
 } from '@/shared/components';
 import { BOOTSTRAP_METHOD_ICONS, BOOTSTRAP_METHOD_LABELS } from '@/shared/constants';
+import styles from './BootstrapApp.module.css';
 
-function BootstrapApp() {
+export function BootstrapApp() {
   const { sidekickSelection, setSidekickSelection } = useAppStore();
 
   const { data: profiles, isLoading, refetch, isRefetching } = useQuery({
@@ -61,7 +62,7 @@ function BootstrapApp() {
                   <>
                     {profile.is_system_profile && (
                       <Badge variant="pending">
-                        <Lock size={10} style={{ marginRight: 2 }} />
+                        <Lock size={10} className={styles.badgeIcon} />
                         System
                       </Badge>
                     )}
@@ -115,5 +116,4 @@ function BootstrapApp() {
   );
 }
 
-export default BootstrapApp;
 

@@ -11,8 +11,8 @@ export const auditRouter = Router();
 // GET /audit/events - List audit events with filtering
 auditRouter.get('/events', (req: Request, res: Response) => {
   const filters: AuditEventListFilter = {
-    action: req.query.action as any,
-    outcome: req.query.outcome as any,
+    action: req.query.action as AuditEventListFilter['action'],
+    outcome: req.query.outcome as AuditEventListFilter['outcome'],
     actor_id: req.query.actor_id as string,
     target_type: req.query.target_type as string,
     target_id: req.query.target_id as string,

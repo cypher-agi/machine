@@ -2,9 +2,9 @@ import React from 'react';
 import clsx from 'clsx';
 import styles from './Input.module.css';
 
-type InputSize = 'sm' | 'md';
+export type InputSize = 'sm' | 'md';
 
-interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   size?: InputSize;
   mono?: boolean;
 }

@@ -3,7 +3,7 @@ import { Copy } from 'lucide-react';
 import clsx from 'clsx';
 import { copyToClipboard } from '@/shared/lib';
 import { useAppStore } from '@/store/appStore';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './SidekickRow.module.css';
 
 export interface SidekickRowProps {
   label: string;
@@ -46,4 +46,3 @@ export function SidekickRow({ label, value, icon, accent, copyable }: SidekickRo
     </div>
   );
 }
-

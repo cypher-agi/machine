@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './SidekickGrid.module.css';
 
 export interface SidekickGridProps {
   children: ReactNode;
@@ -26,4 +26,3 @@ export function SidekickGridItem({ label, value, icon }: SidekickGridItemProps) 
     </div>
   );
 }
-

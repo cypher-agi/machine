@@ -2,17 +2,24 @@ import React from 'react';
 import clsx from 'clsx';
 import styles from './Button.module.css';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-type ButtonSize = 'sm' | 'md';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonSize = 'sm' | 'md';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+type ButtonAsButton = {
+  as?: 'button';
+} & React.ButtonHTMLAttributes<HTMLButtonElement>;
+
+type ButtonAsSpan = {
+  as: 'span';
+} & React.HTMLAttributes<HTMLSpanElement>;
+
+export type ButtonProps = (ButtonAsButton | ButtonAsSpan) & {
   variant?: ButtonVariant;
   size?: ButtonSize;
   iconOnly?: boolean;
-  as?: 'button' | 'span';
-}
+};
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+export const Button = React.forwardRef<HTMLButtonElement | HTMLSpanElement, ButtonProps>(
   (
     {
       variant = 'primary',
@@ -24,18 +31,29 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const Component = as;
+    const classNames = clsx(
+      styles.button,
+      styles[variant],
+      size === 'sm' && styles.sm,
+      iconOnly && styles.iconOnly,
+      className
+    );
+
+    if (as === 'span') {
+      return (
+        <span
+          ref={ref as React.Ref<HTMLSpanElement>}
+          className={classNames}
+          {...(props as React.HTMLAttributes<HTMLSpanElement>)}
+        />
+      );
+    }
+
     return (
-      <Component
-        ref={ref as any}
-        className={clsx(
-          styles.button,
-          styles[variant],
-          size === 'sm' && styles.sm,
-          iconOnly && styles.iconOnly,
-          className
-        )}
-        {...props}
+      <button
+        ref={ref as React.Ref<HTMLButtonElement>}
+        className={classNames}
+        {...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}
       />
     );
   }

@@ -19,9 +19,9 @@ import {
   SidekickFullCode,
   SidekickEmpty,
 } from '../../components';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './DeploymentDetail.module.css';
 
-interface DeploymentDetailProps {
+export interface DeploymentDetailProps {
   deploymentId: string;
   onClose: () => void;
   onMinimize?: () => void;

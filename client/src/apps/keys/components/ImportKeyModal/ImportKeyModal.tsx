@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/appStore';
 import { Modal, Button, Input } from '@/shared/ui';
 import styles from './ImportKeyModal.module.css';
 
-interface ImportKeyModalProps {
+export interface ImportKeyModalProps {
   onClose: () => void;
 }
 

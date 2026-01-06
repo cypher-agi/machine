@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 import styles from './Card.module.css';
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export const Card: React.FC<CardProps> = ({ className, children, ...props }) => {
   return (

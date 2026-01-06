@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './SidekickContent.module.css';
 
 export interface SidekickContentProps {
   children: ReactNode;
@@ -13,4 +13,3 @@ export function SidekickContent({ children }: SidekickContentProps) {
 export function SidekickContentFull({ children }: SidekickContentProps) {
   return <div className={styles.tabContentFull}>{children}</div>;
 }
-

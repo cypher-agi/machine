@@ -1,3 +1,24 @@
+// Import all types and icons at the top
+import type { 
+  SSHKeyType, 
+  BootstrapMethod, 
+  MachineStatus, 
+  CredentialStatus, 
+  DeploymentState, 
+  DeploymentType 
+} from '@machina/shared';
+import { 
+  Cloud, 
+  Terminal, 
+  Play, 
+  Check, 
+  X, 
+  AlertCircle, 
+  Clock, 
+  Loader2, 
+  StopCircle 
+} from 'lucide-react';
+
 // Provider constants
 export const PROVIDER_LABELS: Record<string, string> = {
   digitalocean: 'DO',
@@ -16,8 +37,6 @@ export const PROVIDER_FULL_LABELS: Record<string, string> = {
 };
 
 // SSH Key type labels
-import type { SSHKeyType } from '@machina/shared';
-
 export const KEY_TYPE_LABELS: Record<SSHKeyType, string> = {
   ed25519: 'ED25519',
   rsa: 'RSA',
@@ -25,9 +44,6 @@ export const KEY_TYPE_LABELS: Record<SSHKeyType, string> = {
 };
 
 // Bootstrap method configuration
-import type { BootstrapMethod } from '@machina/shared';
-import { Cloud, Terminal, Play } from 'lucide-react';
-
 export const BOOTSTRAP_METHOD_ICONS: Record<BootstrapMethod, typeof Cloud> = {
   cloud_init: Cloud,
   ssh_script: Terminal,
@@ -41,8 +57,6 @@ export const BOOTSTRAP_METHOD_LABELS: Record<BootstrapMethod, string> = {
 };
 
 // Machine status configuration
-import type { MachineStatus } from '@machina/shared';
-
 export const MACHINE_STATUS_PRIORITY: Record<MachineStatus, number> = {
   running: 0,
   provisioning: 1,
@@ -80,9 +94,6 @@ export const MACHINE_STATUS_CONFIG: Record<MachineStatus, { label: string; varia
 };
 
 // Credential status configuration
-import type { CredentialStatus } from '@machina/shared';
-import { Check, X, AlertCircle } from 'lucide-react';
-
 export const CREDENTIAL_STATUS_CONFIG: Record<CredentialStatus, { icon: typeof Check; variant: 'valid' | 'invalid' | 'warning' | 'muted'; label: string }> = {
   valid: { icon: Check, variant: 'valid', label: 'Valid' },
   invalid: { icon: X, variant: 'invalid', label: 'Invalid' },
@@ -90,10 +101,15 @@ export const CREDENTIAL_STATUS_CONFIG: Record<CredentialStatus, { icon: typeof C
   unchecked: { icon: AlertCircle, variant: 'muted', label: 'Unchecked' },
 };
 
-// Deployment state configuration
-import type { DeploymentState, DeploymentType } from '@machina/shared';
-import { Clock, Loader2, StopCircle } from 'lucide-react';
+// Variant mapping for sidekick badge (different variant types)
+export const CREDENTIAL_STATUS_BADGE_CONFIG: Record<CredentialStatus, { label: string; variant: 'running' | 'stopped' | 'error' | 'pending' }> = {
+  valid: { label: 'Valid', variant: 'running' },
+  invalid: { label: 'Invalid', variant: 'error' },
+  expired: { label: 'Expired', variant: 'stopped' },
+  unchecked: { label: 'Unchecked', variant: 'pending' },
+};
 
+// Deployment state configuration
 export const DEPLOYMENT_STATE_CONFIG: Record<DeploymentState, { icon: typeof Check; variant: 'valid' | 'invalid' | 'warning' | 'muted' | 'pending' | 'provisioning'; label: string }> = {
   queued: { icon: Clock, variant: 'pending', label: 'Queued' },
   planning: { icon: Loader2, variant: 'provisioning', label: 'Planning' },
@@ -115,6 +131,7 @@ export const DEPLOYMENT_STATE_BADGE_CONFIG: Record<DeploymentState, { icon: type
   cancelled: { icon: StopCircle, variant: 'stopped', label: 'Cancelled' },
 };
 
+// Deployment type labels
 export const DEPLOYMENT_TYPE_LABELS: Record<DeploymentType, string> = {
   create: 'Create',
   update: 'Update',
@@ -132,4 +149,3 @@ export const DEPLOYMENT_TYPE_FULL_LABELS: Record<DeploymentType, string> = {
   restart_service: 'Restart Service',
   refresh: 'Refresh State',
 };
-

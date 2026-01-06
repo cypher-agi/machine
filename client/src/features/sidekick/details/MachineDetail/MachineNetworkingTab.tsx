@@ -4,7 +4,7 @@ import {
   SidekickSection,
   SidekickEmpty,
 } from '../../components';
-import styles from '../../Sidekick/Sidekick.module.css';
+import styles from './MachineDetail.module.css';
 
 interface MachineNetworkingTabProps {
   networking: MachineNetworking | undefined;

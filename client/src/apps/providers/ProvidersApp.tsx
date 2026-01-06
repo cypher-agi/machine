@@ -16,7 +16,7 @@ import {
 import { AddProviderModal } from './components/AddProviderModal';
 import { PROVIDER_LABELS, CREDENTIAL_STATUS_CONFIG } from '@/shared/constants';
 
-function ProvidersApp() {
+export function ProvidersApp() {
   const { addToast, sidekickSelection, setSidekickSelection } = useAppStore();
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -133,5 +133,4 @@ function ProvidersApp() {
   );
 }
 
-export default ProvidersApp;
 

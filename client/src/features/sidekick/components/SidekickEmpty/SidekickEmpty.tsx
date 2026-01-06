@@ -1,17 +1,5 @@
 import { ReactNode } from 'react';
-import styles from '../../Sidekick/Sidekick.module.css';
-
-export interface SidekickLoadingProps {
-  message?: string;
-}
-
-export function SidekickLoading({ message = 'Loading...' }: SidekickLoadingProps) {
-  return (
-    <div className={styles.loading}>
-      <span className={styles.loadingText}>{message}</span>
-    </div>
-  );
-}
+import styles from './SidekickEmpty.module.css';
 
 export interface SidekickEmptyProps {
   icon?: ReactNode;

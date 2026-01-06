@@ -1,37 +1,27 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, X, AlertCircle, Shield, Trash2, RefreshCw, Clock, Server } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { Shield, Trash2, RefreshCw } from 'lucide-react';
 import { getProviderAccounts, verifyProviderAccount, deleteProviderAccount, getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Badge, Button, Modal } from '@/shared/ui';
-import { PROVIDER_LABELS, PROVIDER_FULL_LABELS } from '@/shared/constants';
-import type { CredentialStatus, ProviderAccount, Machine } from '@machina/shared';
+import { PROVIDER_LABELS, PROVIDER_FULL_LABELS, CREDENTIAL_STATUS_BADGE_CONFIG } from '@/shared/constants';
 import {
   SidekickHeader,
   SidekickTabs,
   SidekickContent,
-  SidekickPanel,
-  SidekickSection,
-  SidekickRow,
   SidekickLoading,
-  SidekickEmpty,
   SidekickActionBar,
 } from '../../components';
-import styles from '../../Sidekick/Sidekick.module.css';
+import { ProviderOverview } from './ProviderOverview';
+import { ProviderMachines } from './ProviderMachines';
+import { ProviderDetails } from './ProviderDetails';
+import styles from './ProviderDetail.module.css';
 
-interface ProviderDetailProps {
+export interface ProviderDetailProps {
   providerId: string;
   onClose: () => void;
   onMinimize?: () => void;
 }
-
-const credentialStatusConfig: Record<CredentialStatus, { label: string; variant: 'running' | 'stopped' | 'error' | 'pending' }> = {
-  valid: { label: 'Valid', variant: 'running' },
-  invalid: { label: 'Invalid', variant: 'error' },
-  expired: { label: 'Expired', variant: 'stopped' },
-  unchecked: { label: 'Unchecked', variant: 'pending' },
-};
 
 type TabId = 'overview' | 'machines' | 'details';
 
@@ -93,7 +83,7 @@ export function ProviderDetail({ providerId, onClose, onMinimize }: ProviderDeta
     return <SidekickLoading message="Provider not found" />;
   }
 
-  const status = credentialStatusConfig[account.credential_status];
+  const status = CREDENTIAL_STATUS_BADGE_CONFIG[account.credential_status];
   const providerMachines = machines?.filter((m) => m.provider_account_id === providerId) || [];
 
   const handleVerify = () => {
@@ -197,109 +187,5 @@ export function ProviderDetail({ providerId, onClose, onMinimize }: ProviderDeta
         </Modal>
       )}
     </>
-  );
-}
-
-function ProviderOverview({ account, machineCount }: { account: ProviderAccount; machineCount: number }) {
-  const StatusIcon = account.credential_status === 'valid' ? Check :
-                     account.credential_status === 'invalid' ? X :
-                     AlertCircle;
-
-  return (
-    <SidekickPanel>
-      <SidekickSection title="Status">
-        <SidekickRow 
-          label="Credential Status" 
-          value={account.credential_status}
-          icon={<StatusIcon size={12} />}
-        />
-        {account.last_verified_at && (
-          <SidekickRow 
-            label="Last Verified" 
-            value={formatDistanceToNow(new Date(account.last_verified_at), { addSuffix: true })}
-          />
-        )}
-      </SidekickSection>
-
-      <SidekickSection title="Usage">
-        <SidekickRow 
-          label="Machines" 
-          value={machineCount.toString()}
-          icon={<Server size={12} />}
-        />
-      </SidekickSection>
-
-      <SidekickSection title="Information">
-        <SidekickRow 
-          label="Provider Type" 
-          value={PROVIDER_FULL_LABELS[account.provider_type] || account.provider_type}
-        />
-        <SidekickRow 
-          label="Created" 
-          value={formatDistanceToNow(new Date(account.created_at), { addSuffix: true })}
-          icon={<Clock size={12} />}
-        />
-      </SidekickSection>
-    </SidekickPanel>
-  );
-}
-
-function ProviderMachines({ machines }: { machines: Machine[] }) {
-  const { setSidekickSelection } = useAppStore();
-
-  if (!machines.length) {
-    return <SidekickEmpty message="No machines using this provider" />;
-  }
-
-  return (
-    <SidekickPanel>
-      {machines.map((machine) => (
-        <div 
-          key={machine.machine_id} 
-          className={styles.cardClickable}
-          onClick={() => setSidekickSelection({ type: 'machine', id: machine.machine_id })}
-        >
-          <div className={styles.cardHeader}>
-            <div className={styles.cardInfo}>
-              <div className={styles.cardTitle}>
-                <span className={styles.cardNameMono}>
-                  {machine.name}
-                </span>
-                <Badge variant={machine.actual_status === 'running' ? 'running' : 'stopped'}>
-                  {machine.actual_status}
-                </Badge>
-              </div>
-              <span className={styles.cardMeta}>
-                {machine.region} · {machine.size}
-              </span>
-            </div>
-          </div>
-        </div>
-      ))}
-    </SidekickPanel>
-  );
-}
-
-function ProviderDetails({ account }: { account: ProviderAccount }) {
-  return (
-    <SidekickPanel>
-      <SidekickSection title="Identifiers">
-        <SidekickRow label="Provider Account ID" value={account.provider_account_id} copyable />
-      </SidekickSection>
-
-      <SidekickSection title="Configuration">
-        <SidekickRow label="Label" value={account.label} />
-        <SidekickRow label="Provider Type" value={account.provider_type} />
-        <SidekickRow label="Credential Status" value={account.credential_status} />
-      </SidekickSection>
-
-      <SidekickSection title="Timestamps">
-        <SidekickRow label="Created At" value={format(new Date(account.created_at), 'PPpp')} />
-        <SidekickRow label="Updated At" value={format(new Date(account.updated_at), 'PPpp')} />
-        {account.last_verified_at && (
-          <SidekickRow label="Last Verified" value={format(new Date(account.last_verified_at), 'PPpp')} />
-        )}
-      </SidekickSection>
-    </SidekickPanel>
   );
 }
