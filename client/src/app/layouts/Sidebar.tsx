@@ -30,9 +30,7 @@ export function Sidebar() {
     <aside className={styles.sidebar}>
       {/* Logo */}
       <div className={styles.logo}>
-        <div className={styles.logoIcon}>
-          <Server size={14} style={{ color: 'var(--color-text-secondary)' }} />
-        </div>
+        <img src="/machina_icon.png" alt="Machina" className={styles.logoIcon} />
         <span className={styles.logoText}>Machina</span>
       </div>
 
