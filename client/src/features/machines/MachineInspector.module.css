@@ -17,7 +17,7 @@
 
 .loadingText {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .header {
@@ -58,13 +58,13 @@
 
 .subtitle {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin: 0;
 }
 
 .closeButton {
   padding: var(--space-1);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   transition: color var(--transition-fast);
   border-radius: var(--radius-md);
   background: none;
@@ -95,7 +95,7 @@
 
 .copyButton {
   padding: var(--space-1);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   transition: color var(--transition-fast);
   border-radius: var(--radius-md);
   background: none;
@@ -128,7 +128,7 @@
   border: none;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   background: none;
   cursor: pointer;
 }

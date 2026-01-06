@@ -30,7 +30,7 @@
 
 .count {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-family: var(--font-mono);
 }
 
@@ -74,7 +74,7 @@
 
 .expandIcon {
   padding: 2px;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .keyIconWrapper {
@@ -89,7 +89,7 @@
 }
 
 .keyIcon {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .keyInfo {
@@ -118,7 +118,7 @@
   background-color: var(--color-border);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .keyMeta {
@@ -126,7 +126,7 @@
   align-items: center;
   gap: var(--space-3);
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .metaItem {
@@ -177,7 +177,7 @@
 
 .expandedLabel {
   font-size: var(--text-2xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: var(--space-1);
@@ -189,7 +189,7 @@
   padding: var(--space-2);
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   word-break: break-all;
   line-height: 1.5;
 }
@@ -217,7 +217,7 @@
 }
 
 .unsyncButton {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   background: none;
   border: none;
   cursor: pointer;
@@ -252,7 +252,7 @@
 
 .noProvidersText {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 /* Empty and loading states */
@@ -270,7 +270,7 @@
 
 .emptyText {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-bottom: var(--space-3);
 }
 
@@ -282,6 +282,6 @@
 
 .loadingText {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 

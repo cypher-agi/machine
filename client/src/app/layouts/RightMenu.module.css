@@ -80,7 +80,7 @@
 
 .headerDescription {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .closeButton {
@@ -108,7 +108,7 @@
 .sectionLabel {
   font-size: var(--text-2xs);
   font-weight: var(--font-medium);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 0 var(--space-4);
@@ -148,7 +148,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   flex-shrink: 0;
   transition: all var(--transition-fast);
 }
@@ -196,7 +196,7 @@
 
 .actionDescription {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 /* Quick Search */
@@ -223,7 +223,7 @@
 }
 
 .searchIcon {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 
@@ -238,7 +238,7 @@
 }
 
 .searchInput::placeholder {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 /* Footer */
@@ -280,5 +280,5 @@
 
 .userRole {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }

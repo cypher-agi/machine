@@ -71,7 +71,7 @@
 }
 
 .searchIcon {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   flex-shrink: 0;
 }
 
@@ -95,7 +95,7 @@
   justify-content: center;
   background: none;
   border: none;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   cursor: pointer;
   padding: var(--space-1);
   border-radius: var(--radius-sm);
@@ -142,7 +142,7 @@
 }
 
 .resultIcon {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .searchResult:hover .resultIcon {

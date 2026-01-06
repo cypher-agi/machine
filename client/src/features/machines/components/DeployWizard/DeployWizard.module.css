@@ -32,7 +32,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .stepButton:disabled {
@@ -65,7 +65,7 @@
 
 .sectionTitle {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-bottom: var(--space-3);
 }
 
@@ -109,7 +109,7 @@
   justify-content: center;
   font-size: var(--text-2xs);
   font-family: var(--font-mono);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .providerInfo {
@@ -123,7 +123,7 @@
 
 .providerType {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: capitalize;
 }
 
@@ -149,7 +149,7 @@
 
 .formLabel {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-bottom: var(--space-1);
   display: block;
 }
@@ -194,7 +194,7 @@
 
 .sizeDetails {
   font-size: var(--text-2xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-top: 2px;
 }
 
@@ -232,7 +232,7 @@
 
 .profileDesc {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .profileTags {
@@ -248,7 +248,7 @@
   background-color: var(--color-bg);
   padding: 2px 4px;
   border-radius: var(--radius-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .reviewCard {
@@ -268,7 +268,7 @@
 }
 
 .reviewLabel {
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .reviewValue {

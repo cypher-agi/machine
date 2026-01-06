@@ -30,7 +30,7 @@
 
 .count {
   font-size: var(--text-xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   font-family: var(--font-mono);
 }
 
@@ -49,7 +49,7 @@
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .searchInput {
@@ -62,7 +62,7 @@
   right: var(--space-2);
   top: 50%;
   transform: translateY(-50%);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   background: none;
   border: none;
   cursor: pointer;
@@ -107,11 +107,11 @@
 
 .emptyText {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   margin-bottom: var(--space-3);
 }
 
 .loadingText {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }

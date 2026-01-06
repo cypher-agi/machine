@@ -45,7 +45,7 @@
 
 .closeButton {
   padding: var(--space-1);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   border-radius: var(--radius-md);
   transition: color var(--transition-fast);
   background: none;

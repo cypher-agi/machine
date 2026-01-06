@@ -28,7 +28,7 @@
 
 .filterLabel {
   font-size: var(--text-2xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -43,7 +43,7 @@
 
 .clearButton {
   font-size: var(--text-2xs);
-  color: var(--color-text-muted);
+  color: var(--color-text-secondary);
 }
 
 .clearButton:hover {
