@@ -56,6 +56,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
   }, [onClose]);
   
   const [currentStep, setCurrentStep] = useState<WizardStep>('provider');
+  const [maxVisitedStep, setMaxVisitedStep] = useState(0); // Track furthest step reached
   const [formData, setFormData] = useState<Partial<MachineCreateRequest>>({
     tags: {},
     firewall_profile_id: 'none',
@@ -184,6 +185,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
     const nextIndex = currentStepIndex + 1;
     if (nextIndex < steps.length) {
       setCurrentStep(steps[nextIndex].id);
+      setMaxVisitedStep(Math.max(maxVisitedStep, nextIndex));
     }
   };
 
@@ -224,19 +226,21 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
           <div className="flex items-center justify-center gap-1">
             {steps.map((step, index) => {
               const isActive = step.id === currentStep;
+              const isVisited = index <= maxVisitedStep;
               const isPast = index < currentStepIndex;
+              const canClick = isVisited && !isActive;
               const StepIcon = step.icon;
 
               return (
                 <div key={step.id} className="flex items-center">
                   <button
-                    onClick={() => isPast && setCurrentStep(step.id)}
-                    disabled={!isPast && !isActive}
+                    onClick={() => canClick && setCurrentStep(step.id)}
+                    disabled={!canClick && !isActive}
                     className={clsx(
                       'flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-sm',
                       isActive && 'bg-neon-cyan/10 text-neon-cyan',
-                      isPast && 'text-status-running cursor-pointer hover:bg-machine-elevated',
-                      !isActive && !isPast && 'text-text-tertiary cursor-not-allowed'
+                      canClick && 'text-status-running cursor-pointer hover:bg-machine-elevated',
+                      !isActive && !canClick && 'text-text-tertiary cursor-not-allowed'
                     )}
                   >
                     {isPast ? (

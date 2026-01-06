@@ -922,7 +922,14 @@ runcmd:
   - echo "Machine agent started" | tee -a /var/log/grid-bootstrap.log
   
   # Log completion
-  - echo "The Grid bootstrap complete at $(date)" | tee -a /var/log/grid-bootstrap.log`,
+  - echo "The Grid bootstrap complete at $(date)" | tee -a /var/log/grid-bootstrap.log
+
+# Reboot to apply kernel updates and ensure clean state
+power_state:
+  mode: reboot
+  message: "Rebooting to apply kernel updates"
+  timeout: 30
+  condition: true`,
       services_to_run: [
         {
           service_name: 'the-grid',

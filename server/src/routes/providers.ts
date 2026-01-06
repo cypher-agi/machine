@@ -272,6 +272,64 @@ providersRouter.post('/:type/accounts', async (req: Request, res: Response) => {
   res.status(201).json(response);
 });
 
+// PUT /providers/accounts/:id - Update provider account credentials
+providersRouter.put('/accounts/:id', async (req: Request, res: Response) => {
+  const account = database.getProviderAccount(req.params.id);
+
+  if (!account) {
+    throw new AppError(404, 'ACCOUNT_NOT_FOUND', `Provider account ${req.params.id} not found`);
+  }
+
+  const { label, credentials } = req.body;
+
+  // Update label if provided
+  if (label) {
+    database.updateProviderAccount({
+      provider_account_id: account.provider_account_id,
+      label,
+      updated_at: new Date().toISOString()
+    });
+  }
+
+  // Update credentials if provided
+  if (credentials) {
+    database.storeCredentials(account.provider_account_id, credentials);
+    
+    // Verify the new credentials
+    if (account.provider_type === 'digitalocean' && credentials.api_token) {
+      try {
+        const response = await fetch('https://api.digitalocean.com/v2/account', {
+          headers: {
+            'Authorization': `Bearer ${credentials.api_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        database.updateProviderAccount({
+          provider_account_id: account.provider_account_id,
+          credential_status: response.ok ? 'valid' : 'invalid',
+          updated_at: new Date().toISOString()
+        });
+      } catch {
+        database.updateProviderAccount({
+          provider_account_id: account.provider_account_id,
+          credential_status: 'invalid',
+          updated_at: new Date().toISOString()
+        });
+      }
+    }
+  }
+
+  const updatedAccount = database.getProviderAccount(req.params.id);
+  
+  const response: ApiResponse<ProviderAccount> = {
+    success: true,
+    data: updatedAccount!
+  };
+
+  res.json(response);
+});
+
 // POST /providers/accounts/:id/verify - Verify provider account credentials
 providersRouter.post('/accounts/:id/verify', async (req: Request, res: Response) => {
   const account = database.getProviderAccount(req.params.id);
@@ -332,6 +390,18 @@ providersRouter.delete('/accounts/:id', (req: Request, res: Response) => {
 
   if (!account) {
     throw new AppError(404, 'ACCOUNT_NOT_FOUND', `Provider account ${req.params.id} not found`);
+  }
+
+  // Check for linked machines
+  const machines = database.getMachines();
+  const linkedMachines = machines.filter(m => m.provider_account_id === req.params.id);
+  
+  if (linkedMachines.length > 0) {
+    throw new AppError(
+      400, 
+      'PROVIDER_HAS_MACHINES', 
+      `Cannot delete provider: ${linkedMachines.length} machine(s) are linked to this account. Delete the machines first.`
+    );
   }
 
   // Delete from database (also deletes credentials)

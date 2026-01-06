@@ -57,6 +57,9 @@ export interface Deployment {
   
   // Outputs (saved after apply)
   outputs?: Record<string, unknown>;
+  
+  // Logs (stored for review)
+  logs?: string;
 }
 
 export interface DeploymentLog {

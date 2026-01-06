@@ -485,7 +485,7 @@ async function runReboot(machineId: string, resourceId: string, deploymentId: st
     );
 
     if (!response.ok) {
-      const error = await response.json();
+      const error = await response.json() as { message?: string };
       throw new Error(error.message || 'Reboot API call failed');
     }
 
@@ -507,7 +507,7 @@ async function runReboot(machineId: string, resourceId: string, deploymentId: st
       );
 
       if (statusResponse.ok) {
-        const data = await statusResponse.json();
+        const data = await statusResponse.json() as { droplet: { status: string } };
         if (data.droplet.status === 'active') {
           database.updateMachine({
             machine_id: machineId,

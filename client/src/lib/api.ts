@@ -163,6 +163,16 @@ export async function verifyProviderAccount(id: string): Promise<ProviderAccount
   });
 }
 
+export async function updateProviderAccount(
+  id: string, 
+  data: { label?: string; credentials?: Record<string, string> }
+): Promise<ProviderAccount> {
+  return fetchApi<ProviderAccount>(`/providers/accounts/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
 export async function deleteProviderAccount(id: string): Promise<{ deleted: boolean }> {
   return fetchApi<{ deleted: boolean }>(`/providers/accounts/${id}`, {
     method: 'DELETE',

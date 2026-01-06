@@ -342,11 +342,11 @@ sshRouter.post('/keys/:id/sync/:providerAccountId', async (req: Request, res: Re
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        const error = await response.json() as { message?: string };
         throw new Error(error.message || 'Failed to upload key to DigitalOcean');
       }
 
-      const data = await response.json();
+      const data = await response.json() as { ssh_key: { id: number | string } };
       const providerKeyId = String(data.ssh_key.id);
 
       // Update provider_key_ids
@@ -417,7 +417,7 @@ sshRouter.delete('/keys/:id/sync/:providerType', async (req: Request, res: Respo
 
       // 204 = success, 404 = already deleted (which is fine)
       if (!response.ok && response.status !== 404) {
-        const error = await response.json();
+        const error = await response.json() as { message?: string };
         throw new Error(error.message || 'Failed to remove key from DigitalOcean');
       }
     } catch (error: any) {

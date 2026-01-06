@@ -51,6 +51,7 @@ export interface Machine {
   // Provisioning
   provisioning_method: ProvisioningMethod;
   bootstrap_profile_id?: string;
+  firewall_profile_id?: string;
   
   // Health & Agent
   last_health_check?: string;

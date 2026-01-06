@@ -8,18 +8,20 @@ import {
   AlertCircle,
   Trash2,
   Shield,
-  Clock
+  Clock,
+  KeyRound
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import { 
   getProviderAccounts, 
   verifyProviderAccount,
+  updateProviderAccount,
   deleteProviderAccount 
 } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { AddProviderModal } from './AddProviderModal';
-import type { CredentialStatus } from '@machine/shared';
+import type { CredentialStatus, ProviderAccount } from '@machine/shared';
 
 const providerIcons: Record<string, string> = {
   digitalocean: '🌊',
@@ -42,6 +44,8 @@ export function ProvidersPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [updatingAccount, setUpdatingAccount] = useState<ProviderAccount | null>(null);
+  const [newToken, setNewToken] = useState('');
 
   const { data: accounts, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['provider-accounts'],
@@ -71,6 +75,20 @@ export function ProvidersPage() {
     onError: (error: Error) => {
       addToast({ type: 'error', title: 'Delete failed', message: error.message });
       setDeletingId(null);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, token }: { id: string; token: string }) => 
+      updateProviderAccount(id, { credentials: { api_token: token } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['provider-accounts'] });
+      addToast({ type: 'success', title: 'Token updated', message: 'Your API token has been updated and verified' });
+      setUpdatingAccount(null);
+      setNewToken('');
+    },
+    onError: (error: Error) => {
+      addToast({ type: 'error', title: 'Update failed', message: error.message });
     },
   });
 
@@ -168,6 +186,13 @@ export function ProvidersPage() {
                           {verifyingId === account.provider_account_id ? 'Verifying...' : 'Verify'}
                         </button>
                         <button
+                          onClick={() => setUpdatingAccount(account)}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          <KeyRound className="w-4 h-4" />
+                          Update Token
+                        </button>
+                        <button
                           onClick={() => {
                             if (confirm(`Delete provider account "${account.label}"?`)) {
                               setDeletingId(account.provider_account_id);
@@ -208,6 +233,56 @@ export function ProvidersPage() {
       {/* Add Provider Modal */}
       {showAddModal && (
         <AddProviderModal onClose={() => setShowAddModal(false)} />
+      )}
+
+      {/* Update Token Modal */}
+      {updatingAccount && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+          <div className="w-full max-w-md bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-machine-border">
+              <h2 className="font-semibold text-lg text-text-primary">Update API Token</h2>
+              <button 
+                onClick={() => { setUpdatingAccount(null); setNewToken(''); }} 
+                className="btn btn-ghost btn-icon"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-text-secondary">
+                Update the API token for <span className="text-text-primary font-medium">{updatingAccount.label}</span>
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">
+                  New API Token
+                </label>
+                <input
+                  type="password"
+                  value={newToken}
+                  onChange={(e) => setNewToken(e.target.value)}
+                  placeholder="Enter new API token..."
+                  className="input font-mono"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 p-4 border-t border-machine-border">
+              <button 
+                onClick={() => { setUpdatingAccount(null); setNewToken(''); }} 
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => updateMutation.mutate({ id: updatingAccount.provider_account_id, token: newToken })}
+                disabled={!newToken || updateMutation.isPending}
+                className="btn btn-primary"
+              >
+                {updateMutation.isPending ? 'Updating...' : 'Update Token'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
