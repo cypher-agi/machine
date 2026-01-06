@@ -1,0 +1,9 @@
+# Cursor Rules
+
+## Git Commit Behavior
+
+- **Do NOT automatically commit changes** or create commits after making code modifications
+- **Do NOT run git commit commands** unless the user explicitly requests a commit
+- Only stage or commit files when the user specifically asks to "commit", "create a commit", or similar explicit instructions
+- When asked to make code changes, only modify the files - do not follow up with git operations
+
