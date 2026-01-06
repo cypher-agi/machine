@@ -120,23 +120,42 @@ body {
   }
 
   .btn-primary {
-    @apply bg-cursor-elevated text-text-primary border border-cursor-border;
-    @apply hover:bg-cursor-border hover:border-cursor-border-light;
+    background-color: var(--color-elevated);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+  }
+  .btn-primary:hover {
+    background-color: var(--color-border);
+    border-color: var(--color-border-light);
   }
 
   .btn-secondary {
-    @apply bg-transparent text-text-secondary border border-cursor-border;
-    @apply hover:bg-cursor-elevated hover:text-text-primary;
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border);
+  }
+  .btn-secondary:hover {
+    background-color: var(--color-elevated);
+    color: var(--color-text-primary);
   }
 
   .btn-ghost {
-    @apply bg-transparent text-text-muted border border-transparent;
-    @apply hover:text-text-secondary hover:bg-cursor-elevated;
+    background-color: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid transparent;
+  }
+  .btn-ghost:hover {
+    color: var(--color-text-secondary);
+    background-color: var(--color-elevated);
   }
 
   .btn-danger {
-    @apply bg-transparent text-status-error border border-status-error/30;
-    @apply hover:bg-status-error/10;
+    background-color: transparent;
+    color: var(--color-error);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+  }
+  .btn-danger:hover {
+    background-color: rgba(248, 113, 113, 0.1);
   }
 
   .btn-sm {
@@ -151,11 +170,16 @@ body {
 
   /* Input styles */
   .input {
-    @apply w-full px-3 py-1.5 bg-cursor-surface border border-cursor-border rounded-md;
-    @apply text-sm text-text-primary placeholder:text-text-muted;
-    @apply focus:outline-none;
-    @apply transition-colors duration-100;
+    @apply w-full px-3 py-1.5 rounded-md text-sm;
+    @apply focus:outline-none transition-colors duration-100;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
     min-height: 32px;
+  }
+
+  .input::placeholder {
+    color: var(--color-text-muted);
   }
 
   .input:focus {
@@ -175,7 +199,9 @@ body {
 
   /* Card styles - bordered container, no shadow */
   .card {
-    @apply bg-cursor-surface border border-cursor-border rounded-lg p-4;
+    @apply rounded-lg p-4;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
   }
 
   /* Badge styles */
@@ -184,19 +210,23 @@ body {
   }
 
   .badge-running {
-    @apply bg-status-success/10 text-status-success;
+    background-color: rgba(74, 222, 128, 0.1);
+    color: var(--color-success);
   }
 
   .badge-stopped {
-    @apply bg-text-muted/10 text-text-muted;
+    background-color: rgba(107, 114, 128, 0.1);
+    color: var(--color-text-muted);
   }
 
   .badge-error {
-    @apply bg-status-error/10 text-status-error;
+    background-color: rgba(248, 113, 113, 0.1);
+    color: var(--color-error);
   }
 
   .badge-pending {
-    @apply bg-status-pending/10 text-status-pending;
+    background-color: rgba(167, 139, 250, 0.1);
+    color: #A78BFA;
   }
 
   .badge-provisioning {
