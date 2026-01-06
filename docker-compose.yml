@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  machine:
+  machina:
     build: .
     ports:
       # Default: expose on port 80 (frontend + API served together)
@@ -13,7 +13,7 @@ services:
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
     volumes:
       # Persist database and Terraform state
-      - machine-data:/app/server/.data
+      - machina-data:/app/server/.data
       - terraform-state:/app/server/terraform-workspaces
     restart: unless-stopped
 
@@ -29,12 +29,12 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
     depends_on:
-      - machine
+      - machina
     restart: unless-stopped
     profiles:
       - with-nginx
 
 volumes:
-  machine-data:
+  machina-data:
   terraform-state:
 

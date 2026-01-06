@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AppLayout } from './layouts/AppLayout';
+import { AppLayout } from './app/layouts';
+import styles from './App.module.css';
 
 // Lazy-loaded route components for code-splitting
 const MachinesPage = lazy(() => import('./features/machines/MachinesPage'));
@@ -12,8 +13,8 @@ const SettingsPage = lazy(() => import('./features/settings/SettingsPage'));
 
 function PageLoader() {
   return (
-    <div className="flex items-center justify-center h-full">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
+    <div className={styles.loader}>
+      <div className={styles.spinner} />
     </div>
   );
 }
@@ -23,18 +24,57 @@ function App() {
     <Routes>
       <Route path="/" element={<AppLayout />}>
         <Route index element={<Navigate to="/machines" replace />} />
-        <Route path="machines" element={<Suspense fallback={<PageLoader />}><MachinesPage /></Suspense>} />
-        <Route path="providers" element={<Suspense fallback={<PageLoader />}><ProvidersPage /></Suspense>} />
-        <Route path="keys" element={<Suspense fallback={<PageLoader />}><KeysPage /></Suspense>} />
-        <Route path="deployments" element={<Suspense fallback={<PageLoader />}><DeploymentsPage /></Suspense>} />
-        <Route path="bootstrap" element={<Suspense fallback={<PageLoader />}><BootstrapPage /></Suspense>} />
-        <Route path="settings" element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
+        <Route
+          path="machines"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <MachinesPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="providers"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <ProvidersPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="keys"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <KeysPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="deployments"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <DeploymentsPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="bootstrap"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <BootstrapPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <SettingsPage />
+            </Suspense>
+          }
+        />
       </Route>
     </Routes>
   );
 }
 
 export default App;
-
-
-

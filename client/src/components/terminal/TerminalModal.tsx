@@ -36,11 +36,11 @@ export function TerminalModal({ machine, onClose }: TerminalModalProps) {
 
   return (
     <div className={clsx(
-      'fixed z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in',
+      'fixed z-50 flex items-center justify-center bg-[#000000]/95 animate-fade-in',
       isMaximized ? 'inset-0' : 'inset-0 p-4 md:p-8'
     )}>
       <div className={clsx(
-        'bg-black border border-machine-border flex flex-col animate-slide-in-up shadow-2xl overflow-hidden',
+        'bg-[#0c0c0e] border border-[#1a1a1d] flex flex-col animate-slide-in-up shadow-2xl overflow-hidden',
         isMaximized 
           ? 'w-full h-full rounded-none' 
           : 'w-full max-w-5xl h-[80vh] rounded-xl'

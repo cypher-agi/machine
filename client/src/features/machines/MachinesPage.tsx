@@ -3,18 +3,19 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus, RefreshCw, Search, Filter, X } from 'lucide-react';
 import { getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
-import { MachineCard } from './MachineCard';
-import { DeployWizard } from './DeployWizard';
-import { MachineFilters } from './MachineFilters';
+import { MachineCard, DeployWizard, MachineFilters } from './components';
+import { Button, Input } from '@/shared/ui';
+import clsx from 'clsx';
+import styles from './MachinesPage.module.css';
 
 function MachinesPage() {
-  const { 
-    machineFilters, 
+  const {
+    machineFilters,
     machineSort,
-    deployWizardOpen, 
-    setDeployWizardOpen 
+    deployWizardOpen,
+    setDeployWizardOpen
   } = useAppStore();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -32,106 +33,85 @@ function MachinesPage() {
   const activeFilterCount = Object.values(machineFilters).filter(Boolean).length;
 
   return (
-    <div className="h-full flex flex-col bg-cursor-bg">
-      {/* Header - minimal */}
-      <header className="flex-shrink-0 h-12 border-b border-cursor-border px-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-sm font-medium text-text-primary">Machines</h1>
-          <span className="text-xs text-text-muted font-mono">
-            {machines?.length ?? 0}
-          </span>
+    <div className={styles.page}>
+      {/* Header */}
+      <header className={styles.header}>
+        <div className={styles.headerLeft}>
+          <h1 className={styles.title}>Machines</h1>
+          <span className={styles.count}>{machines?.length ?? 0}</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className={styles.headerRight}>
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
-            <input
+          <div className={styles.searchContainer}>
+            <Search size={14} className={styles.searchIcon} />
+            <Input
               type="text"
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input pl-8 w-48 h-7 text-xs"
+              className={styles.searchInput}
+              size="sm"
             />
             {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
-              >
-                <X className="w-3 h-3" />
+              <button onClick={() => setSearchQuery('')} className={styles.clearSearch}>
+                <X size={12} />
               </button>
             )}
           </div>
 
           {/* Filter toggle */}
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className={`btn btn-ghost btn-sm ${
-              showFilters || activeFilterCount > 0 ? 'text-accent-blue' : ''
-            }`}
+            className={clsx(showFilters || activeFilterCount > 0 ? styles.filterButtonActive : '')}
           >
-            <Filter className="w-3.5 h-3.5" />
+            <Filter size={14} />
             {activeFilterCount > 0 && (
-              <span className="text-[10px] font-medium">{activeFilterCount}</span>
+              <span className={styles.filterCount}>{activeFilterCount}</span>
             )}
-          </button>
+          </Button>
 
           {/* Refresh */}
-          <button
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="btn btn-ghost btn-icon"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
-          </button>
+          <Button variant="ghost" size="sm" iconOnly onClick={() => refetch()} disabled={isRefetching}>
+            <RefreshCw size={14} className={isRefetching ? 'animate-spin' : ''} />
+          </Button>
 
           {/* Deploy new */}
-          <button
-            onClick={() => setDeployWizardOpen(true)}
-            className="btn btn-primary btn-sm"
-          >
-            <Plus className="w-3.5 h-3.5" />
+          <Button variant="primary" size="sm" onClick={() => setDeployWizardOpen(true)}>
+            <Plus size={14} />
             Deploy
-          </button>
+          </Button>
         </div>
       </header>
 
       {/* Filters panel */}
-      {showFilters && (
-        <MachineFilters onClose={() => setShowFilters(false)} />
-      )}
+      {showFilters && <MachineFilters onClose={() => setShowFilters(false)} />}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className={styles.content}>
         {isLoading ? (
-          <div className="flex items-center justify-center h-32">
-            <span className="text-sm text-text-muted">Loading...</span>
+          <div className={styles.loadingState}>
+            <span className={styles.loadingText}>Loading...</span>
           </div>
         ) : machines && machines.length > 0 ? (
-          <div className="space-y-1">
+          <div className={styles.list}>
             {machines.map((machine) => (
-              <MachineCard 
-                key={machine.machine_id} 
-                machine={machine}
-              />
+              <MachineCard key={machine.machine_id} machine={machine} />
             ))}
           </div>
         ) : (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-center">
-              <p className="text-sm text-text-muted mb-3">
-                {searchQuery || activeFilterCount > 0
-                  ? 'No machines found'
-                  : 'No machines yet'}
+          <div className={styles.emptyState}>
+            <div className={styles.emptyContent}>
+              <p className={styles.emptyText}>
+                {searchQuery || activeFilterCount > 0 ? 'No machines found' : 'No machines yet'}
               </p>
               {!searchQuery && activeFilterCount === 0 && (
-                <button
-                  onClick={() => setDeployWizardOpen(true)}
-                  className="btn btn-primary btn-sm"
-                >
-                  <Plus className="w-3.5 h-3.5" />
+                <Button variant="primary" size="sm" onClick={() => setDeployWizardOpen(true)}>
+                  <Plus size={14} />
                   Deploy Machine
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -139,9 +119,7 @@ function MachinesPage() {
       </div>
 
       {/* Deploy Wizard Modal */}
-      {deployWizardOpen && (
-        <DeployWizard onClose={() => setDeployWizardOpen(false)} />
-      )}
+      {deployWizardOpen && <DeployWizard onClose={() => setDeployWizardOpen(false)} />}
     </div>
   );
 }

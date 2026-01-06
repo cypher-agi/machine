@@ -2,20 +2,21 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { useAppStore } from '@/store/appStore';
 import { MachineInspector } from '@/features/machines/MachineInspector';
-import { Toasts } from '@/components/Toasts';
+import { Toasts } from '@/shared/components/Toasts';
+import styles from './AppLayout.module.css';
 
 export function AppLayout() {
   const { selectedMachineId, setSelectedMachineId } = useAppStore();
 
   return (
-    <div className="flex h-screen bg-cursor-bg overflow-hidden">
+    <div className={styles.layout}>
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
-      <main className="flex-1 flex overflow-hidden">
+      <main className={styles.main}>
         {/* Primary Content Area */}
-        <div className="flex-1 overflow-auto">
+        <div className={styles.content}>
           <Outlet />
         </div>
 

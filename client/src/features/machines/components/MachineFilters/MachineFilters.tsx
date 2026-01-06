@@ -1,6 +1,9 @@
 import { X } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import type { MachineStatus, ProviderType } from '@machine/shared';
+import { Input, Select, Button } from '@/shared/ui';
+import clsx from 'clsx';
+import styles from './MachineFilters.module.css';
 
 interface MachineFiltersProps {
   onClose: () => void;
@@ -27,16 +30,17 @@ export function MachineFilters({ onClose }: MachineFiltersProps) {
   const { machineFilters, setMachineFilters, clearMachineFilters, machineSort, setMachineSort } = useAppStore();
 
   return (
-    <div className="border-b border-cursor-border bg-cursor-surface px-4 py-3">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 flex-wrap">
+    <div className={styles.container}>
+      <div className={styles.content}>
+        <div className={styles.filters}>
           {/* Status filter */}
-          <div className="flex items-center gap-2">
-            <label className="text-[10px] text-text-muted uppercase tracking-wider">Status</label>
-            <select
+          <div className={styles.filterItem}>
+            <label className={styles.filterLabel}>Status</label>
+            <Select
               value={machineFilters.status || ''}
               onChange={(e) => setMachineFilters({ status: e.target.value as MachineStatus || undefined })}
-              className="input w-28 h-7 text-xs"
+              className={styles.filterInput}
+              size="sm"
             >
               <option value="">All</option>
               {statusOptions.map((opt) => (
@@ -44,16 +48,17 @@ export function MachineFilters({ onClose }: MachineFiltersProps) {
                   {opt.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Provider filter */}
-          <div className="flex items-center gap-2">
-            <label className="text-[10px] text-text-muted uppercase tracking-wider">Provider</label>
-            <select
+          <div className={styles.filterItem}>
+            <label className={styles.filterLabel}>Provider</label>
+            <Select
               value={machineFilters.provider || ''}
               onChange={(e) => setMachineFilters({ provider: e.target.value as ProviderType || undefined })}
-              className="input w-28 h-7 text-xs"
+              className={styles.filterInput}
+              size="sm"
             >
               <option value="">All</option>
               {providerOptions.map((opt) => (
@@ -61,54 +66,50 @@ export function MachineFilters({ onClose }: MachineFiltersProps) {
                   {opt.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Region filter */}
-          <div className="flex items-center gap-2">
-            <label className="text-[10px] text-text-muted uppercase tracking-wider">Region</label>
-            <input
+          <div className={styles.filterItem}>
+            <label className={styles.filterLabel}>Region</label>
+            <Input
               type="text"
               placeholder="e.g., nyc3"
               value={machineFilters.region || ''}
               onChange={(e) => setMachineFilters({ region: e.target.value || undefined })}
-              className="input w-24 h-7 text-xs"
+              className={clsx(styles.filterInput, styles.filterInputSm)}
+              size="sm"
             />
           </div>
 
           {/* Sort */}
-          <div className="flex items-center gap-2">
-            <label className="text-[10px] text-text-muted uppercase tracking-wider">Sort</label>
-            <select
+          <div className={styles.filterItem}>
+            <label className={styles.filterLabel}>Sort</label>
+            <Select
               value={`${machineSort.field}-${machineSort.direction}`}
               onChange={(e) => {
                 const [field, direction] = e.target.value.split('-') as [typeof machineSort.field, 'asc' | 'desc'];
                 setMachineSort({ field, direction });
               }}
-              className="input w-32 h-7 text-xs"
+              className={styles.filterInput}
+              size="sm"
             >
               <option value="created_at-desc">Newest</option>
               <option value="created_at-asc">Oldest</option>
               <option value="name-asc">Name A-Z</option>
               <option value="name-desc">Name Z-A</option>
-            </select>
+            </Select>
           </div>
 
           {/* Clear */}
-          <button
-            onClick={clearMachineFilters}
-            className="text-[10px] text-text-muted hover:text-status-error"
-          >
+          <Button variant="ghost" size="sm" onClick={clearMachineFilters} className={styles.clearButton}>
             Clear
-          </button>
+          </Button>
         </div>
 
-        <button
-          onClick={onClose}
-          className="p-1 text-text-muted hover:text-text-secondary rounded"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        <Button variant="ghost" size="sm" iconOnly onClick={onClose}>
+          <X size={16} />
+        </Button>
       </div>
     </div>
   );

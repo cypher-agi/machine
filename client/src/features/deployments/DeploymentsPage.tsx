@@ -13,16 +13,18 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import { getDeployments, getMachines } from '@/lib/api';
+import { Button, Select } from '@/shared/ui';
 import type { DeploymentState, DeploymentType } from '@machine/shared';
+import styles from './DeploymentsPage.module.css';
 
-const stateConfig: Record<DeploymentState, { icon: typeof Check; class: string }> = {
-  queued: { icon: Clock, class: 'text-text-muted' },
-  planning: { icon: Loader2, class: 'text-accent-blue' },
-  awaiting_approval: { icon: AlertCircle, class: 'text-status-warning' },
-  applying: { icon: Loader2, class: 'text-accent-blue' },
-  succeeded: { icon: Check, class: 'text-status-success' },
-  failed: { icon: X, class: 'text-status-error' },
-  cancelled: { icon: StopCircle, class: 'text-text-muted' },
+const stateConfig: Record<DeploymentState, { icon: typeof Check; className: string }> = {
+  queued: { icon: Clock, className: styles.stateQueued },
+  planning: { icon: Loader2, className: styles.statePlanning },
+  awaiting_approval: { icon: AlertCircle, className: styles.stateAwaitingApproval },
+  applying: { icon: Loader2, className: styles.stateApplying },
+  succeeded: { icon: Check, className: styles.stateSucceeded },
+  failed: { icon: X, className: styles.stateFailed },
+  cancelled: { icon: StopCircle, className: styles.stateCancelled },
 };
 
 const typeLabels: Record<DeploymentType, string> = {
@@ -58,21 +60,20 @@ function DeploymentsPage() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-cursor-bg">
+    <div className={styles.page}>
       {/* Header */}
-      <header className="flex-shrink-0 h-12 border-b border-cursor-border px-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-sm font-medium text-text-primary">Deployments</h1>
-          <span className="text-xs text-text-muted font-mono">
-            {deployments?.length ?? 0}
-          </span>
+      <header className={styles.header}>
+        <div className={styles.headerLeft}>
+          <h1 className={styles.title}>Deployments</h1>
+          <span className={styles.count}>{deployments?.length ?? 0}</span>
         </div>
 
-        <div className="flex items-center gap-2">
-          <select
+        <div className={styles.headerRight}>
+          <Select
             value={filterState}
             onChange={(e) => setFilterState(e.target.value as DeploymentState | '')}
-            className="input w-28 h-7 text-xs"
+            size="sm"
+            className={styles.filterSelect}
           >
             <option value="">All states</option>
             <option value="queued">Queued</option>
@@ -81,12 +82,13 @@ function DeploymentsPage() {
             <option value="succeeded">Succeeded</option>
             <option value="failed">Failed</option>
             <option value="cancelled">Cancelled</option>
-          </select>
+          </Select>
 
-          <select
+          <Select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as DeploymentType | '')}
-            className="input w-28 h-7 text-xs"
+            size="sm"
+            className={styles.filterSelect}
           >
             <option value="">All types</option>
             <option value="create">Create</option>
@@ -94,81 +96,64 @@ function DeploymentsPage() {
             <option value="destroy">Destroy</option>
             <option value="reboot">Reboot</option>
             <option value="restart_service">Restart</option>
-          </select>
+          </Select>
 
-          <button
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="btn btn-ghost btn-icon"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
-          </button>
+          <Button variant="ghost" size="sm" iconOnly onClick={() => refetch()} disabled={isRefetching}>
+            <RefreshCw size={14} className={isRefetching ? 'animate-spin' : ''} />
+          </Button>
         </div>
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className={styles.content}>
         {isLoading ? (
-          <div className="flex items-center justify-center h-32">
-            <span className="text-sm text-text-muted">Loading...</span>
+          <div className={styles.loadingState}>
+            <span className={styles.loadingText}>Loading...</span>
           </div>
         ) : deployments && deployments.length > 0 ? (
-          <div className="space-y-1">
+          <div className={styles.list}>
             {deployments.map((deployment) => {
               const state = stateConfig[deployment.state];
               const StateIcon = state.icon;
               const isInProgress = deployment.state === 'planning' || deployment.state === 'applying';
 
               return (
-                <div 
-                  key={deployment.deployment_id} 
-                  className="group flex items-center gap-3 px-3 py-2 rounded-md hover:bg-cursor-surface transition-colors"
-                >
-                  <div className={clsx('w-5 h-5 flex items-center justify-center', state.class)}>
-                    <StateIcon className={clsx('w-4 h-4', isInProgress && 'animate-spin')} />
+                <div key={deployment.deployment_id} className={styles.row}>
+                  <div className={clsx(styles.stateIcon, state.className)}>
+                    <StateIcon size={16} className={isInProgress ? 'animate-spin' : ''} />
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-text-primary font-medium">
-                        {typeLabels[deployment.type]}
-                      </span>
-                      <span className={clsx('text-xs', state.class)}>
+                  <div className={styles.info}>
+                    <div className={styles.infoTop}>
+                      <span className={styles.type}>{typeLabels[deployment.type]}</span>
+                      <span className={clsx(styles.state, state.className)}>
                         {deployment.state.replace(/_/g, ' ')}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-text-muted">
-                      <span className="font-mono">{getMachineName(deployment.machine_id)}</span>
+                    <div className={styles.meta}>
+                      <span className={styles.machineName}>{getMachineName(deployment.machine_id)}</span>
                       <span>{formatDistanceToNow(new Date(deployment.created_at), { addSuffix: true })}</span>
-                      {deployment.initiated_by && (
-                        <span>by {deployment.initiated_by}</span>
-                      )}
+                      {deployment.initiated_by && <span>by {deployment.initiated_by}</span>}
                     </div>
                   </div>
 
                   {/* Plan summary */}
                   {deployment.plan_summary && (
-                    <div className="flex items-center gap-2 text-[10px] font-mono">
+                    <div className={styles.planSummary}>
                       {deployment.plan_summary.resources_to_add > 0 && (
-                        <span className="text-status-success">
-                          +{deployment.plan_summary.resources_to_add}
-                        </span>
+                        <span className={styles.planAdd}>+{deployment.plan_summary.resources_to_add}</span>
                       )}
                       {deployment.plan_summary.resources_to_change > 0 && (
-                        <span className="text-status-warning">
-                          ~{deployment.plan_summary.resources_to_change}
-                        </span>
+                        <span className={styles.planChange}>~{deployment.plan_summary.resources_to_change}</span>
                       )}
                       {deployment.plan_summary.resources_to_destroy > 0 && (
-                        <span className="text-status-error">
-                          -{deployment.plan_summary.resources_to_destroy}
-                        </span>
+                        <span className={styles.planDestroy}>-{deployment.plan_summary.resources_to_destroy}</span>
                       )}
                     </div>
                   )}
 
-                  <div className="text-[10px] text-text-muted font-mono">
+                  <div className={styles.deploymentId}>
                     {deployment.deployment_id.substring(0, 8)}
                   </div>
                 </div>
@@ -176,10 +161,10 @@ function DeploymentsPage() {
             })}
           </div>
         ) : (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-center">
-              <GitBranch className="w-6 h-6 text-text-muted mx-auto mb-2" />
-              <p className="text-sm text-text-muted">
+          <div className={styles.emptyState}>
+            <div className={styles.emptyContent}>
+              <GitBranch className={styles.emptyIcon} />
+              <p className={styles.emptyText}>
                 {filterState || filterType ? 'No matching deployments' : 'No deployments yet'}
               </p>
             </div>

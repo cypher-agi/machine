@@ -1,5 +1,5 @@
 {
-  "name": "machine",
+  "name": "machina",
   "version": "1.0.0",
   "description": "Web app for provisioning and managing compute machines across cloud providers using Terraform",
   "private": true,

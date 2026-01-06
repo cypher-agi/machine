@@ -1,0 +1,426 @@
+/* Shared inspector panel styles */
+.panel {
+  padding: var(--space-3);
+}
+
+.section {
+  padding: var(--space-3);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+}
+
+.sectionTitle {
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-1-5) 0;
+  font-size: var(--text-xs);
+}
+
+.row:not(:last-child) {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.label {
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.value {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  text-align: right;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.valueAccent {
+  color: var(--color-accent);
+}
+
+/* Grid layout */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+}
+
+.gridItem {
+  padding: var(--space-2);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.gridLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.gridValue {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-primary);
+}
+
+/* Progress bar */
+.progressBar {
+  height: 4px;
+  background-color: var(--color-border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-normal);
+}
+
+.progressFillBlue {
+  background-color: var(--color-accent);
+}
+
+.progressFillGreen {
+  background-color: var(--color-success);
+}
+
+/* Tags */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-1-5);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.tagKey {
+  color: var(--color-text-muted);
+}
+
+.tagValue {
+  color: var(--color-text-primary);
+}
+
+/* Status colors */
+.statusSuccess {
+  color: var(--color-success);
+}
+
+.statusWarning {
+  color: var(--color-warning);
+}
+
+.statusError {
+  color: var(--color-error);
+}
+
+.statusMuted {
+  color: var(--color-text-muted);
+}
+
+/* Empty state */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+}
+
+.emptyIcon {
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.emptyText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Deployments list */
+.deploymentCard {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-3);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.deploymentCard:hover {
+  border-color: var(--color-border-light);
+}
+
+.deploymentHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.deploymentIcon {
+  margin-top: 2px;
+}
+
+.deploymentInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.deploymentTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.deploymentType {
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+}
+
+.deploymentState {
+  font-size: var(--text-xs);
+}
+
+.deploymentMeta {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.deploymentStats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+}
+
+.deploymentError {
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-error);
+  background-color: rgba(248, 113, 113, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+/* Service card */
+.serviceCard {
+  padding: var(--space-3);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+}
+
+.serviceHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.serviceIcon {
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+}
+
+.serviceInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.serviceName {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.serviceTitle {
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+}
+
+.serviceVersion {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  background-color: var(--color-elevated);
+  padding: 1px var(--space-1-5);
+  border-radius: var(--radius-sm);
+}
+
+.serviceUnit {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.serviceStats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.servicePorts {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.servicePortsLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.servicePort {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--color-neon-cyan);
+  background-color: rgba(34, 211, 238, 0.1);
+  padding: 2px var(--space-1-5);
+  border-radius: var(--radius-sm);
+}
+
+.serviceError {
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-error);
+  background-color: rgba(248, 113, 113, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+/* Networking */
+.portBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  background-color: rgba(34, 211, 238, 0.1);
+  color: var(--color-neon-cyan);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.firewallRule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-elevated);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-2);
+}
+
+.firewallProtocol {
+  width: 64px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+}
+
+.firewallPort {
+  width: 80px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+}
+
+.firewallDescription {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.firewallSource {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.protocolTcp {
+  color: var(--color-neon-cyan);
+}
+
+.protocolUdp {
+  color: var(--color-neon-green);
+}
+
+.protocolIcmp {
+  color: var(--color-neon-purple);
+}
+
+/* Details */
+.detailsSection {
+  margin-bottom: var(--space-6);
+}
+
+.copyButton {
+  padding: var(--space-1);
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.copyButton:hover {
+  color: var(--color-neon-cyan);
+}
+
+.jsonPreview {
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--color-text-secondary);
+  background-color: var(--color-elevated);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  overflow: auto;
+  max-height: 160px;
+}
+

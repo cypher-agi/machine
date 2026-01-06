@@ -1,0 +1,287 @@
+/* KeysPage styles */
+.page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+}
+
+.header {
+  flex-shrink: 0;
+  height: 48px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0 var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+}
+
+.count {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--space-4);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.keyCard {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.keyRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--color-surface);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.keyRow:hover {
+  background-color: var(--color-elevated);
+}
+
+.expandIcon {
+  padding: 2px;
+  color: var(--color-text-muted);
+}
+
+.keyIconWrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-elevated);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.keyIcon {
+  color: var(--color-text-muted);
+}
+
+.keyInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.keyNameRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.keyName {
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  font-weight: var(--font-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.keyType {
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+  background-color: var(--color-border);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
+
+.keyMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.providerBadges {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.providerBadge {
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+  background-color: rgba(74, 222, 128, 0.1);
+  color: var(--color-success);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.keyActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.keyRow:hover .keyActions {
+  opacity: 1;
+}
+
+/* Expanded section */
+.expandedSection {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+}
+
+.expandedContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.expandedLabel {
+  font-size: var(--text-2xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-1);
+}
+
+.publicKeyBox {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.cloudSyncList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.syncedProvider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  background-color: rgba(74, 222, 128, 0.05);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+}
+
+.syncedProviderName {
+  color: var(--color-text-primary);
+  text-transform: capitalize;
+}
+
+.unsyncButton {
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.unsyncButton:hover {
+  color: var(--color-error);
+}
+
+.syncButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space-1) var(--space-2);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.syncButton:hover {
+  border-color: var(--color-accent);
+}
+
+.syncButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.noProvidersText {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Empty and loading states */
+.emptyState,
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 128px;
+}
+
+.emptyContent {
+  text-align: center;
+}
+
+.emptyText {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+}
+
+.emptyActions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.loadingText {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+

@@ -1,0 +1,16 @@
+/* App loader styles */
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid transparent;
+  border-bottom-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}

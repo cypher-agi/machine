@@ -1,40 +1,30 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Activity, 
-  RefreshCw, 
-  AlertTriangle,
-  Check,
-  X,
-  Loader2,
-  Clock,
-  Cpu,
-  HardDrive,
-  Play,
-  Square
-} from 'lucide-react';
+import { Activity, RefreshCw, AlertTriangle, Check, X, Loader2, Clock, Cpu, HardDrive, Play, Square } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import type { MachineServicesResponse, MachineService, ServiceState, ServiceHealth } from '@machine/shared';
 import { restartMachineService } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { Button } from '@/shared/ui';
+import styles from './Inspector.module.css';
 
 interface InspectorServicesProps {
   machineId: string;
   services?: MachineServicesResponse;
 }
 
-const stateConfig: Record<ServiceState, { icon: typeof Check; class: string; bgClass: string }> = {
-  running: { icon: Play, class: 'text-status-running', bgClass: 'bg-status-running/10' },
-  stopped: { icon: Square, class: 'text-status-stopped', bgClass: 'bg-status-stopped/10' },
-  failed: { icon: X, class: 'text-status-error', bgClass: 'bg-status-error/10' },
-  restarting: { icon: RefreshCw, class: 'text-status-provisioning', bgClass: 'bg-status-provisioning/10' },
-  unknown: { icon: AlertTriangle, class: 'text-text-tertiary', bgClass: 'bg-machine-elevated' },
+const stateConfig: Record<ServiceState, { icon: typeof Check; className: string; bgClass: string }> = {
+  running: { icon: Play, className: styles.statusSuccess, bgClass: 'rgba(74, 222, 128, 0.1)' },
+  stopped: { icon: Square, className: styles.statusMuted, bgClass: 'rgba(107, 114, 128, 0.1)' },
+  failed: { icon: X, className: styles.statusError, bgClass: 'rgba(248, 113, 113, 0.1)' },
+  restarting: { icon: RefreshCw, className: styles.statusSuccess, bgClass: 'rgba(94, 158, 255, 0.1)' },
+  unknown: { icon: AlertTriangle, className: styles.statusMuted, bgClass: 'rgba(107, 114, 128, 0.1)' },
 };
 
-const healthConfig: Record<ServiceHealth, { label: string; class: string }> = {
-  healthy: { label: 'Healthy', class: 'text-status-running' },
-  unhealthy: { label: 'Unhealthy', class: 'text-status-error' },
-  unknown: { label: 'Unknown', class: 'text-text-tertiary' },
+const healthConfig: Record<ServiceHealth, { label: string; className: string }> = {
+  healthy: { label: 'Healthy', className: styles.statusSuccess },
+  unhealthy: { label: 'Unhealthy', className: styles.statusError },
+  unknown: { label: 'Unknown', className: styles.statusMuted },
 };
 
 function formatUptime(seconds?: number): string {
@@ -42,7 +32,7 @@ function formatUptime(seconds?: number): string {
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
-  
+
   if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h ${mins}m`;
   return `${mins}m`;
@@ -67,87 +57,75 @@ function ServiceCard({ service, machineId }: { service: MachineService; machineI
   });
 
   return (
-    <div className="card">
-      <div className="flex items-start gap-3">
-        <div className={clsx('p-2 rounded-lg', state.bgClass)}>
-          <StateIcon className={clsx('w-5 h-5', state.class, service.state === 'restarting' && 'animate-spin')} />
+    <div className={styles.serviceCard}>
+      <div className={styles.serviceHeader}>
+        <div
+          className={styles.serviceIcon}
+          style={{ backgroundColor: state.bgClass }}
+        >
+          <StateIcon
+            size={20}
+            className={clsx(state.className, service.state === 'restarting' && 'animate-spin')}
+          />
         </div>
-        
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <h4 className="font-medium text-text-primary">{service.display_name}</h4>
-            {service.version && (
-              <span className="text-xs font-mono text-text-tertiary bg-machine-elevated px-1.5 py-0.5 rounded">
-                v{service.version}
-              </span>
-            )}
-          </div>
-          
-          <p className="text-xs text-text-tertiary font-mono mb-2">
-            {service.systemd_unit}
-          </p>
 
-          <div className="flex items-center gap-4 text-xs text-text-secondary">
-            <span className={health.class}>
-              {health.label}
-            </span>
-            
+        <div className={styles.serviceInfo}>
+          <div className={styles.serviceName}>
+            <h4 className={styles.serviceTitle}>{service.display_name}</h4>
+            {service.version && <span className={styles.serviceVersion}>v{service.version}</span>}
+          </div>
+
+          <p className={styles.serviceUnit}>{service.systemd_unit}</p>
+
+          <div className={styles.serviceStats}>
+            <span className={health.className}>{health.label}</span>
+
             {service.uptime_seconds !== undefined && (
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
+              <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+                <Clock size={12} />
                 {formatUptime(service.uptime_seconds)}
               </span>
             )}
-            
+
             {service.cpu_percent !== undefined && (
-              <span className="flex items-center gap-1">
-                <Cpu className="w-3 h-3" />
+              <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+                <Cpu size={12} />
                 {service.cpu_percent.toFixed(1)}%
               </span>
             )}
-            
+
             {service.memory_mb !== undefined && (
-              <span className="flex items-center gap-1">
-                <HardDrive className="w-3 h-3" />
+              <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)' }}>
+                <HardDrive size={12} />
                 {service.memory_mb}MB
               </span>
             )}
           </div>
 
-          {/* Ports */}
           {service.ports && service.ports.length > 0 && (
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-xs text-text-tertiary">Ports:</span>
-              <div className="flex gap-1">
-                {service.ports.map((port) => (
-                  <span key={port} className="text-xs font-mono text-neon-cyan bg-neon-cyan/10 px-1.5 py-0.5 rounded">
-                    {port}
-                  </span>
-                ))}
-              </div>
+            <div className={styles.servicePorts}>
+              <span className={styles.servicePortsLabel}>Ports:</span>
+              {service.ports.map((port) => (
+                <span key={port} className={styles.servicePort}>
+                  {port}
+                </span>
+              ))}
             </div>
           )}
 
-          {/* Last error */}
-          {service.last_error && (
-            <div className="mt-2 text-xs text-status-error bg-status-error/10 px-2 py-1 rounded">
-              {service.last_error}
-            </div>
-          )}
+          {service.last_error && <div className={styles.serviceError}>{service.last_error}</div>}
         </div>
 
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
+          iconOnly
           onClick={() => restartMutation.mutate()}
           disabled={restartMutation.isPending || service.state === 'restarting'}
-          className="btn btn-ghost btn-icon disabled:opacity-50"
           title="Restart service"
         >
-          {restartMutation.isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <RefreshCw className="w-4 h-4" />
-          )}
-        </button>
+          {restartMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+        </Button>
       </div>
     </div>
   );
@@ -156,10 +134,10 @@ function ServiceCard({ service, machineId }: { service: MachineService; machineI
 export function InspectorServices({ machineId, services }: InspectorServicesProps) {
   if (!services) {
     return (
-      <div className="p-4">
-        <div className="card flex flex-col items-center justify-center py-8">
-          <Activity className="w-8 h-8 text-text-tertiary mb-2" />
-          <p className="text-text-secondary">Loading services...</p>
+      <div className={styles.panel}>
+        <div className={clsx(styles.section, styles.emptyState)}>
+          <Activity size={32} className={styles.emptyIcon} />
+          <p className={styles.emptyText}>Loading services...</p>
         </div>
       </div>
     );
@@ -167,11 +145,13 @@ export function InspectorServices({ machineId, services }: InspectorServicesProp
 
   if (!services.agent_connected) {
     return (
-      <div className="p-4">
-        <div className="card flex flex-col items-center justify-center py-8">
-          <AlertTriangle className="w-8 h-8 text-status-warning mb-2" />
-          <p className="text-text-primary font-medium mb-1">Agent Not Connected</p>
-          <p className="text-sm text-text-secondary text-center max-w-xs">
+      <div className={styles.panel}>
+        <div className={clsx(styles.section, styles.emptyState)}>
+          <AlertTriangle size={32} style={{ color: 'var(--color-warning)', marginBottom: 'var(--space-2)' }} />
+          <p style={{ fontWeight: 'var(--font-medium)', color: 'var(--color-text-primary)', marginBottom: 'var(--space-1)' }}>
+            Agent Not Connected
+          </p>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', textAlign: 'center', maxWidth: '280px' }}>
             The Machine agent is not installed or connected. Install the agent to view service status.
           </p>
         </div>
@@ -181,31 +161,24 @@ export function InspectorServices({ machineId, services }: InspectorServicesProp
 
   if (services.services.length === 0) {
     return (
-      <div className="p-4">
-        <div className="card flex flex-col items-center justify-center py-8">
-          <Activity className="w-8 h-8 text-text-tertiary mb-2" />
-          <p className="text-text-secondary">No services configured</p>
+      <div className={styles.panel}>
+        <div className={clsx(styles.section, styles.emptyState)}>
+          <Activity size={32} className={styles.emptyIcon} />
+          <p className={styles.emptyText}>No services configured</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-3">
+    <div className={styles.panel}>
       {services.services.map((service) => (
-        <ServiceCard 
-          key={service.service_name} 
-          service={service} 
-          machineId={machineId}
-        />
+        <ServiceCard key={service.service_name} service={service} machineId={machineId} />
       ))}
-      
-      <p className="text-xs text-text-tertiary text-center pt-2">
+
+      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', textAlign: 'center', paddingTop: 'var(--space-2)' }}>
         Last updated {formatDistanceToNow(new Date(services.last_updated), { addSuffix: true })}
       </p>
     </div>
   );
 }
-
-
-

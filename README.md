@@ -1,8 +1,8 @@
-# Machine
+# Machina
 
 A modern web application for provisioning and managing compute infrastructure across multiple cloud providers using Terraform as the deployment engine.
 
-![Machine](https://img.shields.io/badge/Machine-Infrastructure_Management-00ffff?style=for-the-badge)
+![Machina](https://img.shields.io/badge/Machina-Infrastructure_Management-00ffff?style=for-the-badge)
 
 ## Features
 
@@ -163,7 +163,7 @@ The UI uses a dark, terminal-inspired theme with:
 
 ```bash
 # Set your public URL (required for agent heartbeats)
-export PUBLIC_SERVER_URL=https://machine.yourdomain.com
+export PUBLIC_SERVER_URL=https://machina.yourdomain.com
 
 # Build and run
 docker compose up -d
@@ -183,7 +183,7 @@ npm run build
 
 # Set environment variables
 export NODE_ENV=production
-export PUBLIC_SERVER_URL=https://machine.yourdomain.com
+export PUBLIC_SERVER_URL=https://machina.yourdomain.com
 export PORT=3001
 
 # Start server
@@ -200,7 +200,7 @@ npm install -g pm2
 npm run build
 
 # Start with PM2
-pm2 start server/dist/index.js --name machine-api
+pm2 start server/dist/index.js --name machina-api
 
 # Save PM2 config
 pm2 save
@@ -221,16 +221,16 @@ pm2 startup
 ```nginx
 server {
     listen 80;
-    server_name machine.yourdomain.com;
+    server_name machina.yourdomain.com;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name machine.yourdomain.com;
+    server_name machina.yourdomain.com;
 
-    ssl_certificate /etc/letsencrypt/live/machine.yourdomain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/machine.yourdomain.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/machina.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/machina.yourdomain.com/privkey.pem;
 
     location / {
         proxy_pass http://localhost:3001;
