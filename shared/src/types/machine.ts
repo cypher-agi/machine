@@ -71,6 +71,7 @@ export interface MachineCreateRequest {
   subnet_id?: string;
   firewall_profile_id?: string;
   bootstrap_profile_id?: string;
+  ssh_key_ids?: string[]; // SSH key IDs to attach to the machine
   tags?: Record<string, string>;
   run_plan_only?: boolean;
 }

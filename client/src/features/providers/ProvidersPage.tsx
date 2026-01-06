@@ -113,7 +113,7 @@ export function ProvidersPage() {
           
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
-              <div className="w-6 h-6 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" />
+              <span className="text-text-secondary animate-pulse">Loading providers...</span>
             </div>
           ) : accounts && accounts.length > 0 ? (
             <div className="space-y-3">

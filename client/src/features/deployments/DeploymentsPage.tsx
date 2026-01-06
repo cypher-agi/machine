@@ -5,7 +5,7 @@ import {
   Check, 
   X, 
   Clock, 
-  Loader2,
+  Sparkles,
   AlertCircle,
   StopCircle,
   Filter,
@@ -16,11 +16,11 @@ import clsx from 'clsx';
 import { getDeployments, getMachines } from '@/lib/api';
 import type { DeploymentState, DeploymentType, Deployment } from '@machine/shared';
 
-const stateConfig: Record<DeploymentState, { icon: typeof Check; class: string; bgClass: string }> = {
+const stateConfig: Record<DeploymentState, { icon: typeof Check; class: string; bgClass: string; shimmer?: boolean }> = {
   queued: { icon: Clock, class: 'text-text-tertiary', bgClass: 'bg-machine-elevated' },
-  planning: { icon: Loader2, class: 'text-status-provisioning', bgClass: 'bg-status-provisioning/10' },
+  planning: { icon: Sparkles, class: 'text-status-provisioning', bgClass: 'bg-status-provisioning/10', shimmer: true },
   awaiting_approval: { icon: AlertCircle, class: 'text-status-warning', bgClass: 'bg-status-warning/10' },
-  applying: { icon: Loader2, class: 'text-status-provisioning', bgClass: 'bg-status-provisioning/10' },
+  applying: { icon: Sparkles, class: 'text-status-provisioning', bgClass: 'bg-status-provisioning/10', shimmer: true },
   succeeded: { icon: Check, class: 'text-status-running', bgClass: 'bg-status-running/10' },
   failed: { icon: X, class: 'text-status-error', bgClass: 'bg-status-error/10' },
   cancelled: { icon: StopCircle, class: 'text-text-tertiary', bgClass: 'bg-machine-elevated' },
@@ -113,10 +113,7 @@ export function DeploymentsPage() {
       <div className="flex-1 overflow-auto p-6">
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" />
-              <p className="text-text-secondary">Loading deployments...</p>
-            </div>
+            <span className="text-text-secondary animate-pulse">Loading deployments...</span>
           </div>
         ) : deployments && deployments.length > 0 ? (
           <div className="space-y-3">
@@ -132,11 +129,7 @@ export function DeploymentsPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div className={clsx('p-2.5 rounded-xl', state.bgClass)}>
-                      <StateIcon className={clsx(
-                        'w-5 h-5', 
-                        state.class,
-                        (deployment.state === 'applying' || deployment.state === 'planning') && 'animate-spin'
-                      )} />
+                      <StateIcon className={clsx('w-5 h-5', state.class)} />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -144,8 +137,13 @@ export function DeploymentsPage() {
                         <span className="font-semibold text-text-primary">
                           {typeLabels[deployment.type]}
                         </span>
-                        <span className={clsx('text-sm font-medium', state.class)}>
+                        <span className={clsx(
+                          'text-sm font-medium',
+                          state.class,
+                          state.shimmer && 'animate-shimmer'
+                        )}>
                           {deployment.state.replace(/_/g, ' ')}
+                          {state.shimmer && <span className="animate-dots"><span>.</span><span>.</span><span>.</span></span>}
                         </span>
                       </div>
 

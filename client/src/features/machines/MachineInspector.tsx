@@ -13,7 +13,8 @@ import {
   Copy,
   ExternalLink,
   RefreshCw,
-  RotateCcw
+  RotateCcw,
+  Terminal
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import clsx from 'clsx';
@@ -29,6 +30,7 @@ import { InspectorDeployments } from './inspector/InspectorDeployments';
 import { InspectorNetworking } from './inspector/InspectorNetworking';
 import { InspectorServices } from './inspector/InspectorServices';
 import { InspectorDetails } from './inspector/InspectorDetails';
+import { TerminalModal } from '@/components/terminal/TerminalModal';
 
 interface MachineInspectorProps {
   machineId: string;
@@ -65,6 +67,7 @@ const statusConfig: Record<MachineStatus, { label: string; class: string }> = {
 
 export function MachineInspector({ machineId, onClose }: MachineInspectorProps) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [showTerminal, setShowTerminal] = useState(false);
 
   const { data: machine, isLoading } = useQuery({
     queryKey: ['machine', machineId],
@@ -94,7 +97,7 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
     return (
       <div className="w-[480px] border-l border-machine-border bg-black flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-neon-cyan border-t-transparent rounded-full animate-spin" />
+          <span className="text-text-secondary animate-pulse">Loading...</span>
           <p className="text-text-secondary">Loading machine...</p>
         </div>
       </div>
@@ -150,6 +153,16 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
             >
               <Copy className="w-4 h-4" />
             </button>
+            {machine.actual_status === 'running' && (
+              <button
+                onClick={() => setShowTerminal(true)}
+                className="btn btn-primary btn-sm"
+                title="Open SSH Terminal"
+              >
+                <Terminal className="w-4 h-4" />
+                SSH
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -193,6 +206,14 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
           <InspectorDetails machine={machine} />
         )}
       </div>
+
+      {/* Terminal Modal */}
+      {showTerminal && (
+        <TerminalModal
+          machine={machine}
+          onClose={() => setShowTerminal(false)}
+        />
+      )}
     </div>
   );
 }

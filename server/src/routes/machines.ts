@@ -9,7 +9,8 @@ import {
   Deployment,
   MachineServicesResponse,
   MachineNetworking,
-  FirewallRule
+  FirewallRule,
+  SSHKey
 } from '@machine/shared';
 import { AppError } from '../middleware/errorHandler';
 import { TerraformService, getCredentials } from '../services/terraform';
@@ -199,6 +200,17 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
     ? database.getFirewallProfile(body.firewall_profile_id)
     : undefined;
 
+  // Get SSH keys if specified
+  const sshKeys: SSHKey[] = [];
+  if (body.ssh_key_ids && body.ssh_key_ids.length > 0) {
+    for (const keyId of body.ssh_key_ids) {
+      const key = database.getSSHKey(keyId);
+      if (key) {
+        sshKeys.push(key);
+      }
+    }
+  }
+
   // Prepare cloud-init template with machine-specific values
   let cloudInitTemplate = bootstrapProfile?.cloud_init_template;
   if (cloudInitTemplate) {
@@ -210,7 +222,7 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
   }
 
   // Start Terraform execution in background
-  runTerraformCreate(newMachine, deployment, credentials, providerAccount.provider_type, cloudInitTemplate, firewallProfile).catch(err => {
+  runTerraformCreate(newMachine, deployment, credentials, providerAccount.provider_type, cloudInitTemplate, firewallProfile, sshKeys).catch(err => {
     console.error('Terraform execution failed:', err);
   });
 
@@ -229,7 +241,8 @@ async function runTerraformCreate(
   credentials: Record<string, string>,
   providerType: string,
   cloudInitTemplate?: string,
-  firewallProfile?: any
+  firewallProfile?: any,
+  sshKeys?: SSHKey[]
 ) {
   const logListeners = deploymentLogListeners.get(deployment.deployment_id) || [];
   const deploymentLogs: any[] = [];
@@ -289,12 +302,26 @@ async function runTerraformCreate(
         onLog({ level: 'info', message: 'No firewall profile selected, applying default SSH-only rules', source: 'system' });
       }
       
+      // Collect SSH key IDs from provider_key_ids for DigitalOcean
+      const sshKeyIds: string[] = [];
+      if (sshKeys && sshKeys.length > 0) {
+        for (const key of sshKeys) {
+          if (key.provider_key_ids.digitalocean) {
+            sshKeyIds.push(key.provider_key_ids.digitalocean);
+            onLog({ level: 'info', message: `SSH key "${key.name}" will be attached (DO ID: ${key.provider_key_ids.digitalocean})`, source: 'system' });
+          } else {
+            onLog({ level: 'warn', message: `SSH key "${key.name}" not synced to DigitalOcean - skipping`, source: 'system' });
+          }
+        }
+      }
+      
       vars = {
         do_token: credentials.api_token,
         name: machine.name,
         region: machine.region,
         size: machine.size,
         image: machine.image,
+        ssh_keys: sshKeyIds,
         tags: Object.entries(machine.tags).map(([k, v]) => `${k}:${v}`),
         user_data: cloudInitTemplate || '',
         firewall_enabled: firewallEnabled,

@@ -1,4 +1,5 @@
 import express from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -10,11 +11,14 @@ import { deploymentsRouter } from './routes/deployments';
 import { bootstrapRouter } from './routes/bootstrap';
 import { auditRouter } from './routes/audit';
 import { agentRouter } from './routes/agent';
+import { sshRouter } from './routes/ssh';
 import { errorHandler } from './middleware/errorHandler';
+import { setupTerminalWebSocket } from './services/terminal';
 
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
 const PORT = process.env.PORT || 3001;
 
 // Security middleware
@@ -46,6 +50,7 @@ app.use('/api/deployments', deploymentsRouter);
 app.use('/api/bootstrap', bootstrapRouter);
 app.use('/api/audit', auditRouter);
 app.use('/api/agent', agentRouter);
+app.use('/api/ssh', sshRouter);
 
 // Apply rate limiting to dangerous endpoints
 app.use('/api/machines/:id/destroy', dangerousActionsLimiter);
@@ -62,9 +67,13 @@ app.use((_, res) => {
   });
 });
 
-app.listen(PORT, () => {
+// Setup WebSocket for terminal
+setupTerminalWebSocket(server);
+
+server.listen(PORT, () => {
   console.log(`🚀 Machine API server running on http://localhost:${PORT}`);
   console.log(`📋 Health check: http://localhost:${PORT}/health`);
+  console.log(`🖥️  Terminal WebSocket: ws://localhost:${PORT}/ws/terminal`);
 });
 
 export default app;

@@ -5,7 +5,7 @@ import {
   Check, 
   X, 
   AlertCircle,
-  Loader2,
+  Sparkles,
   ChevronRight,
   Play,
   StopCircle
@@ -20,11 +20,11 @@ interface InspectorDeploymentsProps {
   deployments: Deployment[];
 }
 
-const stateConfig: Record<DeploymentState, { icon: typeof Check; class: string; label: string }> = {
+const stateConfig: Record<DeploymentState, { icon: typeof Check; class: string; label: string; shimmer?: boolean }> = {
   queued: { icon: Clock, class: 'text-text-tertiary', label: 'Queued' },
-  planning: { icon: Loader2, class: 'text-status-provisioning animate-spin', label: 'Planning' },
+  planning: { icon: Sparkles, class: 'text-status-provisioning', label: 'Planning', shimmer: true },
   awaiting_approval: { icon: AlertCircle, class: 'text-status-warning', label: 'Awaiting Approval' },
-  applying: { icon: Loader2, class: 'text-status-provisioning animate-spin', label: 'Applying' },
+  applying: { icon: Sparkles, class: 'text-status-provisioning', label: 'Applying', shimmer: true },
   succeeded: { icon: Check, class: 'text-status-running', label: 'Succeeded' },
   failed: { icon: X, class: 'text-status-error', label: 'Failed' },
   cancelled: { icon: StopCircle, class: 'text-text-tertiary', label: 'Cancelled' },
@@ -75,8 +75,13 @@ export function InspectorDeployments({ machineId, deployments }: InspectorDeploy
                   <span className="font-medium text-text-primary">
                     {typeLabels[deployment.type]}
                   </span>
-                  <span className={clsx('text-xs', state.class)}>
+                  <span className={clsx(
+                    'text-xs',
+                    state.class,
+                    state.shimmer && 'animate-shimmer'
+                  )}>
                     {state.label}
+                    {state.shimmer && <span className="animate-dots"><span>.</span><span>.</span><span>.</span></span>}
                   </span>
                 </div>
                 

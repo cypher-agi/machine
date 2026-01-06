@@ -11,7 +11,9 @@ import {
   Shield,
   Package,
   FileText,
-  Loader2
+  Loader2,
+  Key,
+  Fingerprint
 } from 'lucide-react';
 import clsx from 'clsx';
 import { 
@@ -19,22 +21,24 @@ import {
   getProviderOptions, 
   getBootstrapProfiles,
   getFirewallProfiles,
+  getSSHKeys,
   createMachine 
 } from '@/lib/api';
-import type { ProviderType, MachineCreateRequest } from '@machine/shared';
+import type { ProviderType, MachineCreateRequest, SSHKey } from '@machine/shared';
 import { useAppStore } from '@/store/appStore';
 
 interface DeployWizardProps {
   onClose: () => void;
 }
 
-type WizardStep = 'provider' | 'config' | 'firewall' | 'bootstrap' | 'review';
+type WizardStep = 'provider' | 'config' | 'firewall' | 'bootstrap' | 'access' | 'review';
 
 const steps: { id: WizardStep; label: string; icon: typeof Cloud }[] = [
   { id: 'provider', label: 'Provider', icon: Cloud },
   { id: 'config', label: 'Configuration', icon: Server },
   { id: 'firewall', label: 'Firewall', icon: Shield },
   { id: 'bootstrap', label: 'Bootstrap', icon: Package },
+  { id: 'access', label: 'Access', icon: Key },
   { id: 'review', label: 'Review', icon: FileText },
 ];
 
@@ -119,6 +123,17 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
     queryFn: getFirewallProfiles,
   });
 
+  const { data: sshKeys } = useQuery({
+    queryKey: ['ssh-keys'],
+    queryFn: getSSHKeys,
+  });
+
+  // Filter SSH keys that are synced to the selected provider
+  const availableSSHKeys = sshKeys?.filter(key => {
+    if (!selectedAccount) return false;
+    return key.provider_key_ids[selectedAccount.provider_type];
+  }) || [];
+
   const createMutation = useMutation({
     mutationFn: createMachine,
     onSuccess: (data) => {
@@ -146,10 +161,22 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
         return formData.firewall_profile_id !== undefined; // Must select (including 'none')
       case 'bootstrap':
         return formData.bootstrap_profile_id !== undefined; // Must select (including 'none')
+      case 'access':
+        return true; // Always can proceed - none is default
       case 'review':
         return true;
       default:
         return false;
+    }
+  };
+
+  // Toggle SSH key selection
+  const toggleSSHKey = (keyId: string) => {
+    const currentKeys = formData.ssh_key_ids || [];
+    if (currentKeys.includes(keyId)) {
+      setFormData({ ...formData, ssh_key_ids: currentKeys.filter(id => id !== keyId) });
+    } else {
+      setFormData({ ...formData, ssh_key_ids: [...currentKeys, keyId] });
     }
   };
 
@@ -176,6 +203,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
       ...formData as MachineCreateRequest,
       firewall_profile_id: formData.firewall_profile_id === 'none' ? undefined : formData.firewall_profile_id,
       bootstrap_profile_id: formData.bootstrap_profile_id === 'none' ? undefined : formData.bootstrap_profile_id,
+      ssh_key_ids: formData.ssh_key_ids && formData.ssh_key_ids.length > 0 ? formData.ssh_key_ids : undefined,
     };
     createMutation.mutate(submitData);
   };
@@ -290,6 +318,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g., grid-node-prod-01"
                   className="input"
+                  autoFocus
                 />
               </div>
 
@@ -475,6 +504,107 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
             </div>
           )}
 
+          {/* Access Step */}
+          {currentStep === 'access' && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-text-primary mb-1">SSH Access</h3>
+                <p className="text-sm text-text-secondary mb-4">
+                  Select SSH keys to grant root access to this machine. You can select multiple keys.
+                </p>
+              </div>
+              
+              <div className="grid gap-3">
+                {/* None option - shown when no keys selected */}
+                <div
+                  className={clsx(
+                    'card text-left transition-all',
+                    (!formData.ssh_key_ids || formData.ssh_key_ids.length === 0)
+                      ? 'border-neon-cyan bg-neon-cyan/5'
+                      : 'border-machine-border'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-machine-elevated flex items-center justify-center">
+                      <Key className="w-5 h-5 text-text-tertiary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-text-primary">None</p>
+                      <p className="text-sm text-text-secondary">No SSH key - use provider default or password auth</p>
+                    </div>
+                    {(!formData.ssh_key_ids || formData.ssh_key_ids.length === 0) && (
+                      <Check className="w-5 h-5 text-neon-cyan" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Available SSH keys */}
+                {availableSSHKeys.length > 0 ? (
+                  availableSSHKeys.map((key) => {
+                    const isSelected = formData.ssh_key_ids?.includes(key.ssh_key_id);
+                    return (
+                      <button
+                        key={key.ssh_key_id}
+                        onClick={() => toggleSSHKey(key.ssh_key_id)}
+                        className={clsx(
+                          'card text-left transition-all',
+                          isSelected
+                            ? 'border-neon-cyan bg-neon-cyan/5'
+                            : 'hover:border-machine-border-light'
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={clsx(
+                            'w-10 h-10 rounded-lg flex items-center justify-center',
+                            isSelected 
+                              ? 'bg-neon-cyan/20 border border-neon-cyan/30'
+                              : 'bg-machine-elevated'
+                          )}>
+                            <Key className={clsx(
+                              'w-5 h-5',
+                              isSelected ? 'text-neon-cyan' : 'text-text-tertiary'
+                            )} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-text-primary">{key.name}</p>
+                            <div className="flex items-center gap-2 text-sm text-text-secondary">
+                              <span className="font-mono text-xs">{key.key_type.toUpperCase()}</span>
+                              <span className="flex items-center gap-1 font-mono text-xs truncate">
+                                <Fingerprint className="w-3 h-3" />
+                                {key.fingerprint.slice(0, 20)}...
+                              </span>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <Check className="w-5 h-5 text-neon-cyan flex-shrink-0" />
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })
+                ) : (
+                  <div className="card bg-status-warning/5 border-status-warning/20">
+                    <p className="text-sm text-text-secondary">
+                      No SSH keys synced to {selectedAccount?.provider_type || 'this provider'}. 
+                      <br />
+                      <span className="text-text-tertiary">
+                        Go to Keys → sync a key to {selectedAccount?.provider_type} first.
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Info about SSH keys */}
+              <div className="mt-4 p-4 bg-machine-elevated/50 border border-machine-border rounded-lg">
+                <p className="text-xs text-text-tertiary">
+                  💡 SSH keys must be synced to the provider before they can be used. 
+                  You can manage and sync keys in the <span className="text-neon-cyan">Keys</span> section.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Review Step */}
           {currentStep === 'review' && (
             <div className="space-y-6">
@@ -520,6 +650,16 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                     {formData.bootstrap_profile_id === 'none'
                       ? 'None'
                       : bootstrapProfiles?.find(b => b.profile_id === formData.bootstrap_profile_id)?.name || '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-text-secondary">SSH Access</span>
+                  <span className="text-text-primary">
+                    {!formData.ssh_key_ids || formData.ssh_key_ids.length === 0
+                      ? 'None'
+                      : formData.ssh_key_ids.map(id => 
+                          sshKeys?.find(k => k.ssh_key_id === id)?.name
+                        ).filter(Boolean).join(', ') || '—'}
                   </span>
                 </div>
               </div>

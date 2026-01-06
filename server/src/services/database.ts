@@ -8,7 +8,8 @@ import {
   ProviderAccount,
   BootstrapProfile,
   FirewallProfile,
-  AuditEvent
+  AuditEvent,
+  SSHKey
 } from '@machine/shared';
 
 // Database file location
@@ -189,12 +190,34 @@ db.exec(`
     FOREIGN KEY (machine_id) REFERENCES machines(machine_id)
   );
 
+  -- SSH keys table
+  CREATE TABLE IF NOT EXISTS ssh_keys (
+    ssh_key_id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    fingerprint TEXT NOT NULL UNIQUE,
+    public_key TEXT NOT NULL,
+    key_type TEXT NOT NULL,
+    key_bits INTEGER NOT NULL,
+    comment TEXT,
+    provider_key_ids TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  -- SSH key private keys (encrypted separately)
+  CREATE TABLE IF NOT EXISTS ssh_key_secrets (
+    ssh_key_id TEXT PRIMARY KEY,
+    encrypted_private_key TEXT NOT NULL,
+    FOREIGN KEY (ssh_key_id) REFERENCES ssh_keys(ssh_key_id)
+  );
+
   -- Create indexes
   CREATE INDEX IF NOT EXISTS idx_machines_status ON machines(actual_status);
   CREATE INDEX IF NOT EXISTS idx_machines_provider ON machines(provider);
   CREATE INDEX IF NOT EXISTS idx_deployments_machine ON deployments(machine_id);
   CREATE INDEX IF NOT EXISTS idx_deployments_state ON deployments(state);
   CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_events(timestamp);
+  CREATE INDEX IF NOT EXISTS idx_ssh_keys_fingerprint ON ssh_keys(fingerprint);
 `);
 
 // Add last_health_check column if it doesn't exist
@@ -209,6 +232,32 @@ try {
   db.exec('ALTER TABLE machines ADD COLUMN firewall_profile_id TEXT');
 } catch (e) {
   // Column already exists, ignore
+}
+
+// Create SSH tables if they don't exist (for existing databases)
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ssh_keys (
+      ssh_key_id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      fingerprint TEXT NOT NULL UNIQUE,
+      public_key TEXT NOT NULL,
+      key_type TEXT NOT NULL,
+      key_bits INTEGER NOT NULL,
+      comment TEXT,
+      provider_key_ids TEXT NOT NULL DEFAULT '{}',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS ssh_key_secrets (
+      ssh_key_id TEXT PRIMARY KEY,
+      encrypted_private_key TEXT NOT NULL,
+      FOREIGN KEY (ssh_key_id) REFERENCES ssh_keys(ssh_key_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_ssh_keys_fingerprint ON ssh_keys(fingerprint);
+  `);
+} catch (e) {
+  // Tables already exist, ignore
 }
 
 // Prepared statements for better performance
@@ -286,7 +335,7 @@ const statements = {
   deleteCredentials: db.prepare('DELETE FROM credentials WHERE provider_account_id = ?'),
 
   // Bootstrap profiles
-  getBootstrapProfiles: db.prepare('SELECT * FROM bootstrap_profiles ORDER BY is_system_profile DESC, created_at DESC'),
+  getBootstrapProfiles: db.prepare('SELECT * FROM bootstrap_profiles ORDER BY is_system_profile DESC, created_at ASC'),
   getBootstrapProfile: db.prepare('SELECT * FROM bootstrap_profiles WHERE profile_id = ?'),
   insertBootstrapProfile: db.prepare(`
     INSERT INTO bootstrap_profiles (profile_id, name, description, method, cloud_init_template,
@@ -306,7 +355,7 @@ const statements = {
   deleteBootstrapProfile: db.prepare('DELETE FROM bootstrap_profiles WHERE profile_id = ?'),
 
   // Firewall profiles
-  getFirewallProfiles: db.prepare('SELECT * FROM firewall_profiles ORDER BY created_at DESC'),
+  getFirewallProfiles: db.prepare('SELECT * FROM firewall_profiles ORDER BY created_at ASC'),
   getFirewallProfile: db.prepare('SELECT * FROM firewall_profiles WHERE profile_id = ?'),
   insertFirewallProfile: db.prepare(`
     INSERT INTO firewall_profiles (profile_id, name, description, rules, created_at, updated_at)
@@ -321,6 +370,26 @@ const statements = {
     VALUES (@event_id, @action, @outcome, @actor_id, @actor_type, @actor_name,
       @target_type, @target_id, @target_name, @timestamp, @details)
   `),
+
+  // SSH Keys
+  getSSHKeys: db.prepare('SELECT * FROM ssh_keys ORDER BY created_at DESC'),
+  getSSHKey: db.prepare('SELECT * FROM ssh_keys WHERE ssh_key_id = ?'),
+  getSSHKeyByFingerprint: db.prepare('SELECT * FROM ssh_keys WHERE fingerprint = ?'),
+  insertSSHKey: db.prepare(`
+    INSERT INTO ssh_keys (ssh_key_id, name, fingerprint, public_key, key_type, key_bits, comment, provider_key_ids, created_at, updated_at)
+    VALUES (@ssh_key_id, @name, @fingerprint, @public_key, @key_type, @key_bits, @comment, @provider_key_ids, @created_at, @updated_at)
+  `),
+  updateSSHKey: db.prepare(`
+    UPDATE ssh_keys SET
+      name = @name, provider_key_ids = @provider_key_ids, updated_at = @updated_at
+    WHERE ssh_key_id = @ssh_key_id
+  `),
+  deleteSSHKey: db.prepare('DELETE FROM ssh_keys WHERE ssh_key_id = ?'),
+
+  // SSH Key Secrets (encrypted private keys)
+  getSSHKeySecret: db.prepare('SELECT encrypted_private_key FROM ssh_key_secrets WHERE ssh_key_id = ?'),
+  insertSSHKeySecret: db.prepare('INSERT OR REPLACE INTO ssh_key_secrets (ssh_key_id, encrypted_private_key) VALUES (?, ?)'),
+  deleteSSHKeySecret: db.prepare('DELETE FROM ssh_key_secrets WHERE ssh_key_id = ?'),
 };
 
 // Helper to parse JSON fields from DB rows
@@ -361,6 +430,13 @@ function parseAuditEvent(row: any): AuditEvent {
   return {
     ...row,
     details: row.details ? JSON.parse(row.details) : undefined,
+  };
+}
+
+function parseSSHKey(row: any): SSHKey {
+  return {
+    ...row,
+    provider_key_ids: JSON.parse(row.provider_key_ids || '{}'),
   };
 }
 
@@ -575,6 +651,59 @@ export const database = {
     });
   },
 
+  // SSH Keys
+  getSSHKeys(): SSHKey[] {
+    return statements.getSSHKeys.all().map(parseSSHKey);
+  },
+  getSSHKey(id: string): SSHKey | undefined {
+    const row = statements.getSSHKey.get(id);
+    return row ? parseSSHKey(row) : undefined;
+  },
+  getSSHKeyByFingerprint(fingerprint: string): SSHKey | undefined {
+    const row = statements.getSSHKeyByFingerprint.get(fingerprint);
+    return row ? parseSSHKey(row) : undefined;
+  },
+  insertSSHKey(key: SSHKey): void {
+    statements.insertSSHKey.run({
+      ...key,
+      comment: key.comment || null,
+      provider_key_ids: JSON.stringify(key.provider_key_ids || {}),
+    });
+  },
+  updateSSHKey(key: Partial<SSHKey> & { ssh_key_id: string }): void {
+    const existing = this.getSSHKey(key.ssh_key_id);
+    if (!existing) return;
+    statements.updateSSHKey.run({
+      ssh_key_id: key.ssh_key_id,
+      name: key.name || existing.name,
+      provider_key_ids: JSON.stringify(key.provider_key_ids || existing.provider_key_ids || {}),
+      updated_at: new Date().toISOString(),
+    });
+  },
+  deleteSSHKey(id: string): void {
+    statements.deleteSSHKeySecret.run(id);
+    statements.deleteSSHKey.run(id);
+  },
+
+  // SSH Key Secrets (encrypted private keys)
+  getSSHKeyPrivateKey(keyId: string): string | undefined {
+    const row = statements.getSSHKeySecret.get(keyId) as { encrypted_private_key: string } | undefined;
+    if (!row) return undefined;
+    try {
+      return decrypt(row.encrypted_private_key);
+    } catch (error) {
+      console.error(`Failed to decrypt private key for ${keyId}:`, error);
+      return undefined;
+    }
+  },
+  storeSSHKeyPrivateKey(keyId: string, privateKey: string): void {
+    const encrypted = encrypt(privateKey);
+    statements.insertSSHKeySecret.run(keyId, encrypted);
+  },
+  deleteSSHKeyPrivateKey(keyId: string): void {
+    statements.deleteSSHKeySecret.run(keyId);
+  },
+
   // Close database
   close(): void {
     db.close();
@@ -595,7 +724,7 @@ function seedDefaults() {
   database.insertBootstrapProfile({
       profile_id: 'bp_the_grid',
       name: 'The Grid',
-      description: 'Cypher AGI Grid node - installs Rust, Cargo, and the-grid from GitHub',
+      description: 'Cypher AGI Grid node - installs Rust via rustup and builds the-grid from GitHub',
       method: 'cloud_init',
       cloud_init_template: `#cloud-config
 package_update: true
@@ -606,7 +735,6 @@ packages:
   - pkg-config
   - libssl-dev
   - libclang-dev
-  - cmake
   - git
   - curl
 
@@ -720,21 +848,17 @@ write_files:
       
       echo "=== $(date) - Starting Grid Setup ==="
       
-      # Install Rust
-      echo "=== Installing Rust and Cargo ==="
+      # Install Rust using rustup (downloads pre-built binaries)
+      echo "=== Installing Rust via rustup ==="
       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
       
       # Source cargo environment
-      export CARGO_HOME="$HOME/.cargo"
-      export RUSTUP_HOME="$HOME/.rustup"
-      export PATH="$CARGO_HOME/bin:$PATH"
       source "$HOME/.cargo/env"
       
-      # Verify cargo is installed
-      echo "=== Verifying Cargo installation ==="
-      which cargo
-      cargo --version
+      # Verify installation
+      echo "=== Verifying Rust installation ==="
       rustc --version
+      cargo --version
       
       # Clone the repository
       echo "=== Cloning the-grid repository ==="
@@ -747,12 +871,8 @@ write_files:
         cd /home/grid/the-grid
       fi
       
-      # Fetch all dependencies first
-      echo "=== Fetching Cargo dependencies ==="
-      cargo fetch
-      
       # Build in release mode
-      echo "=== Building the-grid (release mode) ==="
+      echo "=== Building the-grid ==="
       cargo build --release
       
       # Verify binary exists

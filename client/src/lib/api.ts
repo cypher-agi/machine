@@ -16,6 +16,10 @@ import type {
   AuditEvent,
   AuditEventListFilter,
   ProviderType,
+  SSHKey,
+  SSHKeyCreateRequest,
+  SSHKeyImportRequest,
+  SSHKeyGenerateResponse,
 } from '@machine/shared';
 
 const API_BASE = '/api';
@@ -310,6 +314,59 @@ export async function getAuditEvents(params?: AuditListParams): Promise<AuditEve
   }
   const query = searchParams.toString();
   return fetchApi<AuditEvent[]>(`/audit/events${query ? `?${query}` : ''}`);
+}
+
+// ============ SSH Keys API ============
+
+export async function getSSHKeys(): Promise<SSHKey[]> {
+  return fetchApi<SSHKey[]>('/ssh/keys');
+}
+
+export async function getSSHKey(id: string): Promise<SSHKey> {
+  return fetchApi<SSHKey>(`/ssh/keys/${id}`);
+}
+
+export async function generateSSHKey(data: SSHKeyCreateRequest): Promise<SSHKeyGenerateResponse> {
+  return fetchApi<SSHKeyGenerateResponse>('/ssh/keys/generate', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function importSSHKey(data: SSHKeyImportRequest): Promise<SSHKey> {
+  return fetchApi<SSHKey>('/ssh/keys/import', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getSSHKeyPrivate(id: string): Promise<{ private_key: string }> {
+  return fetchApi<{ private_key: string }>(`/ssh/keys/${id}/private`);
+}
+
+export async function syncSSHKeyToProvider(keyId: string, providerAccountId: string): Promise<SSHKey> {
+  return fetchApi<SSHKey>(`/ssh/keys/${keyId}/sync/${providerAccountId}`, {
+    method: 'POST',
+  });
+}
+
+export async function unsyncSSHKeyFromProvider(keyId: string, providerType: string): Promise<SSHKey> {
+  return fetchApi<SSHKey>(`/ssh/keys/${keyId}/sync/${providerType}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function updateSSHKey(id: string, data: { name: string }): Promise<SSHKey> {
+  return fetchApi<SSHKey>(`/ssh/keys/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteSSHKey(id: string): Promise<{ deleted: boolean }> {
+  return fetchApi<{ deleted: boolean }>(`/ssh/keys/${id}`, {
+    method: 'DELETE',
+  });
 }
 
 

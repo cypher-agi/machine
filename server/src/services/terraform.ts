@@ -67,16 +67,35 @@ export class TerraformService {
     return new Promise((resolve) => {
       const proc = spawn(command, args, {
         cwd: this.workspaceDir,
-        env: { ...process.env, ...env },
+        env: { 
+          ...process.env, 
+          ...env,
+          // Disable output buffering for terraform
+          TF_LOG_CORE: '',
+          TF_LOG_PROVIDER: '',
+          PYTHONUNBUFFERED: '1',
+        },
         shell: true,
+        // Force line-buffered output on Windows
+        stdio: ['pipe', 'pipe', 'pipe'],
       });
 
       let stdout = '';
       let stderr = '';
+      let lastLogTime = Date.now();
+
+      // Heartbeat timer to show progress during long operations
+      const heartbeatInterval = setInterval(() => {
+        const elapsed = Math.round((Date.now() - lastLogTime) / 1000);
+        if (elapsed >= 10) {
+          this.log('info', `⏳ Operation in progress... (${elapsed}s since last update)`, 'system');
+        }
+      }, 5000);
 
       proc.stdout.on('data', (data) => {
         const text = data.toString();
         stdout += text;
+        lastLogTime = Date.now();
         // Parse terraform output for logging
         text.split('\n').filter(Boolean).forEach((line: string) => {
           if (line.includes('Error')) {
@@ -92,16 +111,19 @@ export class TerraformService {
       proc.stderr.on('data', (data) => {
         const text = data.toString();
         stderr += text;
+        lastLogTime = Date.now();
         text.split('\n').filter(Boolean).forEach((line: string) => {
           this.log('error', line, 'terraform');
         });
       });
 
       proc.on('close', (code) => {
+        clearInterval(heartbeatInterval);
         resolve({ code: code || 0, stdout, stderr });
       });
 
       proc.on('error', (err) => {
+        clearInterval(heartbeatInterval);
         this.log('error', `Process error: ${err.message}`, 'system');
         resolve({ code: 1, stdout, stderr: err.message });
       });
@@ -172,6 +194,7 @@ export class TerraformService {
     }
 
     this.log('info', 'Applying Terraform changes...', 'system');
+    this.log('info', '⏳ This may take 30-90 seconds for cloud resources to provision...', 'system');
     
     const args = ['apply', '-no-color', '-auto-approve'];
     if (planFile) {

@@ -5,7 +5,8 @@ import {
   GitBranch, 
   Package, 
   Settings,
-  Terminal
+  Terminal,
+  Key
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -18,6 +19,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { to: '/machines', icon: Server, label: 'Machines' },
   { to: '/providers', icon: Cloud, label: 'Providers' },
+  { to: '/keys', icon: Key, label: 'Keys' },
   { to: '/deployments', icon: GitBranch, label: 'Deployments' },
   { to: '/bootstrap', icon: Package, label: 'Bootstrap' },
   { to: '/settings', icon: Settings, label: 'Settings' },
