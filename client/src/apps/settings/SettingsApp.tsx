@@ -13,11 +13,11 @@ import {
 import clsx from 'clsx';
 import { useAppStore } from '@/store/appStore';
 import { Button, Input, Select } from '@/shared/ui';
-import styles from './SettingsPage.module.css';
+import styles from './SettingsApp.module.css';
 
 type SettingsTab = 'general' | 'security' | 'notifications' | 'terraform';
 
-function SettingsPage() {
+function SettingsApp() {
   const { addToast } = useAppStore();
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
 
@@ -248,4 +248,5 @@ function SettingsPage() {
   );
 }
 
-export default SettingsPage;
+export default SettingsApp;
+

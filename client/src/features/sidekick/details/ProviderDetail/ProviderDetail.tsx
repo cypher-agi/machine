@@ -5,6 +5,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { getProviderAccounts, verifyProviderAccount, deleteProviderAccount, getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Badge, Button, Modal } from '@/shared/ui';
+import { PROVIDER_LABELS, PROVIDER_FULL_LABELS } from '@/shared/constants';
 import type { CredentialStatus, ProviderAccount } from '@machina/shared';
 import {
   SidekickHeader,
@@ -24,22 +25,6 @@ interface ProviderDetailProps {
   onClose: () => void;
   onMinimize?: () => void;
 }
-
-const providerLabels: Record<string, string> = {
-  digitalocean: 'DO',
-  aws: 'AWS',
-  gcp: 'GCP',
-  hetzner: 'HZ',
-  baremetal: 'BM',
-};
-
-const providerFullLabels: Record<string, string> = {
-  digitalocean: 'DigitalOcean',
-  aws: 'Amazon Web Services',
-  gcp: 'Google Cloud Platform',
-  hetzner: 'Hetzner Cloud',
-  baremetal: 'Bare Metal',
-};
 
 const credentialStatusConfig: Record<CredentialStatus, { label: string; variant: 'running' | 'stopped' | 'error' | 'pending' }> = {
   valid: { label: 'Valid', variant: 'running' },
@@ -124,10 +109,10 @@ export function ProviderDetail({ providerId, onClose, onMinimize }: ProviderDeta
   return (
     <>
       <SidekickHeader
-        iconText={providerLabels[account.provider_type] || '??'}
+        iconText={PROVIDER_LABELS[account.provider_type] || '??'}
         name={account.label}
         nameSans
-        subtitle={providerFullLabels[account.provider_type] || account.provider_type}
+        subtitle={PROVIDER_FULL_LABELS[account.provider_type] || account.provider_type}
         statusBadge={<Badge variant={status.variant}>{status.label}</Badge>}
         onClose={onClose}
         onMinimize={onMinimize}
@@ -247,7 +232,7 @@ function ProviderOverview({ account, machineCount }: { account: ProviderAccount;
       <SidekickSection title="Information">
         <SidekickRow 
           label="Provider Type" 
-          value={providerFullLabels[account.provider_type] || account.provider_type}
+          value={PROVIDER_FULL_LABELS[account.provider_type] || account.provider_type}
         />
         <SidekickRow 
           label="Created" 
@@ -318,4 +303,3 @@ function ProviderDetails({ account }: { account: ProviderAccount }) {
     </SidekickPanel>
   );
 }
-

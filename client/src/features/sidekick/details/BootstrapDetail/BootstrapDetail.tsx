@@ -1,22 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Package, 
-  Cloud, 
-  Terminal, 
-  Play,
-  Lock,
-  Trash2,
-  Edit,
-  Clock,
-  Tag,
-  Server
-} from 'lucide-react';
+import { Package, Lock, Trash2, Edit, Clock, Tag, Server } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { getBootstrapProfiles, deleteBootstrapProfile, getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Badge, Button } from '@/shared/ui';
-import type { BootstrapMethod, BootstrapProfile } from '@machina/shared';
+import { BOOTSTRAP_METHOD_ICONS, BOOTSTRAP_METHOD_LABELS } from '@/shared/constants';
+import type { BootstrapProfile } from '@machina/shared';
 import {
   SidekickHeader,
   SidekickTabs,
@@ -38,18 +28,6 @@ interface BootstrapDetailProps {
   onClose: () => void;
   onMinimize?: () => void;
 }
-
-const methodIcons: Record<BootstrapMethod, typeof Cloud> = {
-  cloud_init: Cloud,
-  ssh_script: Terminal,
-  ansible: Play,
-};
-
-const methodLabels: Record<BootstrapMethod, string> = {
-  cloud_init: 'Cloud-Init',
-  ssh_script: 'SSH Script',
-  ansible: 'Ansible',
-};
 
 type TabId = 'overview' | 'template' | 'machines' | 'details';
 
@@ -97,7 +75,7 @@ export function BootstrapDetail({ profileId, onClose, onMinimize }: BootstrapDet
     return <SidekickLoading message="Profile not found" />;
   }
 
-  const MethodIcon = methodIcons[profile.method];
+  const MethodIcon = BOOTSTRAP_METHOD_ICONS[profile.method];
   const profileMachines = machines?.filter((m) => m.bootstrap_profile_id === profileId) || [];
 
   const handleDelete = () => {
@@ -176,7 +154,7 @@ function BootstrapOverview({ profile, machineCount }: { profile: BootstrapProfil
       <SidekickSection title="Configuration">
         <SidekickRow 
           label="Method" 
-          value={methodLabels[profile.method]}
+          value={BOOTSTRAP_METHOD_LABELS[profile.method]}
         />
         <SidekickRow 
           label="System Profile" 
@@ -328,4 +306,3 @@ function BootstrapDetails({ profile }: { profile: BootstrapProfile }) {
     </SidekickPanel>
   );
 }
-

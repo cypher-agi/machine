@@ -1,22 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Check, 
-  X, 
-  Clock, 
-  Loader2, 
-  AlertCircle, 
-  StopCircle,
-  Server,
-  User,
-  FileText,
-  Terminal
-} from 'lucide-react';
+import { Server, User, FileText, Terminal } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { getDeployments, getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Badge } from '@/shared/ui';
-import type { DeploymentState, DeploymentType, Deployment } from '@machina/shared';
+import { DEPLOYMENT_STATE_BADGE_CONFIG, DEPLOYMENT_TYPE_FULL_LABELS } from '@/shared/constants';
+import type { Deployment } from '@machina/shared';
 import {
   SidekickHeader,
   SidekickTabs,
@@ -36,25 +26,6 @@ interface DeploymentDetailProps {
   onClose: () => void;
   onMinimize?: () => void;
 }
-
-const stateConfig: Record<DeploymentState, { icon: typeof Check; label: string; variant: 'running' | 'stopped' | 'provisioning' | 'pending' | 'error' }> = {
-  queued: { icon: Clock, label: 'Queued', variant: 'pending' },
-  planning: { icon: Loader2, label: 'Planning', variant: 'provisioning' },
-  awaiting_approval: { icon: AlertCircle, label: 'Awaiting Approval', variant: 'pending' },
-  applying: { icon: Loader2, label: 'Applying', variant: 'provisioning' },
-  succeeded: { icon: Check, label: 'Succeeded', variant: 'running' },
-  failed: { icon: X, label: 'Failed', variant: 'error' },
-  cancelled: { icon: StopCircle, label: 'Cancelled', variant: 'stopped' },
-};
-
-const typeLabels: Record<DeploymentType, string> = {
-  create: 'Create Machine',
-  update: 'Update Machine',
-  destroy: 'Destroy Machine',
-  reboot: 'Reboot Machine',
-  restart_service: 'Restart Service',
-  refresh: 'Refresh State',
-};
 
 type TabId = 'overview' | 'plan' | 'logs' | 'details';
 
@@ -90,7 +61,7 @@ export function DeploymentDetail({ deploymentId, onClose, onMinimize }: Deployme
     return <SidekickLoading message="Deployment not found" />;
   }
 
-  const state = stateConfig[deployment.state];
+  const state = DEPLOYMENT_STATE_BADGE_CONFIG[deployment.state];
   const StateIcon = state.icon;
   const machine = machines?.find((m) => m.machine_id === deployment.machine_id);
   const isInProgress = deployment.state === 'planning' || deployment.state === 'applying';
@@ -99,7 +70,7 @@ export function DeploymentDetail({ deploymentId, onClose, onMinimize }: Deployme
     <>
       <SidekickHeader
         icon={<StateIcon size={18} className={isInProgress ? 'animate-spin' : ''} />}
-        name={typeLabels[deployment.type]}
+        name={DEPLOYMENT_TYPE_FULL_LABELS[deployment.type]}
         nameSans
         subtitle={machine?.name || deployment.machine_id?.substring(0, 12) || 'Unknown Machine'}
         statusBadge={<Badge variant={state.variant}>{state.label}</Badge>}
@@ -148,7 +119,7 @@ function DeploymentOverview({
   machine?: any;
   onMachineClick: () => void;
 }) {
-  const state = stateConfig[deployment.state];
+  const state = DEPLOYMENT_STATE_BADGE_CONFIG[deployment.state];
 
   return (
     <SidekickPanel>
@@ -159,12 +130,11 @@ function DeploymentOverview({
         />
         <SidekickRow 
           label="Type" 
-          value={typeLabels[deployment.type]}
+          value={DEPLOYMENT_TYPE_FULL_LABELS[deployment.type]}
         />
         <SidekickRow 
           label="Started" 
           value={formatDistanceToNow(new Date(deployment.created_at), { addSuffix: true })}
-          icon={<Clock size={12} />}
         />
         {deployment.completed_at && (
           <SidekickRow 
@@ -338,4 +308,3 @@ function DeploymentDetails({ deployment }: { deployment: Deployment }) {
     </SidekickPanel>
   );
 }
-

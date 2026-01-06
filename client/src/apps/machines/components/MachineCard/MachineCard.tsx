@@ -11,37 +11,19 @@ import {
   Copy
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import type { Machine, MachineStatus } from '@machina/shared';
+import type { Machine } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { rebootMachine, destroyMachine } from '@/lib/api';
 import { Badge, Button } from '@/shared/ui';
 import { ItemCard, ItemCardMeta, ItemCardCode } from '@/shared/components';
+import { PROVIDER_LABELS, MACHINE_STATUS_CONFIG } from '@/shared/constants';
+import { copyToClipboard } from '@/shared/lib';
 import styles from './MachineCard.module.css';
 
 interface MachineCardProps {
   machine: Machine;
 }
-
-const statusConfig: Record<MachineStatus, { label: string; variant: 'running' | 'stopped' | 'provisioning' | 'pending' | 'error'; pulse?: boolean }> = {
-  running: { label: 'Running', variant: 'running', pulse: true },
-  stopped: { label: 'Stopped', variant: 'stopped' },
-  provisioning: { label: 'Provisioning', variant: 'provisioning', pulse: true },
-  pending: { label: 'Pending', variant: 'pending', pulse: true },
-  stopping: { label: 'Stopping', variant: 'pending', pulse: true },
-  rebooting: { label: 'Rebooting', variant: 'provisioning', pulse: true },
-  terminating: { label: 'Terminating', variant: 'error', pulse: true },
-  terminated: { label: 'Terminated', variant: 'stopped' },
-  error: { label: 'Error', variant: 'error' },
-};
-
-const providerLabels: Record<string, string> = {
-  digitalocean: 'DO',
-  aws: 'AWS',
-  gcp: 'GCP',
-  hetzner: 'HZ',
-  baremetal: 'BM',
-};
 
 export function MachineCard({ machine }: MachineCardProps) {
   const { sidekickSelection, setSidekickSelection, addToast } = useAppStore();
@@ -50,7 +32,7 @@ export function MachineCard({ machine }: MachineCardProps) {
   const queryClient = useQueryClient();
 
   const isSelected = sidekickSelection?.type === 'machine' && sidekickSelection?.id === machine.machine_id;
-  const status = statusConfig[machine.actual_status] || statusConfig.error;
+  const status = MACHINE_STATUS_CONFIG[machine.actual_status] || MACHINE_STATUS_CONFIG.error;
 
   const rebootMutation = useMutation({
     mutationFn: () => rebootMachine(machine.machine_id),
@@ -84,9 +66,9 @@ export function MachineCard({ machine }: MachineCardProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const copyIp = () => {
+  const copyIp = async () => {
     if (machine.public_ip) {
-      navigator.clipboard.writeText(machine.public_ip);
+      await copyToClipboard(machine.public_ip);
       addToast({ type: 'info', title: 'Copied', message: 'IP address copied' });
     }
   };
@@ -99,7 +81,7 @@ export function MachineCard({ machine }: MachineCardProps) {
     <ItemCard
       selected={isSelected}
       onClick={handleSelect}
-      iconBadge={providerLabels[machine.provider] || '??'}
+      iconBadge={PROVIDER_LABELS[machine.provider] || '??'}
       title={machine.name}
       statusBadge={
         <Badge variant={status.variant} pulse={status.pulse}>

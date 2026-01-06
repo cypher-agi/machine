@@ -25,6 +25,21 @@ import type {
 
 const API_BASE = '/api';
 
+/**
+ * Build query string from params object, filtering out empty values
+ */
+function buildQueryString<T extends object>(params?: T): string {
+  if (!params) return '';
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      searchParams.set(key, String(value));
+    }
+  });
+  const query = searchParams.toString();
+  return query ? `?${query}` : '';
+}
+
 async function fetchApi<T>(
   endpoint: string,
   options?: RequestInit
@@ -56,16 +71,7 @@ export interface MachineListParams extends MachineListFilter {
 }
 
 export async function getMachines(params?: MachineListParams): Promise<Machine[]> {
-  const searchParams = new URLSearchParams();
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        searchParams.set(key, String(value));
-      }
-    });
-  }
-  const query = searchParams.toString();
-  return fetchApi<Machine[]>(`/machines${query ? `?${query}` : ''}`);
+  return fetchApi<Machine[]>(`/machines${buildQueryString(params)}`);
 }
 
 export async function getMachine(id: string): Promise<Machine> {
@@ -202,16 +208,7 @@ export interface DeploymentListParams extends DeploymentListFilter {
 }
 
 export async function getDeployments(params?: DeploymentListParams): Promise<Deployment[]> {
-  const searchParams = new URLSearchParams();
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        searchParams.set(key, String(value));
-      }
-    });
-  }
-  const query = searchParams.toString();
-  return fetchApi<Deployment[]>(`/deployments${query ? `?${query}` : ''}`);
+  return fetchApi<Deployment[]>(`/deployments${buildQueryString(params)}`);
 }
 
 export async function getDeployment(id: string): Promise<Deployment> {
@@ -329,16 +326,7 @@ export interface AuditListParams extends AuditEventListFilter {
 }
 
 export async function getAuditEvents(params?: AuditListParams): Promise<AuditEvent[]> {
-  const searchParams = new URLSearchParams();
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        searchParams.set(key, String(value));
-      }
-    });
-  }
-  const query = searchParams.toString();
-  return fetchApi<AuditEvent[]>(`/audit/events${query ? `?${query}` : ''}`);
+  return fetchApi<AuditEvent[]>(`/audit/events${buildQueryString(params)}`);
 }
 
 // ============ SSH Keys API ============

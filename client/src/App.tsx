@@ -4,12 +4,12 @@ import { AppLayout } from './app/layouts';
 import styles from './App.module.css';
 
 // Lazy-loaded route components for code-splitting
-const MachinesPage = lazy(() => import('./apps/machines/MachinesPage'));
-const ProvidersPage = lazy(() => import('./apps/providers/ProvidersPage'));
-const KeysPage = lazy(() => import('./apps/keys/KeysPage'));
-const DeploymentsPage = lazy(() => import('./apps/deployments/DeploymentsPage'));
-const BootstrapPage = lazy(() => import('./apps/bootstrap/BootstrapPage'));
-const SettingsPage = lazy(() => import('./apps/settings/SettingsPage'));
+const MachinesApp = lazy(() => import('./apps/machines/MachinesApp'));
+const ProvidersApp = lazy(() => import('./apps/providers/ProvidersApp'));
+const KeysApp = lazy(() => import('./apps/keys/KeysApp'));
+const DeploymentsApp = lazy(() => import('./apps/deployments/DeploymentsApp'));
+const BootstrapApp = lazy(() => import('./apps/bootstrap/BootstrapApp'));
+const SettingsApp = lazy(() => import('./apps/settings/SettingsApp'));
 
 function PageLoader() {
   return (
@@ -28,7 +28,7 @@ function App() {
           path="machines"
           element={
             <Suspense fallback={<PageLoader />}>
-              <MachinesPage />
+              <MachinesApp />
             </Suspense>
           }
         />
@@ -36,7 +36,7 @@ function App() {
           path="providers"
           element={
             <Suspense fallback={<PageLoader />}>
-              <ProvidersPage />
+              <ProvidersApp />
             </Suspense>
           }
         />
@@ -44,7 +44,7 @@ function App() {
           path="keys"
           element={
             <Suspense fallback={<PageLoader />}>
-              <KeysPage />
+              <KeysApp />
             </Suspense>
           }
         />
@@ -52,7 +52,7 @@ function App() {
           path="deployments"
           element={
             <Suspense fallback={<PageLoader />}>
-              <DeploymentsPage />
+              <DeploymentsApp />
             </Suspense>
           }
         />
@@ -60,7 +60,7 @@ function App() {
           path="bootstrap"
           element={
             <Suspense fallback={<PageLoader />}>
-              <BootstrapPage />
+              <BootstrapApp />
             </Suspense>
           }
         />
@@ -68,7 +68,7 @@ function App() {
           path="settings"
           element={
             <Suspense fallback={<PageLoader />}>
-              <SettingsPage />
+              <SettingsApp />
             </Suspense>
           }
         />

@@ -12,7 +12,8 @@ import {
 } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Badge, Button } from '@/shared/ui';
-import type { SSHKey, SSHKeyType } from '@machina/shared';
+import { KEY_TYPE_LABELS, PROVIDER_FULL_LABELS } from '@/shared/constants';
+import type { SSHKey } from '@machina/shared';
 import {
   SidekickHeader,
   SidekickTabs,
@@ -32,19 +33,6 @@ interface KeyDetailProps {
   onClose: () => void;
   onMinimize?: () => void;
 }
-
-const keyTypeLabels: Record<SSHKeyType, string> = {
-  ed25519: 'ED25519',
-  rsa: 'RSA',
-  ecdsa: 'ECDSA'
-};
-
-const providerLabels: Record<string, string> = {
-  digitalocean: 'DigitalOcean',
-  aws: 'AWS',
-  gcp: 'GCP',
-  hetzner: 'Hetzner',
-};
 
 type TabId = 'overview' | 'sync' | 'details';
 
@@ -133,7 +121,7 @@ export function KeyDetail({ keyId, onClose, onMinimize }: KeyDetailProps) {
         icon={<Key size={18} />}
         name={sshKey.name}
         nameSans
-        subtitle={`${keyTypeLabels[sshKey.key_type]} · ${sshKey.fingerprint.slice(0, 16)}...`}
+        subtitle={`${KEY_TYPE_LABELS[sshKey.key_type]} · ${sshKey.fingerprint.slice(0, 16)}...`}
         statusBadge={
           syncedProviders.length > 0 ? (
             <Badge variant="running">{syncedProviders.length} synced</Badge>
@@ -209,7 +197,7 @@ function KeyOverview({ sshKey, onCopy }: { sshKey: SSHKey; onCopy: (text: string
       <SidekickSection title="Key Information">
         <SidekickRow 
           label="Type" 
-          value={keyTypeLabels[sshKey.key_type]}
+          value={KEY_TYPE_LABELS[sshKey.key_type]}
         />
         <SidekickRow 
           label="Fingerprint" 
@@ -226,7 +214,7 @@ function KeyOverview({ sshKey, onCopy }: { sshKey: SSHKey; onCopy: (text: string
 
       {syncedProviders.length > 0 && (
         <SidekickSection title="Synced To" icon={<Cloud size={12} />}>
-          <SidekickTags tags={syncedProviders.map(p => providerLabels[p] || p)} />
+          <SidekickTags tags={syncedProviders.map(p => PROVIDER_FULL_LABELS[p] || p)} />
         </SidekickSection>
       )}
 
@@ -282,7 +270,7 @@ function KeySync({ sshKey, providerAccounts }: { sshKey: SSHKey; providerAccount
             <div key={providerType} className={styles.row}>
               <span className={styles.label}>
                 <Cloud size={12} />
-                {providerLabels[providerType] || providerType}
+                {PROVIDER_FULL_LABELS[providerType] || providerType}
               </span>
               <Button
                 variant="ghost"
@@ -352,12 +340,12 @@ function KeyDetails({ sshKey }: { sshKey: SSHKey }) {
 
       <SidekickSection title="Configuration">
         <SidekickRow label="Name" value={sshKey.name} />
-        <SidekickRow label="Key Type" value={keyTypeLabels[sshKey.key_type]} />
+        <SidekickRow label="Key Type" value={KEY_TYPE_LABELS[sshKey.key_type]} />
       </SidekickSection>
 
       <SidekickSection title="Provider Sync">
         {Object.entries(sshKey.provider_key_ids).map(([provider, id]) => (
-          <SidekickRow key={provider} label={providerLabels[provider] || provider} value={id as string} copyable />
+          <SidekickRow key={provider} label={PROVIDER_FULL_LABELS[provider] || provider} value={id as string} copyable />
         ))}
         {Object.keys(sshKey.provider_key_ids).length === 0 && (
           <SidekickRow label="Status" value="Not synced to any provider" />
@@ -371,4 +359,3 @@ function KeyDetails({ sshKey }: { sshKey: SSHKey }) {
     </SidekickPanel>
   );
 }
-

@@ -6,3 +6,5 @@ export { Badge } from './Badge';
 export { Modal } from './Modal';
 export { AnimatedTabs } from './AnimatedTabs';
 export type { AnimatedTabsProps, Tab } from './AnimatedTabs';
+export { RefreshButton } from './RefreshButton';
+export type { RefreshButtonProps } from './RefreshButton';
