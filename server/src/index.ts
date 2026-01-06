@@ -15,6 +15,7 @@ import { agentRouter } from './routes/agent';
 import { sshRouter } from './routes/ssh';
 import { errorHandler } from './middleware/errorHandler';
 import { setupTerminalWebSocket } from './services/terminal';
+import { getTerraformModulesDir, isTerraformAvailable } from './services/terraform';
 
 dotenv.config();
 
@@ -43,7 +44,19 @@ app.use(express.json());
 
 // Health check
 app.get('/health', (_, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const serverPkg = require('../package.json');
+  const modulesDir = getTerraformModulesDir();
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: serverPkg.version,
+    git_sha: process.env.GIT_SHA || null,
+    terraform: {
+      available: isTerraformAvailable(),
+      modules_dir: modulesDir,
+    }
+  });
 });
 
 // API routes

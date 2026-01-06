@@ -56,6 +56,10 @@ function resolveTerraformModulesDir(): string | null {
   return null;
 }
 
+export function getTerraformModulesDir(): string | null {
+  return resolveTerraformModulesDir();
+}
+
 type TerraformResolution =
   | { available: true; command: string; source: 'env' | 'path' | 'winget'; note?: string }
   | { available: false; command?: string; note?: string };
