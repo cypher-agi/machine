@@ -8,14 +8,12 @@ import {
   Download,
   Trash2,
   Cloud,
-  Check,
   Clock,
   Upload,
   Fingerprint,
   Shield
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import clsx from 'clsx';
 import { 
   getSSHKeys, 
   deleteSSHKey,
@@ -77,7 +75,7 @@ export function KeysPage() {
   const syncMutation = useMutation({
     mutationFn: ({ keyId, providerAccountId }: { keyId: string; providerAccountId: string }) => 
       syncSSHKeyToProvider(keyId, providerAccountId),
-    onSuccess: (_, { keyId }) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssh-keys'] });
       addToast({ type: 'success', title: 'Key synced to provider' });
       setSyncingKey(null);

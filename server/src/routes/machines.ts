@@ -259,7 +259,7 @@ async function runTerraformCreate(
     // Persist logs to database
     database.updateDeployment({
       deployment_id: deployment.deployment_id,
-      logs: deploymentLogs
+      logs: JSON.stringify(deploymentLogs)
     });
     
     // Send to connected listeners

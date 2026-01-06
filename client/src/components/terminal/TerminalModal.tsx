@@ -4,7 +4,7 @@ import { X, Terminal, Key, AlertTriangle, Maximize2, Minimize2 } from 'lucide-re
 import clsx from 'clsx';
 import { SSHTerminal } from './SSHTerminal';
 import { getSSHKeys } from '@/lib/api';
-import type { Machine, SSHKey } from '@machine/shared';
+import type { Machine } from '@machine/shared';
 
 interface TerminalModalProps {
   machine: Machine;
@@ -27,8 +27,6 @@ export function TerminalModal({ machine, onClose }: TerminalModalProps) {
     // Key must be synced to the machine's provider
     return key.provider_key_ids[machine.provider];
   }) || [];
-
-  const selectedKey = sshKeys?.find(k => k.ssh_key_id === selectedKeyId);
 
   const handleConnect = () => {
     if (selectedKeyId) {

@@ -6,7 +6,6 @@ import {
   ChevronRight, 
   Check,
   Cloud,
-  Globe,
   Server,
   Shield,
   Package,
@@ -24,7 +23,7 @@ import {
   getSSHKeys,
   createMachine 
 } from '@/lib/api';
-import type { ProviderType, MachineCreateRequest, SSHKey } from '@machine/shared';
+import type { MachineCreateRequest } from '@machine/shared';
 import { useAppStore } from '@/store/appStore';
 
 interface DeployWizardProps {

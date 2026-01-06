@@ -5,7 +5,6 @@ import {
   Tag,
   Cpu,
   HardDrive,
-  Network,
   Shield,
   Activity,
   Gauge,

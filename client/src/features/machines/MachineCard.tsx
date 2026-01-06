@@ -8,8 +8,7 @@ import {
   RotateCcw,
   RefreshCw,
   Trash2,
-  Copy,
-  ExternalLink
+  Copy
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';

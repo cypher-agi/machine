@@ -259,7 +259,7 @@ export function streamDeploymentLogs(
     eventSource.close();
   });
 
-  eventSource.onerror = (error) => {
+  eventSource.onerror = () => {
     onError(new Error('Connection lost'));
     eventSource.close();
   };

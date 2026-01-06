@@ -7,16 +7,14 @@ import {
   AlertCircle,
   Sparkles,
   ChevronRight,
-  Play,
   StopCircle
 } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import type { Deployment, DeploymentState, DeploymentType } from '@machine/shared';
 import { DeploymentLogsModal } from './DeploymentLogsModal';
 
 interface InspectorDeploymentsProps {
-  machineId: string;
   deployments: Deployment[];
 }
 
@@ -39,7 +37,7 @@ const typeLabels: Record<DeploymentType, string> = {
   refresh: 'Refresh',
 };
 
-export function InspectorDeployments({ machineId, deployments }: InspectorDeploymentsProps) {
+export function InspectorDeployments({ deployments }: InspectorDeploymentsProps) {
   const [selectedDeployment, setSelectedDeployment] = useState<Deployment | null>(null);
 
   if (deployments.length === 0) {

@@ -9,7 +9,6 @@ import clsx from 'clsx';
 import type { MachineNetworking, FirewallRule, Protocol } from '@machine/shared';
 
 interface InspectorNetworkingProps {
-  machineId: string;
   networking?: MachineNetworking;
 }
 
@@ -45,7 +44,7 @@ function FirewallRuleRow({ rule }: { rule: FirewallRule }) {
   );
 }
 
-export function InspectorNetworking({ machineId, networking }: InspectorNetworkingProps) {
+export function InspectorNetworking({ networking }: InspectorNetworkingProps) {
   if (!networking) {
     return (
       <div className="p-4">

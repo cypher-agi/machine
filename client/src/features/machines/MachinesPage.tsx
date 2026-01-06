@@ -6,7 +6,6 @@ import { useAppStore } from '@/store/appStore';
 import { MachineCard } from './MachineCard';
 import { DeployWizard } from './DeployWizard';
 import { MachineFilters } from './MachineFilters';
-import type { MachineStatus, ProviderType } from '@machine/shared';
 
 export function MachinesPage() {
   const { 

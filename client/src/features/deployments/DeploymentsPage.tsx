@@ -8,13 +8,12 @@ import {
   Sparkles,
   AlertCircle,
   StopCircle,
-  Filter,
   GitBranch
 } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import { getDeployments, getMachines } from '@/lib/api';
-import type { DeploymentState, DeploymentType, Deployment } from '@machine/shared';
+import type { DeploymentState, DeploymentType } from '@machine/shared';
 
 const stateConfig: Record<DeploymentState, { icon: typeof Check; class: string; bgClass: string; shimmer?: boolean }> = {
   queued: { icon: Clock, class: 'text-text-tertiary', bgClass: 'bg-machine-elevated' },

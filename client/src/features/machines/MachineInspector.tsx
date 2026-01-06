@@ -3,20 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { 
   X, 
   Server, 
-  Globe, 
-  Clock, 
-  Tag,
   GitBranch,
   Shield,
   Activity,
   FileText,
   Copy,
-  ExternalLink,
-  RefreshCw,
-  RotateCcw,
   Terminal
 } from 'lucide-react';
-import { formatDistanceToNow, format } from 'date-fns';
 import clsx from 'clsx';
 import { 
   getMachine, 
@@ -194,10 +187,10 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
           <InspectorOverview machine={machine} />
         )}
         {activeTab === 'deployments' && (
-          <InspectorDeployments machineId={machineId} deployments={deployments || []} />
+          <InspectorDeployments deployments={deployments || []} />
         )}
         {activeTab === 'networking' && (
-          <InspectorNetworking machineId={machineId} networking={networking} />
+          <InspectorNetworking networking={networking} />
         )}
         {activeTab === 'services' && (
           <InspectorServices machineId={machineId} services={services} />
