@@ -401,12 +401,29 @@ function parseMachine(row: any): Machine {
 }
 
 function parseDeployment(row: any): Deployment {
+  let logs: any = row.logs ? JSON.parse(row.logs) : undefined;
+  // Historical bug: logs were sometimes double-JSON-encoded, so JSON.parse(row.logs)
+  // produced a string that itself contains JSON. Try to unwrap once more.
+  if (typeof logs === 'string') {
+    try {
+      logs = JSON.parse(logs);
+    } catch {
+      // ignore
+    }
+  }
   return {
     ...row,
     plan_summary: row.plan_summary ? JSON.parse(row.plan_summary) : undefined,
     outputs: row.outputs ? JSON.parse(row.outputs) : undefined,
-    logs: row.logs ? JSON.parse(row.logs) : undefined,
+    logs,
   };
+}
+
+function serializeJsonField(value: any): string | null {
+  if (value === undefined || value === null) return null;
+  // If callers provide a JSON string, assume it's already serialized.
+  if (typeof value === 'string') return value;
+  return JSON.stringify(value);
 }
 
 function parseBootstrapProfile(row: any): BootstrapProfile {
@@ -536,7 +553,10 @@ export const database = {
       plan_summary: deployment.plan_summary ? JSON.stringify(deployment.plan_summary) : (existing.plan_summary ? JSON.stringify(existing.plan_summary) : null),
       outputs: deployment.outputs ? JSON.stringify(deployment.outputs) : (existing.outputs ? JSON.stringify(existing.outputs) : null),
       error_message: deployment.error_message || existing.error_message || null,
-      logs: (deployment as any).logs ? JSON.stringify((deployment as any).logs) : null,
+      // Preserve existing logs unless explicitly provided.
+      logs: (deployment as any).logs !== undefined
+        ? serializeJsonField((deployment as any).logs)
+        : serializeJsonField((existing as any).logs),
     });
   },
 

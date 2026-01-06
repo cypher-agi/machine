@@ -19,20 +19,101 @@ export type LogCallback = (log: { level: string; message: string; source: string
 const WORKSPACES_DIR = path.join(process.cwd(), '.terraform-workspaces');
 const MODULES_DIR = path.join(__dirname, '../terraform/modules');
 
-// Check if terraform is installed
-let TERRAFORM_AVAILABLE = false;
+type TerraformResolution =
+  | { available: true; command: string; source: 'env' | 'path' | 'winget'; note?: string }
+  | { available: false; command?: string; note?: string };
 
-try {
-  execSync('terraform --version', { stdio: 'ignore' });
-  TERRAFORM_AVAILABLE = true;
-  console.log('✓ Terraform detected');
-} catch {
+let TERRAFORM_RESOLUTION: TerraformResolution | null = null;
+
+function canExecuteTerraform(command: string): boolean {
+  try {
+    // Use execFile-style invocation where possible; on Windows a full path may include spaces.
+    execSync(`"${command}" --version`, { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function tryResolveTerraform(): TerraformResolution {
+  // 1) Explicit override
+  const envBin = process.env.TERRAFORM_BIN;
+  if (envBin && envBin.trim()) {
+    const cmd = envBin.trim();
+    if (fs.existsSync(cmd) && canExecuteTerraform(cmd)) {
+      return { available: true, command: cmd, source: 'env' };
+    }
+    return { available: false, command: cmd, note: 'TERRAFORM_BIN is set but not executable.' };
+  }
+
+  // 2) PATH
+  if (canExecuteTerraform('terraform')) {
+    return { available: true, command: 'terraform', source: 'path' };
+  }
+
+  // 3) WinGet portable install common locations (Windows only)
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA;
+    if (localAppData) {
+      const wingetPackagesDir = path.join(localAppData, 'Microsoft', 'WinGet', 'Packages');
+      try {
+        if (fs.existsSync(wingetPackagesDir)) {
+          const entries = fs.readdirSync(wingetPackagesDir, { withFileTypes: true });
+          const terraformDirs = entries
+            .filter((e) => e.isDirectory() && e.name.toLowerCase().startsWith('hashicorp.terraform_'))
+            .map((e) => path.join(wingetPackagesDir, e.name));
+
+          // Prefer the newest-looking directory by mtime (good enough heuristic)
+          terraformDirs.sort((a, b) => {
+            try {
+              return fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs;
+            } catch {
+              return 0;
+            }
+          });
+
+          for (const dir of terraformDirs) {
+            const exe = path.join(dir, 'terraform.exe');
+            if (fs.existsSync(exe) && canExecuteTerraform(exe)) {
+              return {
+                available: true,
+                command: exe,
+                source: 'winget',
+                note: 'Using WinGet-installed terraform.exe (not found on PATH).'
+              };
+            }
+          }
+        }
+      } catch {
+        // ignore resolution errors
+      }
+    }
+  }
+
+  return { available: false, note: 'Terraform not found (not on PATH and no auto-discovery match).' };
+}
+
+function ensureTerraform(): TerraformResolution {
+  if (TERRAFORM_RESOLUTION?.available) {
+    return TERRAFORM_RESOLUTION;
+  }
+  TERRAFORM_RESOLUTION = tryResolveTerraform();
+  return TERRAFORM_RESOLUTION;
+}
+
+// Eager log at startup, but still allow runtime resolution later (e.g. user installs terraform while server is running)
+const startupResolution = ensureTerraform();
+if (startupResolution.available) {
+  console.log(`✓ Terraform detected (${startupResolution.source})`);
+  if (startupResolution.note) console.log(`  ${startupResolution.note}`);
+} else {
   console.error('✗ Terraform not found in PATH. Deployments will fail.');
   console.error('  Install Terraform: https://developer.hashicorp.com/terraform/install');
+  console.error('  Or set TERRAFORM_BIN to the full path of terraform.exe');
 }
 
 export function isTerraformAvailable(): boolean {
-  return TERRAFORM_AVAILABLE;
+  return ensureTerraform().available;
 }
 
 // Ensure workspaces directory exists
@@ -75,8 +156,7 @@ export class TerraformService {
           TF_LOG_PROVIDER: '',
           PYTHONUNBUFFERED: '1',
         },
-        shell: true,
-        // Force line-buffered output on Windows
+        shell: false,
         stdio: ['pipe', 'pipe', 'pipe'],
       });
 
@@ -131,8 +211,9 @@ export class TerraformService {
   }
 
   async init(modulePath: string): Promise<boolean> {
-    if (!TERRAFORM_AVAILABLE) {
-      this.log('error', 'Terraform is not installed', 'system');
+    const resolution = ensureTerraform();
+    if (!resolution.available) {
+      this.log('error', resolution.note || 'Terraform is not installed', 'system');
       return false;
     }
 
@@ -156,13 +237,14 @@ export class TerraformService {
       }
     }
 
-    const result = await this.runCommand('terraform', ['init', '-no-color']);
+    const result = await this.runCommand(resolution.command, ['init', '-no-color']);
     return result.code === 0;
   }
 
   async plan(vars: TerraformVars): Promise<{ success: boolean; planFile?: string }> {
-    if (!TERRAFORM_AVAILABLE) {
-      this.log('error', 'Terraform is not installed', 'system');
+    const resolution = ensureTerraform();
+    if (!resolution.available) {
+      this.log('error', resolution.note || 'Terraform is not installed', 'system');
       return { success: false };
     }
 
@@ -173,7 +255,7 @@ export class TerraformService {
     fs.writeFileSync(varsFile, JSON.stringify(vars, null, 2));
 
     const planFile = path.join(this.workspaceDir, 'tfplan');
-    const result = await this.runCommand('terraform', [
+    const result = await this.runCommand(resolution.command, [
       'plan',
       '-no-color',
       '-input=false',
@@ -188,9 +270,10 @@ export class TerraformService {
   }
 
   async apply(planFile?: string): Promise<TerraformResult> {
-    if (!TERRAFORM_AVAILABLE) {
-      this.log('error', 'Terraform is not installed', 'system');
-      return { success: false, error: 'Terraform is not installed', logs: this.logs };
+    const resolution = ensureTerraform();
+    if (!resolution.available) {
+      this.log('error', resolution.note || 'Terraform is not installed', 'system');
+      return { success: false, error: resolution.note || 'Terraform is not installed', logs: this.logs };
     }
 
     this.log('info', 'Applying Terraform changes...', 'system');
@@ -207,7 +290,7 @@ export class TerraformService {
       }
     }
 
-    const result = await this.runCommand('terraform', args);
+    const result = await this.runCommand(resolution.command, args);
 
     if (result.code === 0) {
       // Get outputs
@@ -219,9 +302,10 @@ export class TerraformService {
   }
 
   async destroy(): Promise<TerraformResult> {
-    if (!TERRAFORM_AVAILABLE) {
-      this.log('error', 'Terraform is not installed', 'system');
-      return { success: false, error: 'Terraform is not installed', logs: this.logs };
+    const resolution = ensureTerraform();
+    if (!resolution.available) {
+      this.log('error', resolution.note || 'Terraform is not installed', 'system');
+      return { success: false, error: resolution.note || 'Terraform is not installed', logs: this.logs };
     }
 
     this.log('info', 'Destroying Terraform resources...', 'system');
@@ -232,7 +316,7 @@ export class TerraformService {
       args.push(`-var-file=${varsFile}`);
     }
 
-    const result = await this.runCommand('terraform', args);
+    const result = await this.runCommand(resolution.command, args);
 
     if (result.code === 0) {
       return { success: true, logs: this.logs };
@@ -242,7 +326,11 @@ export class TerraformService {
   }
 
   async getOutputs(): Promise<Record<string, any>> {
-    const result = await this.runCommand('terraform', ['output', '-json', '-no-color']);
+    const resolution = ensureTerraform();
+    if (!resolution.available) {
+      return {};
+    }
+    const result = await this.runCommand(resolution.command, ['output', '-json', '-no-color']);
     
     if (result.code === 0 && result.stdout) {
       try {
@@ -261,9 +349,8 @@ export class TerraformService {
   }
 
   async refresh(): Promise<boolean> {
-    if (!TERRAFORM_AVAILABLE) {
-      return false;
-    }
+    const resolution = ensureTerraform();
+    if (!resolution.available) return false;
 
     this.log('info', 'Refreshing Terraform state...', 'system');
     
@@ -273,7 +360,7 @@ export class TerraformService {
       args.push(`-var-file=${varsFile}`);
     }
 
-    const result = await this.runCommand('terraform', args);
+    const result = await this.runCommand(resolution.command, args);
     return result.code === 0;
   }
 

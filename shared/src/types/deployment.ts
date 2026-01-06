@@ -59,7 +59,7 @@ export interface Deployment {
   outputs?: Record<string, unknown>;
   
   // Logs (stored for review)
-  logs?: string;
+  logs?: DeploymentLog[];
 }
 
 export interface DeploymentLog {

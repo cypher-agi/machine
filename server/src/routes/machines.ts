@@ -249,6 +249,7 @@ async function runTerraformCreate(
   
   const onLog = (log: any) => {
     const logEntry = {
+      deployment_id: deployment.deployment_id,
       ...log,
       timestamp: new Date().toISOString()
     };
@@ -259,7 +260,8 @@ async function runTerraformCreate(
     // Persist logs to database
     database.updateDeployment({
       deployment_id: deployment.deployment_id,
-      logs: JSON.stringify(deploymentLogs)
+      // Store as an array; DB layer handles JSON serialization.
+      logs: deploymentLogs
     });
     
     // Send to connected listeners

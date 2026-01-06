@@ -95,6 +95,8 @@ deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
   }
 
   const stream = req.query.stream === 'true';
+  const rawLogs = (deployment as any).logs;
+  const logsArray: any[] = Array.isArray(rawLogs) ? rawLogs : [];
 
   if (stream) {
     // SSE streaming for live logs
@@ -106,8 +108,7 @@ deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
     let logIndex = 0;
 
     // Send existing logs if any
-    const logs = (deployment as any).logs || [];
-    logs.forEach((log: any) => {
+    logsArray.forEach((log: any) => {
       res.write(`id: ${logIndex++}\n`);
       res.write(`event: log\n`);
       res.write(`data: ${JSON.stringify(log)}\n\n`);
@@ -147,13 +148,11 @@ deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
     }
   } else {
     // Regular JSON response
-    const logs = (deployment as any).logs || [];
-
     const response: ApiResponse<DeploymentLog[]> = {
       success: true,
-      data: logs.map((log: any) => ({
+      data: logsArray.map((log: any) => ({
+        ...log,
         deployment_id: deployment.deployment_id,
-        ...log
       })) as DeploymentLog[]
     };
 
