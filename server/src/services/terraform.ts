@@ -17,7 +17,44 @@ export type LogCallback = (log: { level: string; message: string; source: string
 
 // Base directory for terraform workspaces
 const WORKSPACES_DIR = path.join(process.cwd(), '.terraform-workspaces');
-const MODULES_DIR = path.join(__dirname, '../terraform/modules');
+
+function resolveTerraformModulesDir(): string | null {
+  // Allow explicit override for unusual deployments
+  const envDir = process.env.TERRAFORM_MODULES_DIR;
+  if (envDir && envDir.trim() && fs.existsSync(envDir.trim())) {
+    return envDir.trim();
+  }
+
+  // Try a few common layouts:
+  // - dev (tsx): server/src/services -> server/src/terraform/modules
+  // - docker/prod: node server/dist/index.js, __dirname=server/dist/services -> server/src/terraform/modules
+  // - alternative: modules copied into dist (server/dist/terraform/modules)
+  const candidates = [
+    // When cwd is repo root (/app or C:\dev\machine)
+    path.join(process.cwd(), 'server', 'src', 'terraform', 'modules'),
+    // When cwd is server directory (/app/server)
+    path.join(process.cwd(), 'src', 'terraform', 'modules'),
+    // Relative to this file (dev)
+    path.join(__dirname, '..', 'terraform', 'modules'),
+    // Relative to this file (docker/prod)
+    path.join(__dirname, '..', '..', 'src', 'terraform', 'modules'),
+    // If we ever copy modules into dist
+    path.join(__dirname, '..', 'terraform', 'modules'),
+    path.join(__dirname, '..', '..', 'terraform', 'modules'),
+  ];
+
+  for (const dir of candidates) {
+    try {
+      if (fs.existsSync(dir) && fs.statSync(dir).isDirectory()) {
+        return dir;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return null;
+}
 
 type TerraformResolution =
   | { available: true; command: string; source: 'env' | 'path' | 'winget'; note?: string }
@@ -220,9 +257,16 @@ export class TerraformService {
     this.log('info', 'Initializing Terraform workspace...', 'system');
     
     // Copy module files to workspace
-    const moduleDir = path.join(MODULES_DIR, modulePath);
+    const modulesDir = resolveTerraformModulesDir();
+    if (!modulesDir) {
+      this.log('error', 'Terraform modules directory not found. Set TERRAFORM_MODULES_DIR or ensure server/src/terraform/modules exists in the deployment.', 'system');
+      return false;
+    }
+
+    const moduleDir = path.join(modulesDir, modulePath);
     if (!fs.existsSync(moduleDir)) {
       this.log('error', `Module not found: ${modulePath}`, 'system');
+      this.log('error', `Looked in: ${moduleDir}`, 'system');
       return false;
     }
 
