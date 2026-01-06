@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
 
 import { machinesRouter } from './routes/machines';
 import { providersRouter } from './routes/providers';
@@ -16,6 +17,8 @@ import { errorHandler } from './middleware/errorHandler';
 import { setupTerminalWebSocket } from './services/terminal';
 
 dotenv.config();
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 const app = express();
 const server = createServer(app);
@@ -56,16 +59,37 @@ app.use('/api/ssh', sshRouter);
 app.use('/api/machines/:id/destroy', dangerousActionsLimiter);
 app.use('/api/machines/:id/reboot', dangerousActionsLimiter);
 
-// Error handling
-app.use(errorHandler);
+// Error handling for API routes
+app.use('/api', errorHandler);
 
-// 404 handler
-app.use((_, res) => {
-  res.status(404).json({ 
-    success: false, 
-    error: { code: 'NOT_FOUND', message: 'Endpoint not found' } 
+// In production, serve the built frontend
+if (isProduction) {
+  const clientDistPath = path.join(__dirname, '../../client/dist');
+  
+  // Serve static files
+  app.use(express.static(clientDistPath));
+  
+  // Handle client-side routing - serve index.html for all non-API routes
+  app.get('*', (req, res) => {
+    // Don't catch API routes or health check
+    if (req.path.startsWith('/api') || req.path === '/health') {
+      res.status(404).json({ 
+        success: false, 
+        error: { code: 'NOT_FOUND', message: 'Endpoint not found' } 
+      });
+    } else {
+      res.sendFile(path.join(clientDistPath, 'index.html'));
+    }
   });
-});
+} else {
+  // 404 handler for development
+  app.use((_, res) => {
+    res.status(404).json({ 
+      success: false, 
+      error: { code: 'NOT_FOUND', message: 'Endpoint not found' } 
+    });
+  });
+}
 
 // Setup WebSocket for terminal
 setupTerminalWebSocket(server);
