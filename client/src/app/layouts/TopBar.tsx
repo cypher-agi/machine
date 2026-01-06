@@ -67,7 +67,7 @@ export function TopBar() {
       {/* Search */}
       <div className={styles.searchContainer} ref={searchRef}>
         <div className={clsx(styles.searchBox, searchFocused && styles.searchBoxFocused)}>
-          <Search size={16} className={styles.searchIcon} />
+          <Search size={13} className={styles.searchIcon} />
           <input
             type="text"
             placeholder="Search..."
@@ -81,7 +81,7 @@ export function TopBar() {
               className={styles.clearButton}
               onClick={() => setSearchQuery('')}
             >
-              <X size={14} />
+              <X size={12} />
             </button>
           )}
         </div>
@@ -95,7 +95,7 @@ export function TopBar() {
                 className={styles.searchResult}
                 onClick={() => handleResultClick(result)}
               >
-                <result.icon size={16} className={styles.resultIcon} />
+                <result.icon size={14} className={styles.resultIcon} />
                 <span>{result.label}</span>
               </button>
             ))}
@@ -109,7 +109,7 @@ export function TopBar() {
         onClick={() => setRightMenuOpen(!rightMenuOpen)}
         aria-label="Toggle menu"
       >
-        {rightMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        {rightMenuOpen ? <X size={16} /> : <Menu size={16} />}
       </button>
     </header>
   );
