@@ -34,7 +34,7 @@ type WizardStep = 'provider' | 'config' | 'firewall' | 'bootstrap' | 'access' | 
 
 const steps: { id: WizardStep; label: string; icon: typeof Cloud }[] = [
   { id: 'provider', label: 'Provider', icon: Cloud },
-  { id: 'config', label: 'Configuration', icon: Server },
+  { id: 'config', label: 'Config', icon: Server },
   { id: 'firewall', label: 'Firewall', icon: Shield },
   { id: 'bootstrap', label: 'Bootstrap', icon: Package },
   { id: 'access', label: 'Access', icon: Key },
@@ -45,7 +45,6 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
   const { addToast } = useAppStore();
   const queryClient = useQueryClient();
   
-  // Close on ESC key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -55,7 +54,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
   }, [onClose]);
   
   const [currentStep, setCurrentStep] = useState<WizardStep>('provider');
-  const [maxVisitedStep, setMaxVisitedStep] = useState(0); // Track furthest step reached
+  const [maxVisitedStep, setMaxVisitedStep] = useState(0);
   const [formData, setFormData] = useState<Partial<MachineCreateRequest>>({
     tags: {},
     firewall_profile_id: 'none',
@@ -77,12 +76,10 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
     enabled: !!selectedAccount,
   });
 
-  // Set defaults when provider options load
   useEffect(() => {
     if (providerOptions) {
       const updates: Partial<MachineCreateRequest> = {};
       
-      // Default region to San Francisco for DigitalOcean
       if (!formData.region) {
         const sfRegion = providerOptions.regions.find(r => r.slug === 'sfo3' || r.slug.startsWith('sfo'));
         if (sfRegion) {
@@ -92,12 +89,10 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
         }
       }
       
-      // Default size to first (cheapest) option
       if (!formData.size && providerOptions.sizes.length > 0) {
         updates.size = providerOptions.sizes[0].slug;
       }
       
-      // Default to Ubuntu 22.04 x64 for DigitalOcean
       if (!formData.image) {
         const defaultImage = providerOptions.images.find(img => img.slug === 'ubuntu-22-04-x64');
         if (defaultImage) {
@@ -128,7 +123,6 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
     queryFn: getSSHKeys,
   });
 
-  // Filter SSH keys that are synced to the selected provider
   const availableSSHKeys = sshKeys?.filter(key => {
     if (!selectedAccount) return false;
     return key.provider_key_ids[selectedAccount.provider_type];
@@ -158,11 +152,11 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
       case 'config':
         return !!formData.name && !!formData.region && !!formData.size && !!formData.image;
       case 'firewall':
-        return formData.firewall_profile_id !== undefined; // Must select (including 'none')
+        return formData.firewall_profile_id !== undefined;
       case 'bootstrap':
-        return formData.bootstrap_profile_id !== undefined; // Must select (including 'none')
+        return formData.bootstrap_profile_id !== undefined;
       case 'access':
-        return true; // Always can proceed - none is default
+        return true;
       case 'review':
         return true;
       default:
@@ -170,7 +164,6 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
     }
   };
 
-  // Toggle SSH key selection
   const toggleSSHKey = (keyId: string) => {
     const currentKeys = formData.ssh_key_ids || [];
     if (currentKeys.includes(keyId)) {
@@ -199,7 +192,6 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
     if (!formData.name || !formData.provider_account_id || !formData.region || !formData.size || !formData.image) {
       return;
     }
-    // Convert 'none' selections to undefined before submitting
     const submitData: MachineCreateRequest = {
       ...formData as MachineCreateRequest,
       firewall_profile_id: formData.firewall_profile_id === 'none' ? undefined : formData.firewall_profile_id,
@@ -210,18 +202,18 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-3xl max-h-[85vh] bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl flex flex-col animate-slide-in-up shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-cursor-bg/80 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-2xl max-h-[80vh] bg-cursor-surface border border-cursor-border rounded-lg flex flex-col shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-machine-border">
-          <h2 className="font-semibold text-lg text-text-primary">Deploy New Machine</h2>
-          <button onClick={onClose} className="btn btn-ghost btn-icon">
-            <X className="w-5 h-5" />
+        <div className="flex items-center justify-between px-4 py-3 border-b border-cursor-border">
+          <h2 className="text-sm font-medium text-text-primary">Deploy Machine</h2>
+          <button onClick={onClose} className="p-1 text-text-muted hover:text-text-secondary rounded">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Steps indicator */}
-        <div className="px-4 py-3 border-b border-machine-border">
+        <div className="px-4 py-2 border-b border-cursor-border">
           <div className="flex items-center justify-center gap-1">
             {steps.map((step, index) => {
               const isActive = step.id === currentStep;
@@ -236,23 +228,23 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                     onClick={() => canClick && setCurrentStep(step.id)}
                     disabled={!canClick && !isActive}
                     className={clsx(
-                      'flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-sm',
-                      isActive && 'bg-neon-cyan/10 text-neon-cyan',
-                      canClick && 'text-status-running cursor-pointer hover:bg-machine-elevated',
-                      !isActive && !canClick && 'text-text-tertiary cursor-not-allowed'
+                      'flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors',
+                      isActive && 'bg-cursor-elevated text-text-primary',
+                      canClick && 'text-status-success cursor-pointer hover:bg-cursor-elevated',
+                      !isActive && !canClick && 'text-text-muted cursor-not-allowed'
                     )}
                   >
                     {isPast ? (
-                      <Check className="w-4 h-4" />
+                      <Check className="w-3.5 h-3.5" />
                     ) : (
-                      <StepIcon className="w-4 h-4" />
+                      <StepIcon className="w-3.5 h-3.5" />
                     )}
-                    <span className="font-medium hidden sm:inline">{step.label}</span>
+                    <span className="hidden sm:inline">{step.label}</span>
                   </button>
                   {index < steps.length - 1 && (
                     <div className={clsx(
-                      'w-4 h-px mx-1',
-                      isPast ? 'bg-status-running' : 'bg-machine-border'
+                      'w-4 h-px mx-0.5',
+                      isPast ? 'bg-status-success' : 'bg-cursor-border'
                     )} />
                   )}
                 </div>
@@ -262,45 +254,38 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-4">
           {/* Provider Step */}
           {currentStep === 'provider' && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-text-primary mb-1">Select Provider Account</h3>
-                <p className="text-sm text-text-secondary mb-4">
-                  Choose the cloud provider account to deploy to.
-                </p>
-              </div>
-              <div className="grid gap-3">
+            <div className="space-y-3">
+              <p className="text-xs text-text-muted mb-3">Select provider account</p>
+              <div className="space-y-1">
                 {providerAccounts?.map((account) => (
                   <button
                     key={account.provider_account_id}
                     onClick={() => setFormData({ ...formData, provider_account_id: account.provider_account_id })}
                     className={clsx(
-                      'card text-left transition-all',
+                      'w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors',
                       formData.provider_account_id === account.provider_account_id
-                        ? 'border-neon-cyan bg-neon-cyan/5'
-                        : 'hover:border-machine-border-light'
+                        ? 'bg-cursor-elevated border border-accent-blue/30'
+                        : 'bg-cursor-surface border border-cursor-border hover:border-cursor-border-light'
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-machine-elevated flex items-center justify-center text-xl">
-                        {account.provider_type === 'digitalocean' && '🌊'}
-                        {account.provider_type === 'aws' && '☁️'}
-                        {account.provider_type === 'gcp' && '🔷'}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-text-primary">{account.label}</p>
-                        <p className="text-sm text-text-secondary capitalize">{account.provider_type}</p>
-                      </div>
-                      <span className={clsx(
-                        'text-xs font-medium px-2 py-1 rounded',
-                        account.credential_status === 'valid' ? 'bg-status-running/10 text-status-running' : 'bg-status-warning/10 text-status-warning'
-                      )}>
-                        {account.credential_status}
+                    <div className="w-8 h-8 rounded bg-cursor-bg border border-cursor-border flex items-center justify-center">
+                      <span className="text-[10px] font-mono text-text-muted">
+                        {account.provider_type.slice(0, 2).toUpperCase()}
                       </span>
                     </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-text-primary">{account.label}</p>
+                      <p className="text-xs text-text-muted capitalize">{account.provider_type}</p>
+                    </div>
+                    <span className={clsx(
+                      'text-[10px] px-1.5 py-0.5 rounded',
+                      account.credential_status === 'valid' ? 'bg-status-success/10 text-status-success' : 'bg-status-warning/10 text-status-warning'
+                    )}>
+                      {account.credential_status}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -309,33 +294,27 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
 
           {/* Config Step */}
           {currentStep === 'config' && providerOptions && (
-            <div className="space-y-6">
-              {/* Name */}
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
-                  Machine Name
-                </label>
+                <label className="text-xs text-text-muted mb-1 block">Name</label>
                 <input
                   type="text"
                   value={formData.name || ''}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., grid-node-prod-01"
+                  placeholder="e.g., prod-node-01"
                   className="input"
                   autoFocus
                 />
               </div>
 
-              {/* Region */}
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
-                  Region
-                </label>
+                <label className="text-xs text-text-muted mb-1 block">Region</label>
                 <select
                   value={formData.region || ''}
                   onChange={(e) => setFormData({ ...formData, region: e.target.value })}
                   className="input"
                 >
-                  <option value="">Select region...</option>
+                  <option value="">Select...</option>
                   {providerOptions.regions.map((r) => (
                     <option key={r.slug} value={r.slug} disabled={!r.available}>
                       {r.name} ({r.slug})
@@ -344,48 +323,42 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                 </select>
               </div>
 
-              {/* Size */}
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
-                  Size
-                </label>
-                <div className="grid grid-cols-2 gap-3 max-h-48 overflow-auto">
+                <label className="text-xs text-text-muted mb-1 block">Size</label>
+                <div className="grid grid-cols-2 gap-2 max-h-40 overflow-auto">
                   {providerOptions.sizes.map((s) => (
                     <button
                       key={s.slug}
                       onClick={() => setFormData({ ...formData, size: s.slug })}
                       disabled={!s.available}
                       className={clsx(
-                        'card text-left p-3 transition-all',
+                        'text-left p-2 rounded-md border transition-colors',
                         formData.size === s.slug
-                          ? 'border-neon-cyan bg-neon-cyan/5'
-                          : 'hover:border-machine-border-light',
+                          ? 'bg-cursor-elevated border-accent-blue/30'
+                          : 'bg-cursor-surface border-cursor-border hover:border-cursor-border-light',
                         !s.available && 'opacity-50 cursor-not-allowed'
                       )}
                     >
-                      <p className="font-mono text-sm text-text-primary">{s.slug}</p>
-                      <p className="text-xs text-text-secondary mt-1">
-                        {s.vcpus} vCPU • {s.memory_mb / 1024}GB RAM • {s.disk_gb}GB
+                      <p className="font-mono text-xs text-text-primary">{s.slug}</p>
+                      <p className="text-[10px] text-text-muted mt-0.5">
+                        {s.vcpus}vCPU · {s.memory_mb / 1024}GB · {s.disk_gb}GB
                       </p>
                       {s.price_monthly && (
-                        <p className="text-xs text-neon-cyan mt-1">${s.price_monthly}/mo</p>
+                        <p className="text-[10px] text-accent-blue mt-0.5">${s.price_monthly}/mo</p>
                       )}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Image */}
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
-                  Image / OS
-                </label>
+                <label className="text-xs text-text-muted mb-1 block">Image</label>
                 <select
                   value={formData.image || ''}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                   className="input"
                 >
-                  <option value="">Select image...</option>
+                  <option value="">Select...</option>
                   {providerOptions.images.map((img) => (
                     <option key={img.slug} value={img.slug} disabled={!img.available}>
                       {img.name}
@@ -398,249 +371,193 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
 
           {/* Firewall Step */}
           {currentStep === 'firewall' && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-text-primary mb-1">Firewall Profile</h3>
-                <p className="text-sm text-text-secondary mb-4">
-                  Select a firewall profile to configure security rules.
-                </p>
-              </div>
-              <div className="grid gap-3">
-                {/* None option */}
+            <div className="space-y-2">
+              <p className="text-xs text-text-muted mb-3">Select firewall profile</p>
+              <button
+                onClick={() => setFormData({ ...formData, firewall_profile_id: 'none' })}
+                className={clsx(
+                  'w-full text-left p-3 rounded-md border transition-colors',
+                  formData.firewall_profile_id === 'none'
+                    ? 'bg-cursor-elevated border-accent-blue/30'
+                    : 'bg-cursor-surface border-cursor-border hover:border-cursor-border-light'
+                )}
+              >
+                <p className="text-sm text-text-primary">None</p>
+                <p className="text-xs text-text-muted">Use provider defaults</p>
+              </button>
+              
+              {firewallProfiles?.map((profile) => (
                 <button
-                  onClick={() => setFormData({ ...formData, firewall_profile_id: 'none' })}
+                  key={profile.profile_id}
+                  onClick={() => setFormData({ ...formData, firewall_profile_id: profile.profile_id })}
                   className={clsx(
-                    'card text-left transition-all',
-                    formData.firewall_profile_id === 'none'
-                      ? 'border-neon-cyan bg-neon-cyan/5'
-                      : 'hover:border-machine-border-light'
+                    'w-full text-left p-3 rounded-md border transition-colors',
+                    formData.firewall_profile_id === profile.profile_id
+                      ? 'bg-cursor-elevated border-accent-blue/30'
+                      : 'bg-cursor-surface border-cursor-border hover:border-cursor-border-light'
                   )}
                 >
-                  <p className="font-medium text-text-primary">None</p>
-                  <p className="text-sm text-text-secondary">No firewall profile - use provider defaults</p>
+                  <p className="text-sm text-text-primary">{profile.name}</p>
+                  <p className="text-xs text-text-muted">{profile.description}</p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {profile.rules.slice(0, 5).map((rule) => (
+                      <span key={rule.rule_id} className="text-[10px] font-mono bg-cursor-bg px-1 py-0.5 rounded text-text-muted">
+                        {rule.protocol}/{rule.port_range_start}
+                      </span>
+                    ))}
+                  </div>
                 </button>
-                
-                {firewallProfiles?.map((profile) => (
-                  <button
-                    key={profile.profile_id}
-                    onClick={() => setFormData({ ...formData, firewall_profile_id: profile.profile_id })}
-                    className={clsx(
-                      'card text-left transition-all',
-                      formData.firewall_profile_id === profile.profile_id
-                        ? 'border-neon-cyan bg-neon-cyan/5'
-                        : 'hover:border-machine-border-light'
-                    )}
-                  >
-                    <p className="font-medium text-text-primary">{profile.name}</p>
-                    <p className="text-sm text-text-secondary">{profile.description}</p>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {profile.rules.slice(0, 5).map((rule) => (
-                        <span key={rule.rule_id} className="text-xs font-mono bg-machine-elevated px-1.5 py-0.5 rounded">
-                          {rule.protocol}/{rule.port_range_start}
-                        </span>
-                      ))}
-                    </div>
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
           )}
 
           {/* Bootstrap Step */}
           {currentStep === 'bootstrap' && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-text-primary mb-1">Bootstrap Profile</h3>
-                <p className="text-sm text-text-secondary mb-4">
-                  Select services and software to install at boot.
-                </p>
-              </div>
-              <div className="grid gap-3">
-                {/* None option */}
+            <div className="space-y-2">
+              <p className="text-xs text-text-muted mb-3">Select bootstrap profile</p>
+              <button
+                onClick={() => setFormData({ ...formData, bootstrap_profile_id: 'none' })}
+                className={clsx(
+                  'w-full text-left p-3 rounded-md border transition-colors',
+                  formData.bootstrap_profile_id === 'none'
+                    ? 'bg-cursor-elevated border-accent-blue/30'
+                    : 'bg-cursor-surface border-cursor-border hover:border-cursor-border-light'
+                )}
+              >
+                <p className="text-sm text-text-primary">None</p>
+                <p className="text-xs text-text-muted">Vanilla OS installation</p>
+              </button>
+              
+              {bootstrapProfiles?.map((profile) => (
                 <button
-                  onClick={() => setFormData({ ...formData, bootstrap_profile_id: 'none' })}
+                  key={profile.profile_id}
+                  onClick={() => setFormData({ ...formData, bootstrap_profile_id: profile.profile_id })}
                   className={clsx(
-                    'card text-left transition-all',
-                    formData.bootstrap_profile_id === 'none'
-                      ? 'border-neon-cyan bg-neon-cyan/5'
-                      : 'hover:border-machine-border-light'
+                    'w-full text-left p-3 rounded-md border transition-colors',
+                    formData.bootstrap_profile_id === profile.profile_id
+                      ? 'bg-cursor-elevated border-accent-blue/30'
+                      : 'bg-cursor-surface border-cursor-border hover:border-cursor-border-light'
                   )}
                 >
-                  <p className="font-medium text-text-primary">None</p>
-                  <p className="text-sm text-text-secondary">No bootstrap - vanilla OS installation</p>
-                </button>
-                
-                {bootstrapProfiles?.map((profile) => (
-                  <button
-                    key={profile.profile_id}
-                    onClick={() => setFormData({ ...formData, bootstrap_profile_id: profile.profile_id })}
-                    className={clsx(
-                      'card text-left transition-all',
-                      formData.bootstrap_profile_id === profile.profile_id
-                        ? 'border-neon-cyan bg-neon-cyan/5'
-                        : 'hover:border-machine-border-light'
-                    )}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium text-text-primary">{profile.name}</p>
-                        <p className="text-sm text-text-secondary">{profile.description}</p>
-                      </div>
-                      {profile.is_system_profile && (
-                        <span className="text-xs bg-neon-cyan/10 text-neon-cyan px-2 py-0.5 rounded">
-                          System
-                        </span>
-                      )}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm text-text-primary">{profile.name}</p>
+                      <p className="text-xs text-text-muted">{profile.description}</p>
                     </div>
-                    {profile.services_to_run.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {profile.services_to_run.map((svc) => (
-                          <span key={svc.service_name} className="text-xs font-mono bg-machine-elevated px-1.5 py-0.5 rounded">
-                            {svc.display_name}
-                          </span>
-                        ))}
-                      </div>
+                    {profile.is_system_profile && (
+                      <span className="text-[10px] bg-accent-blue/10 text-accent-blue px-1.5 py-0.5 rounded">
+                        System
+                      </span>
                     )}
-                  </button>
-                ))}
-              </div>
+                  </div>
+                  {profile.services_to_run.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {profile.services_to_run.map((svc) => (
+                        <span key={svc.service_name} className="text-[10px] font-mono bg-cursor-bg px-1 py-0.5 rounded text-text-muted">
+                          {svc.display_name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              ))}
             </div>
           )}
 
           {/* Access Step */}
           {currentStep === 'access' && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-text-primary mb-1">SSH Access</h3>
-                <p className="text-sm text-text-secondary mb-4">
-                  Select SSH keys to grant root access to this machine. You can select multiple keys.
-                </p>
-              </div>
+            <div className="space-y-2">
+              <p className="text-xs text-text-muted mb-3">Select SSH keys for access</p>
               
-              <div className="grid gap-3">
-                {/* None option - shown when no keys selected */}
-                <div
-                  className={clsx(
-                    'card text-left transition-all',
-                    (!formData.ssh_key_ids || formData.ssh_key_ids.length === 0)
-                      ? 'border-neon-cyan bg-neon-cyan/5'
-                      : 'border-machine-border'
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-machine-elevated flex items-center justify-center">
-                      <Key className="w-5 h-5 text-text-tertiary" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-text-primary">None</p>
-                      <p className="text-sm text-text-secondary">No SSH key - use provider default or password auth</p>
-                    </div>
-                    {(!formData.ssh_key_ids || formData.ssh_key_ids.length === 0) && (
-                      <Check className="w-5 h-5 text-neon-cyan" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Available SSH keys */}
-                {availableSSHKeys.length > 0 ? (
-                  availableSSHKeys.map((key) => {
-                    const isSelected = formData.ssh_key_ids?.includes(key.ssh_key_id);
-                    return (
-                      <button
-                        key={key.ssh_key_id}
-                        onClick={() => toggleSSHKey(key.ssh_key_id)}
-                        className={clsx(
-                          'card text-left transition-all',
-                          isSelected
-                            ? 'border-neon-cyan bg-neon-cyan/5'
-                            : 'hover:border-machine-border-light'
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={clsx(
-                            'w-10 h-10 rounded-lg flex items-center justify-center',
-                            isSelected 
-                              ? 'bg-neon-cyan/20 border border-neon-cyan/30'
-                              : 'bg-machine-elevated'
-                          )}>
-                            <Key className={clsx(
-                              'w-5 h-5',
-                              isSelected ? 'text-neon-cyan' : 'text-text-tertiary'
-                            )} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-text-primary">{key.name}</p>
-                            <div className="flex items-center gap-2 text-sm text-text-secondary">
-                              <span className="font-mono text-xs">{key.key_type.toUpperCase()}</span>
-                              <span className="flex items-center gap-1 font-mono text-xs truncate">
-                                <Fingerprint className="w-3 h-3" />
-                                {key.fingerprint.slice(0, 20)}...
-                              </span>
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <Check className="w-5 h-5 text-neon-cyan flex-shrink-0" />
-                          )}
-                        </div>
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className="card bg-status-warning/5 border-status-warning/20">
-                    <p className="text-sm text-text-secondary">
-                      No SSH keys synced to {selectedAccount?.provider_type || 'this provider'}. 
-                      <br />
-                      <span className="text-text-tertiary">
-                        Go to Keys → sync a key to {selectedAccount?.provider_type} first.
-                      </span>
-                    </p>
-                  </div>
+              <div
+                className={clsx(
+                  'p-3 rounded-md border transition-colors',
+                  (!formData.ssh_key_ids || formData.ssh_key_ids.length === 0)
+                    ? 'bg-cursor-elevated border-accent-blue/30'
+                    : 'bg-cursor-surface border-cursor-border'
                 )}
+              >
+                <div className="flex items-center gap-2">
+                  <Key className="w-4 h-4 text-text-muted" />
+                  <div className="flex-1">
+                    <p className="text-sm text-text-primary">None</p>
+                    <p className="text-xs text-text-muted">Use provider default or password auth</p>
+                  </div>
+                  {(!formData.ssh_key_ids || formData.ssh_key_ids.length === 0) && (
+                    <Check className="w-4 h-4 text-accent-blue" />
+                  )}
+                </div>
               </div>
 
-              {/* Info about SSH keys */}
-              <div className="mt-4 p-4 bg-machine-elevated/50 border border-machine-border rounded-lg">
-                <p className="text-xs text-text-tertiary">
-                  💡 SSH keys must be synced to the provider before they can be used. 
-                  You can manage and sync keys in the <span className="text-neon-cyan">Keys</span> section.
-                </p>
-              </div>
+              {availableSSHKeys.length > 0 ? (
+                availableSSHKeys.map((key) => {
+                  const isSelected = formData.ssh_key_ids?.includes(key.ssh_key_id);
+                  return (
+                    <button
+                      key={key.ssh_key_id}
+                      onClick={() => toggleSSHKey(key.ssh_key_id)}
+                      className={clsx(
+                        'w-full text-left p-3 rounded-md border transition-colors',
+                        isSelected
+                          ? 'bg-cursor-elevated border-accent-blue/30'
+                          : 'bg-cursor-surface border-cursor-border hover:border-cursor-border-light'
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Key className={clsx('w-4 h-4', isSelected ? 'text-accent-blue' : 'text-text-muted')} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-text-primary">{key.name}</p>
+                          <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <span className="font-mono">{key.key_type.toUpperCase()}</span>
+                            <span className="flex items-center gap-1 font-mono truncate">
+                              <Fingerprint className="w-3 h-3" />
+                              {key.fingerprint.slice(0, 16)}...
+                            </span>
+                          </div>
+                        </div>
+                        {isSelected && <Check className="w-4 h-4 text-accent-blue" />}
+                      </div>
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="p-3 bg-status-warning/5 border border-status-warning/20 rounded-md">
+                  <p className="text-xs text-text-muted">
+                    No SSH keys synced to {selectedAccount?.provider_type || 'this provider'}.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
           {/* Review Step */}
           {currentStep === 'review' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-medium text-text-primary mb-1">Review Configuration</h3>
-                <p className="text-sm text-text-secondary mb-4">
-                  Confirm your machine configuration before deploying.
-                </p>
-              </div>
+            <div className="space-y-4">
+              <p className="text-xs text-text-muted mb-3">Review configuration</p>
 
-              <div className="card space-y-4">
+              <div className="bg-cursor-bg rounded-md border border-cursor-border p-3 space-y-2 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-text-secondary">Name</span>
+                  <span className="text-text-muted">Name</span>
                   <span className="font-mono text-text-primary">{formData.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-text-secondary">Provider</span>
+                  <span className="text-text-muted">Provider</span>
                   <span className="text-text-primary">{selectedAccount?.label}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-text-secondary">Region</span>
+                  <span className="text-text-muted">Region</span>
                   <span className="font-mono text-text-primary">{formData.region}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-text-secondary">Size</span>
+                  <span className="text-text-muted">Size</span>
                   <span className="font-mono text-text-primary">{formData.size}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-text-secondary">Image</span>
-                  <span className="font-mono text-text-primary truncate max-w-[200px]">{formData.image}</span>
+                  <span className="text-text-muted">Image</span>
+                  <span className="font-mono text-text-primary truncate max-w-[180px]">{formData.image}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-text-secondary">Firewall</span>
+                  <span className="text-text-muted">Firewall</span>
                   <span className="text-text-primary">
                     {formData.firewall_profile_id === 'none' 
                       ? 'None' 
@@ -648,7 +565,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-text-secondary">Bootstrap</span>
+                  <span className="text-text-muted">Bootstrap</span>
                   <span className="text-text-primary">
                     {formData.bootstrap_profile_id === 'none'
                       ? 'None'
@@ -656,7 +573,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-text-secondary">SSH Access</span>
+                  <span className="text-text-muted">SSH Keys</span>
                   <span className="text-text-primary">
                     {!formData.ssh_key_ids || formData.ssh_key_ids.length === 0
                       ? 'None'
@@ -666,24 +583,18 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                   </span>
                 </div>
               </div>
-
-              <div className="bg-neon-cyan/5 border border-neon-cyan/20 rounded-lg p-4">
-                <p className="text-sm text-neon-cyan">
-                  ⚡ A Terraform plan will be generated and applied automatically to provision this machine.
-                </p>
-              </div>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-machine-border">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-cursor-border">
           <button
             onClick={goBack}
             disabled={currentStepIndex === 0}
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-sm"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5" />
             Back
           </button>
 
@@ -691,17 +602,17 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
             <button
               onClick={handleSubmit}
               disabled={createMutation.isPending}
-              className="btn btn-primary"
+              className="btn btn-primary btn-sm"
             >
               {createMutation.isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   Deploying...
                 </>
               ) : (
                 <>
-                  <Check className="w-4 h-4" />
-                  Deploy Machine
+                  <Check className="w-3.5 h-3.5" />
+                  Deploy
                 </>
               )}
             </button>
@@ -709,10 +620,10 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
             <button
               onClick={goNext}
               disabled={!canGoNext()}
-              className="btn btn-primary"
+              className="btn btn-primary btn-sm"
             >
               Next
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -720,4 +631,3 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
     </div>
   );
 }
-

@@ -26,39 +26,39 @@ function MachinesPage() {
       sort_by: machineSort.field,
       sort_dir: machineSort.direction,
     }),
-    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchInterval: 10000,
   });
 
   const activeFilterCount = Object.values(machineFilters).filter(Boolean).length;
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <header className="flex-shrink-0 h-16 border-b border-machine-border bg-black px-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold text-text-primary">Machines</h1>
-          <span className="text-sm text-text-tertiary font-mono">
-            {machines?.length ?? 0} total
+    <div className="h-full flex flex-col bg-cursor-bg">
+      {/* Header - minimal */}
+      <header className="flex-shrink-0 h-12 border-b border-cursor-border px-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-sm font-medium text-text-primary">Machines</h1>
+          <span className="text-xs text-text-muted font-mono">
+            {machines?.length ?? 0}
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
             <input
               type="text"
-              placeholder="Search machines..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input pl-9 w-64"
+              className="input pl-8 w-48 h-7 text-xs"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3 h-3" />
               </button>
             )}
           </div>
@@ -66,16 +66,13 @@ function MachinesPage() {
           {/* Filter toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`btn btn-secondary btn-sm ${
-              showFilters || activeFilterCount > 0 ? 'border-neon-cyan text-neon-cyan' : ''
+            className={`btn btn-ghost btn-sm ${
+              showFilters || activeFilterCount > 0 ? 'text-accent-blue' : ''
             }`}
           >
-            <Filter className="w-4 h-4" />
-            Filters
+            <Filter className="w-3.5 h-3.5" />
             {activeFilterCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-neon-cyan text-machine-bg text-xs font-bold flex items-center justify-center">
-                {activeFilterCount}
-              </span>
+              <span className="text-[10px] font-medium">{activeFilterCount}</span>
             )}
           </button>
 
@@ -85,16 +82,16 @@ function MachinesPage() {
             disabled={isRefetching}
             className="btn btn-ghost btn-icon"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
           </button>
 
           {/* Deploy new */}
           <button
             onClick={() => setDeployWizardOpen(true)}
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
           >
-            <Plus className="w-4 h-4" />
-            Deploy Machine
+            <Plus className="w-3.5 h-3.5" />
+            Deploy
           </button>
         </div>
       </header>
@@ -105,16 +102,13 @@ function MachinesPage() {
       )}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="flex flex-col items-center gap-3">
-              <span className="text-text-secondary animate-pulse">Loading machines...</span>
-              <p className="text-text-secondary">Loading machines...</p>
-            </div>
+          <div className="flex items-center justify-center h-32">
+            <span className="text-sm text-text-muted">Loading...</span>
           </div>
         ) : machines && machines.length > 0 ? (
-          <div className="grid gap-4">
+          <div className="space-y-1">
             {machines.map((machine) => (
               <MachineCard 
                 key={machine.machine_id} 
@@ -123,27 +117,19 @@ function MachinesPage() {
             ))}
           </div>
         ) : (
-          <div className="flex items-center justify-center h-64">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-machine-elevated border border-machine-border flex items-center justify-center">
-                <Plus className="w-8 h-8 text-text-tertiary" />
-              </div>
-              <div>
-                <h3 className="text-lg font-medium text-text-primary mb-1">
-                  No machines found
-                </h3>
-                <p className="text-text-secondary max-w-md">
-                  {searchQuery || activeFilterCount > 0
-                    ? 'Try adjusting your search or filters.'
-                    : 'Deploy your first machine to get started.'}
-                </p>
-              </div>
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center">
+              <p className="text-sm text-text-muted mb-3">
+                {searchQuery || activeFilterCount > 0
+                  ? 'No machines found'
+                  : 'No machines yet'}
+              </p>
               {!searchQuery && activeFilterCount === 0 && (
                 <button
                   onClick={() => setDeployWizardOpen(true)}
-                  className="btn btn-primary"
+                  className="btn btn-primary btn-sm"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3.5 h-3.5" />
                   Deploy Machine
                 </button>
               )}
@@ -161,4 +147,3 @@ function MachinesPage() {
 }
 
 export default MachinesPage;
-

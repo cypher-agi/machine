@@ -27,20 +27,18 @@ export function MachineFilters({ onClose }: MachineFiltersProps) {
   const { machineFilters, setMachineFilters, clearMachineFilters, machineSort, setMachineSort } = useAppStore();
 
   return (
-    <div className="border-b border-machine-border bg-black px-6 py-4 animate-slide-in-up">
-      <div className="flex items-start justify-between gap-6">
-        <div className="flex-1 flex items-center gap-6 flex-wrap">
+    <div className="border-b border-cursor-border bg-cursor-surface px-4 py-3">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 flex-wrap">
           {/* Status filter */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-text-tertiary uppercase tracking-wider">
-              Status
-            </label>
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] text-text-muted uppercase tracking-wider">Status</label>
             <select
               value={machineFilters.status || ''}
               onChange={(e) => setMachineFilters({ status: e.target.value as MachineStatus || undefined })}
-              className="input w-40"
+              className="input w-28 h-7 text-xs"
             >
-              <option value="">All statuses</option>
+              <option value="">All</option>
               {statusOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
@@ -50,16 +48,14 @@ export function MachineFilters({ onClose }: MachineFiltersProps) {
           </div>
 
           {/* Provider filter */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-text-tertiary uppercase tracking-wider">
-              Provider
-            </label>
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] text-text-muted uppercase tracking-wider">Provider</label>
             <select
               value={machineFilters.provider || ''}
               onChange={(e) => setMachineFilters({ provider: e.target.value as ProviderType || undefined })}
-              className="input w-40"
+              className="input w-28 h-7 text-xs"
             >
-              <option value="">All providers</option>
+              <option value="">All</option>
               {providerOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
@@ -69,63 +65,51 @@ export function MachineFilters({ onClose }: MachineFiltersProps) {
           </div>
 
           {/* Region filter */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-text-tertiary uppercase tracking-wider">
-              Region
-            </label>
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] text-text-muted uppercase tracking-wider">Region</label>
             <input
               type="text"
               placeholder="e.g., nyc3"
               value={machineFilters.region || ''}
               onChange={(e) => setMachineFilters({ region: e.target.value || undefined })}
-              className="input w-32"
+              className="input w-24 h-7 text-xs"
             />
           </div>
 
           {/* Sort */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-text-tertiary uppercase tracking-wider">
-              Sort by
-            </label>
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] text-text-muted uppercase tracking-wider">Sort</label>
             <select
               value={`${machineSort.field}-${machineSort.direction}`}
               onChange={(e) => {
                 const [field, direction] = e.target.value.split('-') as [typeof machineSort.field, 'asc' | 'desc'];
                 setMachineSort({ field, direction });
               }}
-              className="input w-44"
+              className="input w-32 h-7 text-xs"
             >
-              <option value="created_at-desc">Newest first</option>
-              <option value="created_at-asc">Oldest first</option>
+              <option value="created_at-desc">Newest</option>
+              <option value="created_at-asc">Oldest</option>
               <option value="name-asc">Name A-Z</option>
               <option value="name-desc">Name Z-A</option>
-              <option value="status-asc">Status A-Z</option>
-              <option value="provider-asc">Provider A-Z</option>
             </select>
           </div>
 
-          {/* Clear filters */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-text-tertiary uppercase tracking-wider opacity-0">
-              Clear
-            </label>
-            <button
-              onClick={clearMachineFilters}
-              className="btn btn-ghost btn-sm text-text-tertiary hover:text-neon-red"
-            >
-              Clear all
-            </button>
-          </div>
+          {/* Clear */}
+          <button
+            onClick={clearMachineFilters}
+            className="text-[10px] text-text-muted hover:text-status-error"
+          >
+            Clear
+          </button>
         </div>
 
         <button
           onClick={onClose}
-          className="p-1.5 text-text-tertiary hover:text-text-secondary rounded transition-colors"
+          className="p-1 text-text-muted hover:text-text-secondary rounded"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
       </div>
     </div>
   );
 }
-

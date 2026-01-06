@@ -8,7 +8,7 @@ export function AppLayout() {
   const { selectedMachineId, setSelectedMachineId } = useAppStore();
 
   return (
-    <div className="flex h-screen bg-black overflow-hidden">
+    <div className="flex h-screen bg-cursor-bg overflow-hidden">
       {/* Sidebar */}
       <Sidebar />
 
@@ -19,7 +19,7 @@ export function AppLayout() {
           <Outlet />
         </div>
 
-        {/* Inspector Panel (I panel) */}
+        {/* Inspector Panel (slides in from right) */}
         {selectedMachineId && (
           <MachineInspector
             machineId={selectedMachineId}
@@ -33,4 +33,3 @@ export function AppLayout() {
     </div>
   );
 }
-

@@ -2,18 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base styles */
+/* Cursor-style Design Tokens */
 :root {
-  --color-bg: #000000;
-  --color-surface: #000000;
-  --color-elevated: #0a0a0a;
-  --color-border: #1a1a1a;
-  --color-neon-cyan: #00ffff;
-  --color-neon-green: #00ff88;
-  --color-text-primary: #e6edf3;
-  --color-text-secondary: #8b949e;
+  /* Colors */
+  --color-bg: #0F1115;
+  --color-surface: #14161C;
+  --color-elevated: #1A1D24;
+  --color-border: #23262F;
+  --color-border-light: #2D3139;
+  
+  --color-text-primary: #E6E8EB;
+  --color-text-secondary: #A1A6B3;
+  --color-text-muted: #6B7280;
+  
+  --color-accent: #5E9EFF;
+  --color-success: #4ADE80;
+  --color-warning: #FACC15;
+  --color-error: #F87171;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
 }
 
+/* Scrollbar - thin and subtle */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
@@ -34,9 +54,10 @@
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary);
+  background: var(--color-border-light);
 }
 
+/* Base */
 html {
   background: var(--color-bg);
 }
@@ -46,42 +67,22 @@ body {
   min-height: 100vh;
   background: var(--color-bg);
   color: var(--color-text-primary);
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Grid pattern background */
-.bg-grid-pattern {
-  background-image: 
-    linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* Subtle noise texture */
-.bg-noise {
-  position: relative;
-}
-
-.bg-noise::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  opacity: 0.02;
-  pointer-events: none;
-}
-
-/* Focus styles */
+/* Focus styles - visible but subtle */
 :focus-visible {
-  outline: 2px solid var(--color-neon-cyan);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
 /* Selection */
 ::selection {
-  background: rgba(0, 255, 255, 0.2);
+  background: rgba(94, 158, 255, 0.2);
 }
 
 /* Code / terminal text */
@@ -90,24 +91,7 @@ body {
   font-feature-settings: 'liga' on, 'calt' on;
 }
 
-/* Neon glow effects */
-.glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
-}
-
-.glow-green {
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.15);
-}
-
-.text-glow-cyan {
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-}
-
-.text-glow-green {
-  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-}
-
-/* Status indicator pulse */
+/* Status indicator pulse - subtle */
 @keyframes status-pulse {
   0%, 100% {
     opacity: 1;
@@ -121,122 +105,93 @@ body {
   animation: status-pulse 2s ease-in-out infinite;
 }
 
-/* Magic shimmer text animation (like OpenAI/Vercel) */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    currentColor 0%,
-    currentColor 40%,
-    rgba(255, 255, 255, 0.8) 50%,
-    currentColor 60%,
-    currentColor 100%
-  );
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 2s ease-in-out infinite;
-}
-
-/* Dot loading animation */
-@keyframes dot-pulse {
-  0%, 80%, 100% {
-    opacity: 0;
-  }
-  40% {
-    opacity: 1;
-  }
-}
-
-.animate-dots span {
-  animation: dot-pulse 1.4s ease-in-out infinite;
-}
-
-.animate-dots span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.animate-dots span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
-/* Button styles */
+/* Component Styles */
 @layer components {
+  /* Buttons - flat, subtle, 28-32px height */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 font-medium rounded-lg transition-all duration-200;
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-machine-bg;
+    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md;
+    @apply transition-colors duration-100 ease-out;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue focus-visible:ring-offset-2 focus-visible:ring-offset-cursor-bg;
+    min-height: 28px;
   }
 
   .btn-primary {
-    @apply bg-neon-cyan text-machine-bg hover:bg-neon-cyan-dim;
-    @apply shadow-neon-cyan hover:shadow-none;
+    @apply bg-cursor-elevated text-text-primary border border-cursor-border;
+    @apply hover:bg-cursor-border hover:border-cursor-border-light;
   }
 
   .btn-secondary {
-    @apply bg-machine-elevated text-text-primary border border-machine-border hover:border-neon-cyan hover:text-neon-cyan;
+    @apply bg-transparent text-text-secondary border border-cursor-border;
+    @apply hover:bg-cursor-elevated hover:text-text-primary;
   }
 
   .btn-ghost {
-    @apply text-text-secondary hover:text-text-primary hover:bg-machine-elevated;
+    @apply bg-transparent text-text-muted border border-transparent;
+    @apply hover:text-text-secondary hover:bg-cursor-elevated;
   }
 
   .btn-danger {
-    @apply bg-neon-red/10 text-neon-red border border-neon-red/30 hover:bg-neon-red/20;
+    @apply bg-transparent text-status-error border border-status-error/30;
+    @apply hover:bg-status-error/10;
   }
 
   .btn-sm {
-    @apply px-3 py-1.5 text-sm;
+    @apply px-2 py-1 text-xs;
+    min-height: 24px;
   }
 
   .btn-icon {
-    @apply p-2;
+    @apply p-1.5;
+    min-height: auto;
   }
 
   /* Input styles */
   .input {
-    @apply w-full px-3 py-2 bg-machine-surface border border-machine-border rounded-lg;
-    @apply text-text-primary placeholder:text-text-tertiary;
-    @apply focus:outline-none focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan;
-    @apply transition-colors duration-200;
+    @apply w-full px-3 py-1.5 bg-cursor-surface border border-cursor-border rounded-md;
+    @apply text-sm text-text-primary placeholder:text-text-muted;
+    @apply focus:outline-none focus:border-accent-blue;
+    @apply transition-colors duration-100;
+    min-height: 32px;
   }
 
-  /* Card styles */
+  /* Select dropdown styling */
+  select.input {
+    @apply cursor-pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23A1A6B3' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 8px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 32px;
+  }
+
+  /* Card styles - bordered container, no shadow */
   .card {
-    @apply bg-machine-surface border border-machine-border rounded-xl p-4;
+    @apply bg-cursor-surface border border-cursor-border rounded-lg p-4;
   }
 
   /* Badge styles */
   .badge {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full;
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded;
   }
 
   .badge-running {
-    @apply bg-status-running/10 text-status-running border border-status-running/30;
+    @apply bg-status-success/10 text-status-success;
   }
 
   .badge-stopped {
-    @apply bg-status-stopped/10 text-status-stopped border border-status-stopped/30;
+    @apply bg-text-muted/10 text-text-muted;
   }
 
   .badge-error {
-    @apply bg-status-error/10 text-status-error border border-status-error/30;
+    @apply bg-status-error/10 text-status-error;
   }
 
   .badge-pending {
-    @apply bg-status-pending/10 text-status-pending border border-status-pending/30;
+    @apply bg-status-pending/10 text-status-pending;
   }
 
   .badge-provisioning {
-    @apply bg-status-provisioning/10 text-status-provisioning border border-status-provisioning/30;
+    @apply bg-accent-blue/10 text-accent-blue;
   }
 }
-

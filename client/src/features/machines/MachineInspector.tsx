@@ -40,8 +40,8 @@ interface Tab {
 
 const tabs: Tab[] = [
   { id: 'overview', label: 'Overview', icon: Server },
-  { id: 'deployments', label: 'Deployments', icon: GitBranch },
-  { id: 'networking', label: 'Networking', icon: Shield },
+  { id: 'deployments', label: 'Deploys', icon: GitBranch },
+  { id: 'networking', label: 'Network', icon: Shield },
   { id: 'services', label: 'Services', icon: Activity },
   { id: 'details', label: 'Details', icon: FileText },
 ];
@@ -88,19 +88,16 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
 
   if (isLoading) {
     return (
-      <div className="w-[480px] border-l border-machine-border bg-black flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <span className="text-text-secondary animate-pulse">Loading...</span>
-          <p className="text-text-secondary">Loading machine...</p>
-        </div>
+      <div className="w-96 border-l border-cursor-border bg-cursor-bg flex items-center justify-center">
+        <span className="text-sm text-text-muted">Loading...</span>
       </div>
     );
   }
 
   if (!machine) {
     return (
-      <div className="w-[480px] border-l border-machine-border bg-black flex items-center justify-center">
-        <p className="text-text-secondary">Machine not found</p>
+      <div className="w-96 border-l border-cursor-border bg-cursor-bg flex items-center justify-center">
+        <span className="text-sm text-text-muted">Machine not found</span>
       </div>
     );
   }
@@ -108,51 +105,51 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
   const status = statusConfig[machine.actual_status] || statusConfig.error;
 
   return (
-    <div className="w-[480px] border-l border-machine-border bg-black flex flex-col animate-slide-in-right">
+    <div className="w-96 border-l border-cursor-border bg-cursor-bg flex flex-col animate-slide-in-right">
       {/* Header */}
-      <div className="flex-shrink-0 p-4 border-b border-machine-border">
-        <div className="flex items-start justify-between gap-4">
+      <div className="flex-shrink-0 px-4 py-3 border-b border-cursor-border">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h2 className="font-mono font-bold text-lg text-text-primary truncate">
+            <div className="flex items-center gap-2 mb-0.5">
+              <h2 className="font-mono text-sm font-medium text-text-primary truncate">
                 {machine.name}
               </h2>
               <span className={clsx('badge', status.class)}>
                 {status.label}
               </span>
             </div>
-            <p className="text-sm text-text-secondary">
-              {machine.provider.toUpperCase()} • {machine.region} • {machine.size}
+            <p className="text-xs text-text-muted">
+              {machine.provider.toUpperCase()} · {machine.region} · {machine.size}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-text-tertiary hover:text-text-secondary rounded transition-colors"
+            className="p-1 text-text-muted hover:text-text-secondary rounded transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Quick info */}
+        {/* Quick actions */}
         {machine.public_ip && (
-          <div className="mt-3 flex items-center gap-2">
-            <code className="font-mono text-sm text-neon-cyan bg-neon-cyan/10 px-2 py-1 rounded flex-1">
+          <div className="mt-2 flex items-center gap-2">
+            <code className="flex-1 font-mono text-xs text-text-secondary bg-cursor-surface px-2 py-1 rounded">
               {machine.public_ip}
             </code>
             <button
               onClick={() => navigator.clipboard.writeText(machine.public_ip!)}
-              className="p-1.5 text-text-tertiary hover:text-neon-cyan rounded transition-colors"
+              className="p-1 text-text-muted hover:text-text-secondary rounded transition-colors"
               title="Copy IP"
             >
-              <Copy className="w-4 h-4" />
+              <Copy className="w-3.5 h-3.5" />
             </button>
             {machine.actual_status === 'running' && (
               <button
                 onClick={() => setShowTerminal(true)}
                 className="btn btn-primary btn-sm"
-                title="Open SSH Terminal"
+                title="SSH"
               >
-                <Terminal className="w-4 h-4" />
+                <Terminal className="w-3.5 h-3.5" />
                 SSH
               </button>
             )}
@@ -161,20 +158,20 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
       </div>
 
       {/* Tabs */}
-      <div className="flex-shrink-0 border-b border-machine-border">
-        <div className="flex px-2">
+      <div className="flex-shrink-0 border-b border-cursor-border">
+        <div className="flex px-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={clsx(
-                'flex items-center gap-2 px-3 py-3 text-sm font-medium transition-colors border-b-2 -mb-px',
+                'flex items-center gap-1.5 px-2 py-2 text-xs font-medium transition-colors border-b -mb-px',
                 activeTab === tab.id
-                  ? 'text-neon-cyan border-neon-cyan'
-                  : 'text-text-secondary hover:text-text-primary border-transparent'
+                  ? 'text-text-primary border-text-primary'
+                  : 'text-text-muted hover:text-text-secondary border-transparent'
               )}
             >
-              <tab.icon className="w-4 h-4" />
+              <tab.icon className="w-3.5 h-3.5" />
               {tab.label}
             </button>
           ))}
@@ -210,4 +207,3 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
     </div>
   );
 }
-

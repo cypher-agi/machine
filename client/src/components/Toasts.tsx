@@ -11,17 +11,17 @@ const iconMap = {
 };
 
 const styleMap = {
-  success: 'bg-status-running/10 border-status-running/30 text-status-running',
-  error: 'bg-status-error/10 border-status-error/30 text-status-error',
-  warning: 'bg-status-warning/10 border-status-warning/30 text-status-warning',
-  info: 'bg-neon-cyan/10 border-neon-cyan/30 text-neon-cyan',
+  success: 'border-status-success/30 text-status-success',
+  error: 'border-status-error/30 text-status-error',
+  warning: 'border-status-warning/30 text-status-warning',
+  info: 'border-accent-blue/30 text-accent-blue',
 };
 
 export function Toasts() {
   const { toasts, removeToast } = useAppStore();
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 max-w-sm">
+    <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 max-w-xs">
       {toasts.map((toast) => (
         <Toast
           key={toast.id}
@@ -58,28 +58,24 @@ function Toast({ toast, onClose }: ToastProps) {
   return (
     <div
       className={clsx(
-        'flex items-start gap-3 p-4 rounded-lg border backdrop-blur-sm shadow-lg animate-slide-in-up',
-        'bg-machine-surface/95',
+        'flex items-start gap-2 px-3 py-2 rounded-md border',
+        'bg-cursor-surface shadow-lg animate-fade-in',
         styleMap[toast.type]
       )}
     >
-      <Icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
+      <Icon className="w-4 h-4 flex-shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-text-primary">{toast.title}</p>
+        <p className="text-xs font-medium text-text-primary">{toast.title}</p>
         {toast.message && (
-          <p className="text-sm text-text-secondary mt-0.5">{toast.message}</p>
+          <p className="text-xs text-text-muted mt-0.5">{toast.message}</p>
         )}
       </div>
       <button
         onClick={onClose}
-        className="p-1 text-text-tertiary hover:text-text-secondary rounded transition-colors"
+        className="p-0.5 text-text-muted hover:text-text-secondary rounded transition-colors"
       >
-        <X className="w-4 h-4" />
+        <X className="w-3.5 h-3.5" />
       </button>
     </div>
   );
 }
-
-
-
-

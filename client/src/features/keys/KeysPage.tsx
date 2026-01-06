@@ -11,9 +11,11 @@ import {
   Clock,
   Upload,
   Fingerprint,
-  Shield
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import clsx from 'clsx';
 import { 
   getSSHKeys, 
   deleteSSHKey,
@@ -33,11 +35,11 @@ const keyTypeLabels: Record<SSHKeyType, string> = {
   ecdsa: 'ECDSA'
 };
 
-const providerIcons: Record<string, string> = {
-  digitalocean: '🌊',
-  aws: '☁️',
-  gcp: '🔷',
-  hetzner: '🏢',
+const providerLabels: Record<string, string> = {
+  digitalocean: 'DO',
+  aws: 'AWS',
+  gcp: 'GCP',
+  hetzner: 'HZ',
 };
 
 function KeysPage() {
@@ -63,7 +65,7 @@ function KeysPage() {
     mutationFn: deleteSSHKey,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssh-keys'] });
-      addToast({ type: 'success', title: 'SSH key deleted' });
+      addToast({ type: 'success', title: 'Key deleted' });
       setDeletingId(null);
     },
     onError: (error: Error) => {
@@ -77,7 +79,7 @@ function KeysPage() {
       syncSSHKeyToProvider(keyId, providerAccountId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssh-keys'] });
-      addToast({ type: 'success', title: 'Key synced to provider' });
+      addToast({ type: 'success', title: 'Key synced' });
       setSyncingKey(null);
     },
     onError: (error: Error) => {
@@ -101,7 +103,7 @@ function KeysPage() {
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      addToast({ type: 'success', title: 'Copied', message: `${label} copied to clipboard` });
+      addToast({ type: 'success', title: 'Copied', message: `${label} copied` });
     } catch {
       addToast({ type: 'error', title: 'Copy failed' });
     }
@@ -119,7 +121,7 @@ function KeysPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      addToast({ type: 'success', title: 'Downloaded', message: 'Private key downloaded' });
+      addToast({ type: 'success', title: 'Downloaded' });
     } catch (error: any) {
       addToast({ type: 'error', title: 'Download failed', message: error.message });
     }
@@ -127,7 +129,6 @@ function KeysPage() {
 
   const getSyncableProviders = (key: SSHKey) => {
     if (!providerAccounts) return [];
-    // Get providers that don't already have this key
     const syncedTypes = Object.keys(key.provider_key_ids);
     return providerAccounts.filter(a => 
       !syncedTypes.includes(a.provider_type) && 
@@ -136,101 +137,103 @@ function KeysPage() {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-cursor-bg">
       {/* Header */}
-      <header className="flex-shrink-0 h-16 border-b border-machine-border bg-black px-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold text-text-primary">SSH Keys</h1>
-          <span className="text-sm text-text-tertiary font-mono">
-            {keys?.length ?? 0} keys
+      <header className="flex-shrink-0 h-12 border-b border-cursor-border px-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-sm font-medium text-text-primary">SSH Keys</h1>
+          <span className="text-xs text-text-muted font-mono">
+            {keys?.length ?? 0}
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => refetch()}
             disabled={isRefetching}
             className="btn btn-ghost btn-icon"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefetching ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={() => setShowImportModal(true)}
-            className="btn btn-secondary"
+            className="btn btn-secondary btn-sm"
           >
-            <Upload className="w-4 h-4" />
-            Import Key
+            <Upload className="w-3.5 h-3.5" />
+            Import
           </button>
           <button
             onClick={() => setShowGenerateModal(true)}
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
           >
-            <Plus className="w-4 h-4" />
-            Generate Key
+            <Plus className="w-3.5 h-3.5" />
+            Generate
           </button>
         </div>
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4">
         {isLoading ? (
           <div className="flex items-center justify-center h-32">
-            <span className="text-text-secondary animate-pulse">Loading keys...</span>
+            <span className="text-sm text-text-muted">Loading...</span>
           </div>
         ) : keys && keys.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-1">
             {keys.map((key) => {
               const isExpanded = expandedKey === key.ssh_key_id;
               const syncableProviders = getSyncableProviders(key);
               const syncedProviders = Object.keys(key.provider_key_ids);
 
               return (
-                <div key={key.ssh_key_id} className="card">
+                <div key={key.ssh_key_id} className="rounded-md border border-cursor-border overflow-hidden">
                   {/* Main row */}
                   <div 
-                    className="flex items-center gap-4 cursor-pointer"
+                    className="group flex items-center gap-3 px-3 py-2 bg-cursor-surface hover:bg-cursor-elevated cursor-pointer transition-colors"
                     onClick={() => setExpandedKey(isExpanded ? null : key.ssh_key_id)}
                   >
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 border border-neon-cyan/30 flex items-center justify-center">
-                      <Key className="w-5 h-5 text-neon-cyan" />
+                    <button className="p-0.5 text-text-muted">
+                      {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                    </button>
+
+                    <div className="w-8 h-8 rounded bg-cursor-elevated border border-cursor-border flex items-center justify-center">
+                      <Key className="w-3.5 h-3.5 text-text-muted" />
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-text-primary">{key.name}</h3>
-                        <span className="text-xs font-mono bg-machine-elevated px-2 py-0.5 rounded text-text-secondary">
-                          {keyTypeLabels[key.key_type]} {key.key_bits}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-text-primary font-medium truncate">
+                          {key.name}
+                        </span>
+                        <span className="text-[10px] font-mono bg-cursor-border px-1.5 py-0.5 rounded text-text-muted">
+                          {keyTypeLabels[key.key_type]}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-text-secondary">
-                        <span className="flex items-center gap-1 font-mono text-xs">
-                          <Fingerprint className="w-3.5 h-3.5" />
-                          {key.fingerprint.slice(0, 24)}...
+                      <div className="flex items-center gap-3 text-xs text-text-muted">
+                        <span className="flex items-center gap-1 font-mono">
+                          <Fingerprint className="w-3 h-3" />
+                          {key.fingerprint.slice(0, 16)}...
                         </span>
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          Created {formatDistanceToNow(new Date(key.created_at), { addSuffix: true })}
+                          <Clock className="w-3 h-3" />
+                          {formatDistanceToNow(new Date(key.created_at), { addSuffix: true })}
                         </span>
                       </div>
                     </div>
 
-                    {/* Synced providers badges */}
-                    <div className="flex items-center gap-2">
+                    {/* Synced providers */}
+                    <div className="flex items-center gap-1">
                       {syncedProviders.map(provider => (
                         <span 
                           key={provider}
-                          className="flex items-center gap-1 text-xs bg-status-running/10 text-status-running px-2 py-1 rounded-full"
+                          className="text-[10px] font-mono bg-status-success/10 text-status-success px-1.5 py-0.5 rounded"
                         >
-                          <span>{providerIcons[provider]}</span>
-                          {provider}
+                          {providerLabels[provider] || provider}
                         </span>
                       ))}
-                      {syncedProviders.length === 0 && (
-                        <span className="text-xs text-text-tertiary">Not synced</span>
-                      )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -239,7 +242,7 @@ function KeysPage() {
                         className="btn btn-ghost btn-sm btn-icon"
                         title="Copy public key"
                       >
-                        <Copy className="w-4 h-4" />
+                        <Copy className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={(e) => {
@@ -249,24 +252,24 @@ function KeysPage() {
                         className="btn btn-ghost btn-sm btn-icon"
                         title="Download private key"
                       >
-                        <Download className="w-4 h-4" />
+                        <Download className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm(`Delete SSH key "${key.name}"? This will NOT remove it from cloud providers.`)) {
+                          if (confirm(`Delete "${key.name}"?`)) {
                             setDeletingId(key.ssh_key_id);
                             deleteMutation.mutate(key.ssh_key_id);
                           }
                         }}
                         disabled={deletingId === key.ssh_key_id}
-                        className="btn btn-danger btn-sm btn-icon"
-                        title="Delete key"
+                        className="btn btn-ghost btn-sm btn-icon text-status-error"
+                        title="Delete"
                       >
                         {deletingId === key.ssh_key_id ? (
-                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                         ) : (
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         )}
                       </button>
                     </div>
@@ -274,43 +277,35 @@ function KeysPage() {
 
                   {/* Expanded details */}
                   {isExpanded && (
-                    <div className="mt-4 pt-4 border-t border-machine-border space-y-4">
+                    <div className="px-4 py-3 border-t border-cursor-border bg-cursor-bg space-y-3">
                       {/* Public key */}
                       <div>
-                        <label className="text-xs text-text-tertiary uppercase tracking-wider mb-2 block">
+                        <label className="text-[10px] text-text-muted uppercase tracking-wider mb-1 block">
                           Public Key
                         </label>
-                        <div className="bg-machine-elevated rounded-lg p-3 font-mono text-xs text-text-secondary break-all">
+                        <div className="bg-cursor-surface rounded p-2 font-mono text-[11px] text-text-muted break-all leading-relaxed">
                           {key.public_key}
                         </div>
                       </div>
 
                       {/* Provider Sync Section */}
                       <div>
-                        <label className="text-xs text-text-tertiary uppercase tracking-wider mb-2 block">
-                          Cloud Provider Sync
+                        <label className="text-[10px] text-text-muted uppercase tracking-wider mb-2 block">
+                          Cloud Sync
                         </label>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-wrap gap-2">
                           {/* Synced providers */}
                           {syncedProviders.map(provider => (
                             <div 
                               key={provider}
-                              className="flex items-center justify-between p-3 bg-status-running/5 border border-status-running/20 rounded-lg"
+                              className="flex items-center gap-2 px-2 py-1.5 bg-status-success/5 border border-status-success/20 rounded text-xs"
                             >
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg">{providerIcons[provider]}</span>
-                                <div>
-                                  <p className="text-sm font-medium text-text-primary capitalize">{provider}</p>
-                                  <p className="text-xs text-text-tertiary font-mono">
-                                    ID: {key.provider_key_ids[provider]}
-                                  </p>
-                                </div>
-                              </div>
+                              <span className="text-text-primary capitalize">{provider}</span>
                               <button
                                 onClick={() => unsyncMutation.mutate({ keyId: key.ssh_key_id, providerType: provider })}
-                                className="btn btn-ghost btn-sm text-status-error"
+                                className="text-text-muted hover:text-status-error"
                               >
-                                Remove
+                                ×
                               </button>
                             </div>
                           ))}
@@ -327,27 +322,18 @@ function KeysPage() {
                                 });
                               }}
                               disabled={syncingKey === key.ssh_key_id}
-                              className="flex items-center justify-between p-3 bg-machine-elevated border border-machine-border rounded-lg hover:border-neon-cyan/50 transition-colors"
+                              className="flex items-center gap-1.5 px-2 py-1.5 bg-cursor-surface border border-cursor-border rounded text-xs hover:border-accent-blue transition-colors"
                             >
-                              <div className="flex items-center gap-2">
-                                <span className="text-lg">{providerIcons[account.provider_type]}</span>
-                                <div className="text-left">
-                                  <p className="text-sm font-medium text-text-primary">{account.label}</p>
-                                  <p className="text-xs text-text-tertiary capitalize">{account.provider_type}</p>
-                                </div>
-                              </div>
-                              {syncingKey === key.ssh_key_id ? (
-                                <RefreshCw className="w-4 h-4 animate-spin text-neon-cyan" />
-                              ) : (
-                                <Cloud className="w-4 h-4 text-text-tertiary" />
+                              <Cloud className="w-3 h-3 text-text-muted" />
+                              <span className="text-text-secondary">{account.label}</span>
+                              {syncingKey === key.ssh_key_id && (
+                                <RefreshCw className="w-3 h-3 animate-spin text-accent-blue" />
                               )}
                             </button>
                           ))}
 
                           {syncedProviders.length === 0 && syncableProviders.length === 0 && (
-                            <p className="text-sm text-text-tertiary col-span-2">
-                              No provider accounts available. Add a provider account first.
-                            </p>
+                            <span className="text-xs text-text-muted">No providers available</span>
                           )}
                         </div>
                       </div>
@@ -358,40 +344,22 @@ function KeysPage() {
             })}
           </div>
         ) : (
-          <div className="card flex flex-col items-center justify-center py-12">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 border border-neon-cyan/30 flex items-center justify-center mb-4">
-              <Key className="w-8 h-8 text-neon-cyan" />
-            </div>
-            <h3 className="text-lg font-medium text-text-primary mb-1">No SSH keys</h3>
-            <p className="text-text-secondary mb-4 text-center max-w-md">
-              Generate or import SSH keys to securely access your machines.
-            </p>
-            <div className="flex gap-3">
-              <button onClick={() => setShowImportModal(true)} className="btn btn-secondary">
-                <Upload className="w-4 h-4" />
-                Import Key
-              </button>
-              <button onClick={() => setShowGenerateModal(true)} className="btn btn-primary">
-                <Plus className="w-4 h-4" />
-                Generate Key
-              </button>
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center">
+              <p className="text-sm text-text-muted mb-3">No SSH keys</p>
+              <div className="flex gap-2 justify-center">
+                <button onClick={() => setShowImportModal(true)} className="btn btn-secondary btn-sm">
+                  <Upload className="w-3.5 h-3.5" />
+                  Import
+                </button>
+                <button onClick={() => setShowGenerateModal(true)} className="btn btn-primary btn-sm">
+                  <Plus className="w-3.5 h-3.5" />
+                  Generate
+                </button>
+              </div>
             </div>
           </div>
         )}
-
-        {/* Info card */}
-        <div className="mt-6 p-4 bg-neon-cyan/5 border border-neon-cyan/20 rounded-lg">
-          <div className="flex items-start gap-3">
-            <Shield className="w-5 h-5 text-neon-cyan flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-medium text-text-primary mb-1">About SSH Key Storage</h4>
-              <p className="text-sm text-text-secondary">
-                Private keys are encrypted with AES-256-GCM before storage. When you sync a key to a provider, 
-                only the public key is uploaded. You can use synced keys when deploying new machines.
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Modals */}
@@ -406,4 +374,3 @@ function KeysPage() {
 }
 
 export default KeysPage;
-

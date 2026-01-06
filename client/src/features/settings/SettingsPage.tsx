@@ -27,70 +27,69 @@ function SettingsPage() {
   ];
 
   const handleSave = () => {
-    addToast({ type: 'success', title: 'Settings saved', message: 'Your changes have been saved.' });
+    addToast({ type: 'success', title: 'Settings saved' });
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-cursor-bg">
       {/* Header */}
-      <header className="flex-shrink-0 h-16 border-b border-machine-border bg-black px-6 flex items-center">
-        <h1 className="text-xl font-semibold text-text-primary">Settings</h1>
+      <header className="flex-shrink-0 h-12 border-b border-cursor-border px-4 flex items-center">
+        <h1 className="text-sm font-medium text-text-primary">Settings</h1>
       </header>
 
       <div className="flex-1 flex overflow-hidden">
         {/* Tabs sidebar */}
-        <nav className="w-56 border-r border-machine-border p-4 space-y-1">
+        <nav className="w-44 border-r border-cursor-border py-2 px-2">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={clsx(
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left',
+                'w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs text-left transition-colors',
                 activeTab === tab.id
-                  ? 'bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/20'
-                  : 'text-text-secondary hover:text-text-primary hover:bg-machine-elevated border border-transparent'
+                  ? 'bg-cursor-elevated text-text-primary'
+                  : 'text-text-secondary hover:text-text-primary hover:bg-cursor-surface'
               )}
             >
-              <tab.icon className="w-5 h-5" />
-              <span className="font-medium">{tab.label}</span>
+              <tab.icon className="w-3.5 h-3.5" />
+              {tab.label}
             </button>
           ))}
         </nav>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-4">
           {activeTab === 'general' && (
-            <div className="max-w-2xl space-y-8">
+            <div className="max-w-lg space-y-4">
               <div>
-                <h2 className="text-lg font-semibold text-text-primary mb-1">General Settings</h2>
-                <p className="text-sm text-text-secondary">Configure general application preferences.</p>
+                <h2 className="text-sm font-medium text-text-primary mb-0.5">General</h2>
+                <p className="text-xs text-text-muted">Configure application preferences.</p>
               </div>
 
-              {/* Theme */}
-              <div className="card">
-                <h3 className="font-medium text-text-primary mb-4">Appearance</h3>
-                <div className="space-y-4">
+              <div className="p-3 bg-cursor-surface border border-cursor-border rounded-md">
+                <h3 className="text-xs font-medium text-text-primary mb-3">Appearance</h3>
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-text-primary">Theme</p>
-                      <p className="text-xs text-text-tertiary">Select your preferred color scheme</p>
+                      <p className="text-xs text-text-primary">Theme</p>
+                      <p className="text-[10px] text-text-muted">Color scheme</p>
                     </div>
-                    <div className="flex items-center gap-2 bg-machine-elevated rounded-lg p-1">
-                      <button className="p-2 rounded bg-machine-surface text-neon-cyan">
-                        <Moon className="w-4 h-4" />
+                    <div className="flex items-center gap-1 bg-cursor-bg rounded p-0.5">
+                      <button className="p-1.5 rounded bg-cursor-elevated text-text-primary">
+                        <Moon className="w-3 h-3" />
                       </button>
-                      <button className="p-2 rounded text-text-tertiary hover:text-text-secondary">
-                        <Sun className="w-4 h-4" />
+                      <button className="p-1.5 rounded text-text-muted hover:text-text-secondary">
+                        <Sun className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-text-primary">Refresh interval</p>
-                      <p className="text-xs text-text-tertiary">How often to poll for updates</p>
+                      <p className="text-xs text-text-primary">Refresh interval</p>
+                      <p className="text-[10px] text-text-muted">Polling frequency</p>
                     </div>
-                    <select className="input w-32">
+                    <select className="input w-28 h-7 text-xs">
                       <option value="5">5 seconds</option>
                       <option value="10">10 seconds</option>
                       <option value="30">30 seconds</option>
@@ -100,123 +99,89 @@ function SettingsPage() {
                 </div>
               </div>
 
-              {/* Time/Locale */}
-              <div className="card">
-                <h3 className="font-medium text-text-primary mb-4">Date & Time</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-text-primary">Timezone</p>
-                      <p className="text-xs text-text-tertiary">Display times in this timezone</p>
-                    </div>
-                    <select className="input w-48">
-                      <option value="local">Local (Browser)</option>
-                      <option value="utc">UTC</option>
-                    </select>
+              <div className="p-3 bg-cursor-surface border border-cursor-border rounded-md">
+                <h3 className="text-xs font-medium text-text-primary mb-3">Date & Time</h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-text-primary">Timezone</p>
+                    <p className="text-[10px] text-text-muted">Display times</p>
                   </div>
+                  <select className="input w-32 h-7 text-xs">
+                    <option value="local">Local</option>
+                    <option value="utc">UTC</option>
+                  </select>
                 </div>
               </div>
             </div>
           )}
 
           {activeTab === 'security' && (
-            <div className="max-w-2xl space-y-8">
+            <div className="max-w-lg space-y-4">
               <div>
-                <h2 className="text-lg font-semibold text-text-primary mb-1">Security Settings</h2>
-                <p className="text-sm text-text-secondary">Manage security and access controls.</p>
+                <h2 className="text-sm font-medium text-text-primary mb-0.5">Security</h2>
+                <p className="text-xs text-text-muted">Manage access controls.</p>
               </div>
 
-              {/* Session */}
-              <div className="card">
-                <h3 className="font-medium text-text-primary mb-4">Session</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-text-primary">Session timeout</p>
-                      <p className="text-xs text-text-tertiary">Automatically log out after inactivity</p>
-                    </div>
-                    <select className="input w-32">
-                      <option value="15">15 minutes</option>
-                      <option value="30">30 minutes</option>
-                      <option value="60">1 hour</option>
-                      <option value="480">8 hours</option>
-                    </select>
+              <div className="p-3 bg-cursor-surface border border-cursor-border rounded-md">
+                <h3 className="text-xs font-medium text-text-primary mb-3">Session</h3>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-text-primary">Timeout</p>
+                    <p className="text-[10px] text-text-muted">Auto logout after inactivity</p>
                   </div>
+                  <select className="input w-28 h-7 text-xs">
+                    <option value="15">15 min</option>
+                    <option value="30">30 min</option>
+                    <option value="60">1 hour</option>
+                    <option value="480">8 hours</option>
+                  </select>
                 </div>
               </div>
 
-              {/* API Keys */}
-              <div className="card">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-medium text-text-primary">API Keys</h3>
-                  <button className="btn btn-secondary btn-sm">
-                    <Key className="w-4 h-4" />
-                    Generate Key
+              <div className="p-3 bg-cursor-surface border border-cursor-border rounded-md">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-medium text-text-primary">API Keys</h3>
+                  <button className="btn btn-secondary btn-sm text-[10px]">
+                    <Key className="w-3 h-3" />
+                    Generate
                   </button>
                 </div>
-                <div className="text-sm text-text-secondary bg-machine-elevated rounded-lg p-4 text-center">
-                  No API keys configured. Generate a key to access the API programmatically.
-                </div>
-              </div>
-
-              {/* Audit */}
-              <div className="card">
-                <h3 className="font-medium text-text-primary mb-4">Audit Log</h3>
-                <p className="text-sm text-text-secondary mb-4">
-                  All actions are logged for security and compliance purposes.
-                </p>
-                <button className="btn btn-secondary btn-sm">
-                  View Audit Log
-                </button>
+                <p className="text-xs text-text-muted">No API keys configured.</p>
               </div>
             </div>
           )}
 
           {activeTab === 'notifications' && (
-            <div className="max-w-2xl space-y-8">
+            <div className="max-w-lg space-y-4">
               <div>
-                <h2 className="text-lg font-semibold text-text-primary mb-1">Notification Settings</h2>
-                <p className="text-sm text-text-secondary">Configure how you receive alerts and updates.</p>
+                <h2 className="text-sm font-medium text-text-primary mb-0.5">Notifications</h2>
+                <p className="text-xs text-text-muted">Configure alerts and updates.</p>
               </div>
 
-              <div className="card">
-                <h3 className="font-medium text-text-primary mb-4">Deployment Notifications</h3>
-                <div className="space-y-4">
-                  {[
-                    { label: 'Deployment started', description: 'When a Terraform apply begins' },
-                    { label: 'Deployment succeeded', description: 'When a deployment completes successfully' },
-                    { label: 'Deployment failed', description: 'When a deployment encounters an error' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-text-primary">{item.label}</p>
-                        <p className="text-xs text-text-tertiary">{item.description}</p>
-                      </div>
+              <div className="p-3 bg-cursor-surface border border-cursor-border rounded-md">
+                <h3 className="text-xs font-medium text-text-primary mb-3">Deployments</h3>
+                <div className="space-y-2">
+                  {['Started', 'Succeeded', 'Failed'].map((label) => (
+                    <div key={label} className="flex items-center justify-between">
+                      <span className="text-xs text-text-secondary">{label}</span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" defaultChecked className="sr-only peer" />
-                        <div className="w-11 h-6 bg-machine-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-cyan"></div>
+                        <div className="w-8 h-4 bg-cursor-border rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-muted after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-accent-blue peer-checked:after:bg-white"></div>
                       </label>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="card">
-                <h3 className="font-medium text-text-primary mb-4">Machine Alerts</h3>
-                <div className="space-y-4">
-                  {[
-                    { label: 'Machine unreachable', description: 'When a machine fails health checks' },
-                    { label: 'Service failed', description: 'When a monitored service goes down' },
-                    { label: 'Terraform drift detected', description: 'When state differs from reality' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-text-primary">{item.label}</p>
-                        <p className="text-xs text-text-tertiary">{item.description}</p>
-                      </div>
+              <div className="p-3 bg-cursor-surface border border-cursor-border rounded-md">
+                <h3 className="text-xs font-medium text-text-primary mb-3">Machine Alerts</h3>
+                <div className="space-y-2">
+                  {['Unreachable', 'Service failed', 'Drift detected'].map((label) => (
+                    <div key={label} className="flex items-center justify-between">
+                      <span className="text-xs text-text-secondary">{label}</span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" defaultChecked className="sr-only peer" />
-                        <div className="w-11 h-6 bg-machine-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-cyan"></div>
+                        <div className="w-8 h-4 bg-cursor-border rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-muted after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-accent-blue peer-checked:after:bg-white"></div>
                       </label>
                     </div>
                   ))}
@@ -226,91 +191,53 @@ function SettingsPage() {
           )}
 
           {activeTab === 'terraform' && (
-            <div className="max-w-2xl space-y-8">
+            <div className="max-w-lg space-y-4">
               <div>
-                <h2 className="text-lg font-semibold text-text-primary mb-1">Terraform Settings</h2>
-                <p className="text-sm text-text-secondary">Configure Terraform execution and state management.</p>
+                <h2 className="text-sm font-medium text-text-primary mb-0.5">Terraform</h2>
+                <p className="text-xs text-text-muted">Configure execution and state.</p>
               </div>
 
-              <div className="bg-status-warning/5 border border-status-warning/20 rounded-lg p-4 flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-status-warning flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-status-warning font-medium">Advanced Configuration</p>
-                  <p className="text-sm text-text-secondary mt-1">
-                    Changes to Terraform settings can affect all deployments. Proceed with caution.
-                  </p>
-                </div>
+              <div className="flex items-start gap-2 p-2 bg-status-warning/5 border border-status-warning/20 rounded-md">
+                <AlertTriangle className="w-3.5 h-3.5 text-status-warning flex-shrink-0 mt-0.5" />
+                <p className="text-[10px] text-text-muted">
+                  Changes affect all deployments. Proceed with caution.
+                </p>
               </div>
 
-              <div className="card">
-                <h3 className="font-medium text-text-primary mb-4">State Backend</h3>
-                <div className="space-y-4">
+              <div className="p-3 bg-cursor-surface border border-cursor-border rounded-md">
+                <h3 className="text-xs font-medium text-text-primary mb-3">State Backend</h3>
+                <div className="space-y-3">
                   <div>
-                    <label className="block text-sm text-text-primary mb-2">Backend Type</label>
-                    <select className="input">
-                      <option value="local">Local (Development only)</option>
+                    <label className="text-[10px] text-text-muted mb-1 block">Backend Type</label>
+                    <select className="input text-xs">
+                      <option value="local">Local</option>
                       <option value="s3">AWS S3</option>
                       <option value="gcs">Google Cloud Storage</option>
-                      <option value="azurerm">Azure Blob Storage</option>
                       <option value="remote">Terraform Cloud</option>
                     </select>
                   </div>
-
                   <div>
-                    <label className="block text-sm text-text-primary mb-2">State Bucket</label>
-                    <input
-                      type="text"
-                      placeholder="my-terraform-state-bucket"
-                      className="input font-mono"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-text-primary mb-2">Lock Table (DynamoDB)</label>
-                    <input
-                      type="text"
-                      placeholder="terraform-state-lock"
-                      className="input font-mono"
-                    />
+                    <label className="text-[10px] text-text-muted mb-1 block">State Bucket</label>
+                    <input type="text" placeholder="my-state-bucket" className="input font-mono text-xs" />
                   </div>
                 </div>
               </div>
 
-              <div className="card">
-                <h3 className="font-medium text-text-primary mb-4">Execution</h3>
-                <div className="space-y-4">
+              <div className="p-3 bg-cursor-surface border border-cursor-border rounded-md">
+                <h3 className="text-xs font-medium text-text-primary mb-3">Execution</h3>
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-text-primary">Auto-approve applies</p>
-                      <p className="text-xs text-text-tertiary">Skip manual approval for non-destructive changes</p>
-                    </div>
+                    <span className="text-xs text-text-secondary">Auto-approve</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" />
-                      <div className="w-11 h-6 bg-machine-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-cyan"></div>
+                      <div className="w-8 h-4 bg-cursor-border rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-muted after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-accent-blue peer-checked:after:bg-white"></div>
                     </label>
                   </div>
-
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-text-primary">Parallel execution</p>
-                      <p className="text-xs text-text-tertiary">Number of concurrent Terraform operations</p>
-                    </div>
-                    <select className="input w-24">
-                      <option value="1">1</option>
-                      <option value="2">2</option>
-                      <option value="4">4</option>
-                      <option value="8">8</option>
-                    </select>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-text-primary">Refresh before plan</p>
-                      <p className="text-xs text-text-tertiary">Always refresh state before planning</p>
-                    </div>
+                    <span className="text-xs text-text-secondary">Refresh before plan</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" defaultChecked className="sr-only peer" />
-                      <div className="w-11 h-6 bg-machine-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-cyan"></div>
+                      <div className="w-8 h-4 bg-cursor-border rounded-full peer peer-checked:after:translate-x-4 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-text-muted after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-accent-blue peer-checked:after:bg-white"></div>
                     </label>
                   </div>
                 </div>
@@ -318,11 +245,10 @@ function SettingsPage() {
             </div>
           )}
 
-          {/* Save button */}
-          <div className="max-w-2xl mt-8 flex justify-end">
-            <button onClick={handleSave} className="btn btn-primary">
-              <Save className="w-4 h-4" />
-              Save Changes
+          <div className="max-w-lg mt-4 flex justify-end">
+            <button onClick={handleSave} className="btn btn-primary btn-sm">
+              <Save className="w-3.5 h-3.5" />
+              Save
             </button>
           </div>
         </div>
@@ -332,4 +258,3 @@ function SettingsPage() {
 }
 
 export default SettingsPage;
-
