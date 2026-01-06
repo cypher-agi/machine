@@ -6,7 +6,7 @@ import { getDeployments, getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Badge } from '@/shared/ui';
 import { DEPLOYMENT_STATE_BADGE_CONFIG, DEPLOYMENT_TYPE_FULL_LABELS } from '@/shared/constants';
-import type { Deployment } from '@machina/shared';
+import type { Deployment, Machine } from '@machina/shared';
 import {
   SidekickHeader,
   SidekickTabs,
@@ -18,7 +18,7 @@ import {
   SidekickLoading,
   SidekickFullCode,
   SidekickEmpty,
-} from '../../Sidekick';
+} from '../../components';
 import styles from '../../Sidekick/Sidekick.module.css';
 
 interface DeploymentDetailProps {
@@ -116,7 +116,7 @@ function DeploymentOverview({
   onMachineClick 
 }: { 
   deployment: Deployment; 
-  machine?: any;
+  machine?: Machine;
   onMachineClick: () => void;
 }) {
   const state = DEPLOYMENT_STATE_BADGE_CONFIG[deployment.state];

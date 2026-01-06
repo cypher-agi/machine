@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppLayout } from './app/layouts';
-import styles from './App.module.css';
+import { PageLoader } from '@/shared/ui';
 
 // Lazy-loaded route components for code-splitting
 const MachinesApp = lazy(() => import('./apps/machines/MachinesApp'));
@@ -10,14 +10,6 @@ const KeysApp = lazy(() => import('./apps/keys/KeysApp'));
 const DeploymentsApp = lazy(() => import('./apps/deployments/DeploymentsApp'));
 const BootstrapApp = lazy(() => import('./apps/bootstrap/BootstrapApp'));
 const SettingsApp = lazy(() => import('./apps/settings/SettingsApp'));
-
-function PageLoader() {
-  return (
-    <div className={styles.loader}>
-      <div className={styles.spinner} />
-    </div>
-  );
-}
 
 function App() {
   return (

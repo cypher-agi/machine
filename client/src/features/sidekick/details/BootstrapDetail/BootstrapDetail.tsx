@@ -4,9 +4,9 @@ import { Package, Lock, Trash2, Edit, Clock, Tag, Server } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { getBootstrapProfiles, deleteBootstrapProfile, getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
-import { Badge, Button } from '@/shared/ui';
+import { Badge, Button, ConfirmModal } from '@/shared/ui';
 import { BOOTSTRAP_METHOD_ICONS, BOOTSTRAP_METHOD_LABELS } from '@/shared/constants';
-import type { BootstrapProfile } from '@machina/shared';
+import type { BootstrapProfile, Machine } from '@machina/shared';
 import {
   SidekickHeader,
   SidekickTabs,
@@ -20,7 +20,7 @@ import {
   SidekickTags,
   SidekickEmpty,
   SidekickActionBar,
-} from '../../Sidekick';
+} from '../../components';
 import styles from '../../Sidekick/Sidekick.module.css';
 
 interface BootstrapDetailProps {
@@ -42,6 +42,7 @@ export function BootstrapDetail({ profileId, onClose, onMinimize }: BootstrapDet
   const { addToast, setSidekickSelection } = useAppStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: profiles, isLoading } = useQuery({
     queryKey: ['bootstrap-profiles'],
@@ -79,9 +80,8 @@ export function BootstrapDetail({ profileId, onClose, onMinimize }: BootstrapDet
   const profileMachines = machines?.filter((m) => m.bootstrap_profile_id === profileId) || [];
 
   const handleDelete = () => {
-    if (confirm(`Delete profile "${profile.name}"?`)) {
-      deleteMutation.mutate(profileId);
-    }
+    deleteMutation.mutate(profileId);
+    setShowDeleteConfirm(false);
   };
 
   return (
@@ -136,7 +136,7 @@ export function BootstrapDetail({ profileId, onClose, onMinimize }: BootstrapDet
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleDelete}
+            onClick={() => setShowDeleteConfirm(true)}
             className={styles.dangerButton}
           >
             <Trash2 size={14} />
@@ -144,6 +144,26 @@ export function BootstrapDetail({ profileId, onClose, onMinimize }: BootstrapDet
           </Button>
         </SidekickActionBar>
       )}
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Delete Bootstrap Profile"
+        message={
+          <>
+            Are you sure you want to delete <strong>{profile.name}</strong>?
+            {profileMachines.length > 0 && (
+              <span style={{ display: 'block', marginTop: 'var(--space-2)', color: 'var(--color-warning)' }}>
+                {profileMachines.length} machine(s) are using this profile.
+              </span>
+            )}
+          </>
+        }
+        confirmLabel="Delete"
+        danger
+        isLoading={deleteMutation.isPending}
+      />
     </>
   );
 }
@@ -226,7 +246,7 @@ function BootstrapTemplate({ profile }: { profile: BootstrapProfile }) {
   );
 }
 
-function BootstrapMachines({ machines }: { machines: any[] }) {
+function BootstrapMachines({ machines }: { machines: Machine[] }) {
   const { setSidekickSelection } = useAppStore();
 
   if (!machines.length) {

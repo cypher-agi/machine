@@ -5,7 +5,7 @@ import {
   SidekickSection,
   SidekickRow,
   SidekickJson,
-} from '../../Sidekick';
+} from '../../components';
 
 interface MachineDetailsTabProps {
   machine: Machine;

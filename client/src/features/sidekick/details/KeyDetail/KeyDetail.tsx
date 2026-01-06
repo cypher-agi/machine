@@ -10,10 +10,11 @@ import {
   syncSSHKeyToProvider,
   unsyncSSHKeyFromProvider
 } from '@/lib/api';
+import { copyToClipboard } from '@/shared/lib';
 import { useAppStore } from '@/store/appStore';
-import { Badge, Button } from '@/shared/ui';
+import { Badge, Button, ConfirmModal } from '@/shared/ui';
 import { KEY_TYPE_LABELS, PROVIDER_FULL_LABELS } from '@/shared/constants';
-import type { SSHKey } from '@machina/shared';
+import type { SSHKey, ProviderAccount } from '@machina/shared';
 import {
   SidekickHeader,
   SidekickTabs,
@@ -25,7 +26,7 @@ import {
   SidekickCode,
   SidekickActionBar,
   SidekickTags,
-} from '../../Sidekick';
+} from '../../components';
 import styles from '../../Sidekick/Sidekick.module.css';
 
 interface KeyDetailProps {
@@ -46,6 +47,7 @@ export function KeyDetail({ keyId, onClose, onMinimize }: KeyDetailProps) {
   const { addToast, setSidekickSelection } = useAppStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: keys, isLoading } = useQuery({
     queryKey: ['ssh-keys'],
@@ -71,9 +73,9 @@ export function KeyDetail({ keyId, onClose, onMinimize }: KeyDetailProps) {
     },
   });
 
-  const copyToClipboard = async (text: string, label: string) => {
+  const handleCopy = async (text: string, label: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      await copyToClipboard(text);
       addToast({ type: 'success', title: 'Copied', message: `${label} copied` });
     } catch {
       addToast({ type: 'error', title: 'Copy failed' });
@@ -110,9 +112,8 @@ export function KeyDetail({ keyId, onClose, onMinimize }: KeyDetailProps) {
   const syncedProviders = Object.keys(sshKey.provider_key_ids);
 
   const handleDelete = () => {
-    if (confirm(`Delete "${sshKey.name}"?`)) {
-      deleteMutation.mutate(keyId);
-    }
+    deleteMutation.mutate(keyId);
+    setShowDeleteConfirm(false);
   };
 
   return (
@@ -140,12 +141,7 @@ export function KeyDetail({ keyId, onClose, onMinimize }: KeyDetailProps) {
       />
 
       <SidekickContent>
-        {activeTab === 'overview' && (
-          <KeyOverview 
-            sshKey={sshKey} 
-            onCopy={copyToClipboard}
-          />
-        )}
+        {activeTab === 'overview' && <KeyOverview sshKey={sshKey} />}
         {activeTab === 'sync' && (
           <KeySync 
             sshKey={sshKey} 
@@ -162,7 +158,7 @@ export function KeyDetail({ keyId, onClose, onMinimize }: KeyDetailProps) {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => copyToClipboard(sshKey.public_key, 'Public key')}
+            onClick={() => handleCopy(sshKey.public_key, 'Public key')}
           >
             <Copy size={14} />
             Copy
@@ -179,17 +175,37 @@ export function KeyDetail({ keyId, onClose, onMinimize }: KeyDetailProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleDelete}
+          onClick={() => setShowDeleteConfirm(true)}
           className={styles.dangerButton}
         >
           <Trash2 size={14} />
         </Button>
       </SidekickActionBar>
+
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Delete SSH Key"
+        message={
+          <>
+            Are you sure you want to delete <strong>{sshKey.name}</strong>?
+            {syncedProviders.length > 0 && (
+              <span style={{ display: 'block', marginTop: 'var(--space-2)', color: 'var(--color-warning)' }}>
+                This key is synced to {syncedProviders.length} provider(s).
+              </span>
+            )}
+          </>
+        }
+        confirmLabel="Delete"
+        danger
+        isLoading={deleteMutation.isPending}
+      />
     </>
   );
 }
 
-function KeyOverview({ sshKey, onCopy }: { sshKey: SSHKey; onCopy: (text: string, label: string) => void }) {
+function KeyOverview({ sshKey }: { sshKey: SSHKey }) {
   const syncedProviders = Object.keys(sshKey.provider_key_ids);
 
   return (
@@ -225,7 +241,7 @@ function KeyOverview({ sshKey, onCopy }: { sshKey: SSHKey; onCopy: (text: string
   );
 }
 
-function KeySync({ sshKey, providerAccounts }: { sshKey: SSHKey; providerAccounts: any[] }) {
+function KeySync({ sshKey, providerAccounts }: { sshKey: SSHKey; providerAccounts: ProviderAccount[] }) {
   const { addToast } = useAppStore();
   const queryClient = useQueryClient();
   const [syncingProvider, setSyncingProvider] = useState<string | null>(null);

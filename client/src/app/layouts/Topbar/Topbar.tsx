@@ -9,7 +9,7 @@ export function Topbar() {
       {/* Logo */}
       <div className={styles.logo} onClick={() => navigate('/machines')}>
         <img src="/machina_icon.png" alt="Machina" className={styles.logoIcon} />
-        <span className={styles.logoText}>Machina</span>
+        <span className={styles.logoText}>MACHINA</span>
       </div>
     </header>
   );

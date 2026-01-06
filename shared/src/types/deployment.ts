@@ -39,6 +39,7 @@ export interface Deployment {
   // Terraform details
   terraform_workspace: string;
   plan_summary?: TerraformPlanSummary;
+  terraform_plan?: string; // Raw terraform plan output
   
   // Git/versioning
   git_ref?: string;
@@ -48,6 +49,7 @@ export interface Deployment {
   created_at: string;
   started_at?: string;
   finished_at?: string;
+  completed_at?: string; // Alias for finished_at for backwards compatibility
   
   // Initiator
   initiated_by: string;

@@ -12,7 +12,7 @@ import {
   SidekickGrid,
   SidekickGridItem,
   SidekickTags,
-} from '../../Sidekick';
+} from '../../components';
 import styles from '../../Sidekick/Sidekick.module.css';
 
 interface MachineOverviewTabProps {

@@ -1,5 +1,6 @@
-/* MachineCard - dropdown menu styles only */
-/* Card styling is now handled by ItemCard component */
+/* MachineCard specific styles */
+/* Card styling is handled by ItemCard component */
+/* Dropdown styling is handled by shared DropdownMenu component */
 
 .copyButton {
   opacity: 0;
@@ -8,77 +9,4 @@
 
 .copyButton:hover {
   opacity: 1;
-}
-
-.menu {
-  position: relative;
-}
-
-.menuButtonActive {
-  background-color: var(--color-surface);
-}
-
-.dropdown {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: var(--space-1);
-  width: 160px;
-  background-color: var(--color-elevated);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  z-index: 50;
-  padding: var(--space-1) 0;
-  animation: fade-in 100ms ease-out forwards;
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.menuItem {
-  width: 100%;
-  padding: var(--space-1) var(--space-3);
-  text-align: left;
-  font-size: var(--text-xs);
-  color: var(--color-text-secondary);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  transition: all var(--transition-fast);
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.menuItem:hover:not(:disabled) {
-  background-color: var(--color-surface);
-  color: var(--color-text-primary);
-}
-
-.menuItem:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.menuItemDanger {
-  color: var(--color-error);
-}
-
-.menuItemDanger:hover:not(:disabled) {
-  background-color: rgba(248, 113, 113, 0.1);
-}
-
-.menuDivider {
-  margin: var(--space-1) 0;
-  border: none;
-  border-top: 1px solid var(--color-border);
 }

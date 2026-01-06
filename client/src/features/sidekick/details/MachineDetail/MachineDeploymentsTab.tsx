@@ -3,7 +3,7 @@ import type { Deployment } from '@machina/shared';
 import {
   SidekickPanel,
   SidekickEmpty,
-} from '../../Sidekick';
+} from '../../components';
 import styles from '../../Sidekick/Sidekick.module.css';
 
 interface MachineDeploymentsTabProps {

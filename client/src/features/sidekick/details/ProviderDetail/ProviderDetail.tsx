@@ -6,7 +6,7 @@ import { getProviderAccounts, verifyProviderAccount, deleteProviderAccount, getM
 import { useAppStore } from '@/store/appStore';
 import { Badge, Button, Modal } from '@/shared/ui';
 import { PROVIDER_LABELS, PROVIDER_FULL_LABELS } from '@/shared/constants';
-import type { CredentialStatus, ProviderAccount } from '@machina/shared';
+import type { CredentialStatus, ProviderAccount, Machine } from '@machina/shared';
 import {
   SidekickHeader,
   SidekickTabs,
@@ -17,7 +17,7 @@ import {
   SidekickLoading,
   SidekickEmpty,
   SidekickActionBar,
-} from '../../Sidekick';
+} from '../../components';
 import styles from '../../Sidekick/Sidekick.module.css';
 
 interface ProviderDetailProps {
@@ -244,7 +244,7 @@ function ProviderOverview({ account, machineCount }: { account: ProviderAccount;
   );
 }
 
-function ProviderMachines({ machines }: { machines: any[] }) {
+function ProviderMachines({ machines }: { machines: Machine[] }) {
   const { setSidekickSelection } = useAppStore();
 
   if (!machines.length) {

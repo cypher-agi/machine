@@ -4,7 +4,7 @@ import styles from './Input.module.css';
 
 type InputSize = 'sm' | 'md';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   size?: InputSize;
   mono?: boolean;
 }

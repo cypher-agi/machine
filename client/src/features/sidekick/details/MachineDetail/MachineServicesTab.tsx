@@ -2,7 +2,7 @@ import type { MachineServicesResponse } from '@machina/shared';
 import {
   SidekickPanel,
   SidekickEmpty,
-} from '../../Sidekick';
+} from '../../components';
 import styles from '../../Sidekick/Sidekick.module.css';
 
 interface MachineServicesTabProps {
@@ -10,13 +10,13 @@ interface MachineServicesTabProps {
 }
 
 export function MachineServicesTab({ services }: MachineServicesTabProps) {
-  if (!services?.length) {
+  if (!services?.services?.length) {
     return <SidekickEmpty message="No services configured" />;
   }
 
   return (
     <SidekickPanel>
-      {services.map((service) => (
+      {services.services.map((service) => (
         <div key={service.service_name} className={styles.card}>
           <div className={styles.cardHeader}>
             <div className={styles.cardInfo}>
@@ -36,4 +36,3 @@ export function MachineServicesTab({ services }: MachineServicesTabProps) {
     </SidekickPanel>
   );
 }
-

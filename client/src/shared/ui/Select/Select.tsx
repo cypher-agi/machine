@@ -4,7 +4,7 @@ import styles from './Select.module.css';
 
 type SelectSize = 'sm' | 'md';
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
   size?: SelectSize;
 }
 

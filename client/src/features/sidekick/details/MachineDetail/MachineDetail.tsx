@@ -10,7 +10,7 @@ import {
   SidekickTabs,
   SidekickContent,
   SidekickLoading,
-} from '../../Sidekick';
+} from '../../components';
 import { MachineOverviewTab } from './MachineOverviewTab';
 import { MachineDeploymentsTab } from './MachineDeploymentsTab';
 import { MachineNetworkingTab } from './MachineNetworkingTab';
