@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { X, Download, Copy, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import clsx from 'clsx';
-import type { Deployment } from '@machine/shared';
+import type { Deployment } from '@machina/shared';
 import { streamDeploymentLogs } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Modal, Button } from '@/shared/ui';

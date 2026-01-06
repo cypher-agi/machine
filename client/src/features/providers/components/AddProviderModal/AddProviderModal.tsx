@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import { createProviderAccount } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Modal, Button, Input, Select } from '@/shared/ui';
-import type { ProviderType, ProviderCredentials } from '@machine/shared';
+import type { ProviderType, ProviderCredentials } from '@machina/shared';
 
 interface AddProviderModalProps {
   onClose: () => void;

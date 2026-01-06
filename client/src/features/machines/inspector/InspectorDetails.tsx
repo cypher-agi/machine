@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { Copy } from 'lucide-react';
-import type { Machine } from '@machine/shared';
+import type { Machine } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
 import styles from './Inspector.module.css';
 

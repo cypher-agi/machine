@@ -28,7 +28,7 @@ import { useAppStore } from '@/store/appStore';
 import { Button } from '@/shared/ui';
 import { GenerateKeyModal } from './components/GenerateKeyModal';
 import { ImportKeyModal } from './components/ImportKeyModal';
-import type { SSHKey, SSHKeyType } from '@machine/shared';
+import type { SSHKey, SSHKeyType } from '@machina/shared';
 import styles from './KeysPage.module.css';
 
 const keyTypeLabels: Record<SSHKeyType, string> = {

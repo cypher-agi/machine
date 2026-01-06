@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { X, Server, GitBranch, Shield, Activity, FileText, Copy, Terminal } from 'lucide-react';
 import clsx from 'clsx';
 import { getMachine, getMachineServices, getMachineNetworking, getDeployments } from '@/lib/api';
-import type { MachineStatus } from '@machine/shared';
+import type { MachineStatus } from '@machina/shared';
 import { Badge, Button } from '@/shared/ui';
 import { InspectorOverview } from './inspector/InspectorOverview';
 import { InspectorDeployments } from './inspector/InspectorDeployments';

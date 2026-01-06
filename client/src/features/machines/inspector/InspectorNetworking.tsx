@@ -1,6 +1,6 @@
 import { Shield, Globe, Lock, Unlock, Server } from 'lucide-react';
 import clsx from 'clsx';
-import type { MachineNetworking, FirewallRule, Protocol } from '@machine/shared';
+import type { MachineNetworking, FirewallRule, Protocol } from '@machina/shared';
 import styles from './Inspector.module.css';
 
 interface InspectorNetworkingProps {

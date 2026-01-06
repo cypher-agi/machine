@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Activity, RefreshCw, AlertTriangle, Check, X, Loader2, Clock, Cpu, HardDrive, Play, Square } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
-import type { MachineServicesResponse, MachineService, ServiceState, ServiceHealth } from '@machine/shared';
+import type { MachineServicesResponse, MachineService, ServiceState, ServiceHealth } from '@machina/shared';
 import { restartMachineService } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Button } from '@/shared/ui';

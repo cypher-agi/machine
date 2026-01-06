@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
-import type { Machine, MachineStatus } from '@machine/shared';
+import type { Machine, MachineStatus } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { rebootMachine, destroyMachine } from '@/lib/api';

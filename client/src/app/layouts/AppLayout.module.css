@@ -1,8 +1,15 @@
 /* AppLayout styles */
 .layout {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   background-color: var(--color-bg);
+  overflow: hidden;
+}
+
+.mainWrapper {
+  flex: 1;
+  display: flex;
   overflow: hidden;
 }
 

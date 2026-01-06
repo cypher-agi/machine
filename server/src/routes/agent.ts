@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { database } from '../services/database';
-import { ApiResponse } from '@machine/shared';
+import { ApiResponse } from '@machina/shared';
 
 export const agentRouter = Router();
 

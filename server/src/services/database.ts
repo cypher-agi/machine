@@ -10,7 +10,7 @@ import {
   FirewallProfile,
   AuditEvent,
   SSHKey
-} from '@machine/shared';
+} from '@machina/shared';
 
 // Database file location
 const DATA_DIR = path.join(process.cwd(), '.data');

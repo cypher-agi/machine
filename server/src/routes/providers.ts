@@ -7,7 +7,7 @@ import {
   ProviderOptions,
   ApiResponse,
   ProviderType
-} from '@machine/shared';
+} from '@machina/shared';
 import { AppError } from '../middleware/errorHandler';
 import { storeCredentials, deleteCredentials, getCredentials } from '../services/terraform';
 

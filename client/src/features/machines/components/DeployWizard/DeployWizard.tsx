@@ -21,7 +21,7 @@ import {
   getSSHKeys,
   createMachine
 } from '@/lib/api';
-import type { MachineCreateRequest } from '@machine/shared';
+import type { MachineCreateRequest } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
 import { Modal, Button, Input, Select } from '@/shared/ui';
 import styles from './DeployWizard.module.css';

@@ -1,32 +1,10 @@
 /* Sidebar styles */
 .sidebar {
-  width: 208px;
+  width: 200px;
   background-color: var(--color-bg);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-}
-
-.logo {
-  height: 48px;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 0 var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.logoIcon {
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-md);
-  object-fit: contain;
-}
-
-.logoText {
-  font-weight: var(--font-medium);
-  font-size: var(--text-sm);
-  color: var(--color-text-primary);
 }
 
 .nav {
@@ -38,7 +16,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
   transition: all var(--transition-fast);
@@ -95,3 +73,4 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+

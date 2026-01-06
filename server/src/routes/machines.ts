@@ -11,7 +11,7 @@ import {
   MachineNetworking,
   FirewallRule,
   SSHKey
-} from '@machine/shared';
+} from '@machina/shared';
 import { AppError } from '../middleware/errorHandler';
 import { TerraformService, getCredentials } from '../services/terraform';
 

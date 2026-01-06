@@ -14,7 +14,7 @@ import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import { getDeployments, getMachines } from '@/lib/api';
 import { Button, Select } from '@/shared/ui';
-import type { DeploymentState, DeploymentType } from '@machine/shared';
+import type { DeploymentState, DeploymentType } from '@machina/shared';
 import styles from './DeploymentsPage.module.css';
 
 const stateConfig: Record<DeploymentState, { icon: typeof Check; className: string }> = {

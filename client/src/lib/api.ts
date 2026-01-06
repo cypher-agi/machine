@@ -1,3 +1,4 @@
+
 import type {
   ApiResponse,
   Machine,
@@ -20,7 +21,7 @@ import type {
   SSHKeyCreateRequest,
   SSHKeyImportRequest,
   SSHKeyGenerateResponse,
-} from '@machine/shared';
+} from '@machina/shared';
 
 const API_BASE = '/api';
 

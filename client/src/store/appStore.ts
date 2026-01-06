@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { MachineListFilter, MachineListSort } from '@machine/shared';
+import type { MachineListFilter, MachineListSort } from '@machina/shared';
 
 interface AppState {
   // Selected machine for inspector panel
@@ -18,6 +18,10 @@ interface AppState {
   // Deploy wizard state
   deployWizardOpen: boolean;
   setDeployWizardOpen: (open: boolean) => void;
+
+  // Right menu state
+  rightMenuOpen: boolean;
+  setRightMenuOpen: (open: boolean) => void;
 
   // Toast notifications
   toasts: Toast[];
@@ -56,6 +60,10 @@ export const useAppStore = create<AppState>((set) => ({
   // Deploy wizard
   deployWizardOpen: false,
   setDeployWizardOpen: (open) => set({ deployWizardOpen: open }),
+
+  // Right menu
+  rightMenuOpen: false,
+  setRightMenuOpen: (open) => set({ rightMenuOpen: open }),
 
   // Toasts
   toasts: [],

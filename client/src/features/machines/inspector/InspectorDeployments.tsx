@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { GitBranch, Clock, Check, X, AlertCircle, Sparkles, ChevronRight, StopCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
-import type { Deployment, DeploymentState, DeploymentType } from '@machine/shared';
+import type { Deployment, DeploymentState, DeploymentType } from '@machina/shared';
 import { DeploymentLogsModal } from './DeploymentLogsModal';
 import styles from './Inspector.module.css';
 

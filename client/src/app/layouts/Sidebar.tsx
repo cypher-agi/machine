@@ -28,12 +28,6 @@ const navItems: NavItem[] = [
 export function Sidebar() {
   return (
     <aside className={styles.sidebar}>
-      {/* Logo */}
-      <div className={styles.logo}>
-        <img src="/machina_icon.png" alt="Machina" className={styles.logoIcon} />
-        <span className={styles.logoText}>Machina</span>
-      </div>
-
       {/* Navigation */}
       <nav className={styles.nav}>
         {navItems.map((item) => (
@@ -67,3 +61,4 @@ export function Sidebar() {
     </aside>
   );
 }
+

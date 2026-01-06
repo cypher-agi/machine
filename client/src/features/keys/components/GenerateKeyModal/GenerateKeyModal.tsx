@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import { generateSSHKey } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Modal, Button, Input, Select } from '@/shared/ui';
-import type { SSHKeyType, SSHKeyGenerateResponse } from '@machine/shared';
+import type { SSHKeyType, SSHKeyGenerateResponse } from '@machina/shared';
 
 interface GenerateKeyModalProps {
   onClose: () => void;

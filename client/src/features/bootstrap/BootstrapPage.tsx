@@ -18,7 +18,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { getBootstrapProfiles, deleteBootstrapProfile } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Button } from '@/shared/ui';
-import type { BootstrapMethod, BootstrapProfile } from '@machine/shared';
+import type { BootstrapMethod, BootstrapProfile } from '@machina/shared';
 import styles from './BootstrapPage.module.css';
 
 const methodIcons: Record<BootstrapMethod, typeof Cloud> = {

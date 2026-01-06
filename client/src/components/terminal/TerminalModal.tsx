@@ -4,7 +4,7 @@ import { X, Terminal, Key, AlertTriangle, Maximize2, Minimize2 } from 'lucide-re
 import clsx from 'clsx';
 import { SSHTerminal } from './SSHTerminal';
 import { getSSHKeys } from '@/lib/api';
-import type { Machine } from '@machine/shared';
+import type { Machine } from '@machina/shared';
 
 interface TerminalModalProps {
   machine: Machine;

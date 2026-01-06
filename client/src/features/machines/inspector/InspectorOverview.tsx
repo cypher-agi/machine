@@ -1,7 +1,7 @@
 import { Server, Globe, Clock, Tag, Cpu, HardDrive, Shield, Activity, Gauge, MemoryStick } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
-import type { Machine } from '@machine/shared';
+import type { Machine } from '@machina/shared';
 import clsx from 'clsx';
 import { getAgentMetrics } from '@/lib/api';
 import styles from './Inspector.module.css';

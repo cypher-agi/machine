@@ -4,7 +4,7 @@ import {
   AuditEvent,
   AuditEventListFilter,
   ApiResponse
-} from '@machine/shared';
+} from '@machina/shared';
 
 export const auditRouter = Router();
 

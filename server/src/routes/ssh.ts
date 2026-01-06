@@ -12,7 +12,7 @@ import {
   SSHKeyImportRequest,
   SSHKeyGenerateResponse,
   ApiResponse
-} from '@machine/shared';
+} from '@machina/shared';
 import { AppError } from '../middleware/errorHandler';
 import { getCredentials } from '../services/terraform';
 

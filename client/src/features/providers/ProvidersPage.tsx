@@ -7,7 +7,7 @@ import { getProviderAccounts, verifyProviderAccount, updateProviderAccount, dele
 import { useAppStore } from '@/store/appStore';
 import { Button, Input, Modal } from '@/shared/ui';
 import { AddProviderModal } from './components/AddProviderModal';
-import type { CredentialStatus, ProviderAccount } from '@machine/shared';
+import type { CredentialStatus, ProviderAccount } from '@machina/shared';
 import styles from './ProvidersPage.module.css';
 
 const providerLabels: Record<string, string> = {

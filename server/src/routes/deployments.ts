@@ -5,7 +5,7 @@ import {
   DeploymentLog,
   DeploymentListFilter,
   ApiResponse
-} from '@machine/shared';
+} from '@machina/shared';
 import { AppError } from '../middleware/errorHandler';
 import { addDeploymentLogListener, removeDeploymentLogListener } from './machines';
 

@@ -6,7 +6,7 @@ import {
   BootstrapProfileCreateRequest,
   FirewallProfile,
   ApiResponse
-} from '@machine/shared';
+} from '@machina/shared';
 import { AppError } from '../middleware/errorHandler';
 
 export const bootstrapRouter = Router();
