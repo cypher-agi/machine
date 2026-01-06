@@ -9,12 +9,12 @@ export default {
       colors: {
         // Cursor-style dark theme
         cursor: {
-          // Base backgrounds
-          bg: '#0F1115',
-          surface: '#14161C',
-          elevated: '#1A1D24',
-          border: '#23262F',
-          'border-light': '#2D3139',
+          // Base backgrounds - ultra dark
+          bg: '#09090B',
+          surface: '#0E0E10',
+          elevated: '#131316',
+          border: '#1C1C1F',
+          'border-light': '#252528',
         },
         // Text colors
         text: {

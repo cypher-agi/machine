@@ -4,12 +4,12 @@
 
 /* Cursor-style Design Tokens */
 :root {
-  /* Colors */
-  --color-bg: #0F1115;
-  --color-surface: #14161C;
-  --color-elevated: #1A1D24;
-  --color-border: #23262F;
-  --color-border-light: #2D3139;
+  /* Colors - ultra dark theme */
+  --color-bg: #09090B;
+  --color-surface: #0E0E10;
+  --color-elevated: #131316;
+  --color-border: #1C1C1F;
+  --color-border-light: #252528;
   
   --color-text-primary: #E6E8EB;
   --color-text-secondary: #A1A6B3;
