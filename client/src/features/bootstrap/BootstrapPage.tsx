@@ -362,14 +362,13 @@ function BootstrapPage() {
           </div>
         ) : profiles && profiles.length > 0 ? (
           <div className="grid gap-4">
-            {profiles.map((profile, index) => {
+            {profiles.map((profile) => {
               const MethodIcon = methodIcons[profile.method];
 
               return (
                 <div 
                   key={profile.profile_id}
-                  className="card animate-slide-in-up"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="card"
                 >
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-machine-elevated border border-machine-border flex items-center justify-center">

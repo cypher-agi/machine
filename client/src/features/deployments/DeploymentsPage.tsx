@@ -116,15 +116,14 @@ function DeploymentsPage() {
           </div>
         ) : deployments && deployments.length > 0 ? (
           <div className="space-y-3">
-            {deployments.map((deployment, index) => {
+            {deployments.map((deployment) => {
               const state = stateConfig[deployment.state];
               const StateIcon = state.icon;
 
               return (
                 <div 
                   key={deployment.deployment_id} 
-                  className="card animate-slide-in-up"
-                  style={{ animationDelay: `${index * 30}ms` }}
+                  className="card"
                 >
                   <div className="flex items-start gap-4">
                     <div className={clsx('p-2.5 rounded-xl', state.bgClass)}>

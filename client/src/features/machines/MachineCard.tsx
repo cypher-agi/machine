@@ -1,4 +1,3 @@
-import { CSSProperties } from 'react';
 import { 
   Server, 
   Globe, 
@@ -20,7 +19,6 @@ import { rebootMachine, destroyMachine } from '@/lib/api';
 
 interface MachineCardProps {
   machine: Machine;
-  style?: CSSProperties;
 }
 
 const statusConfig: Record<MachineStatus, { label: string; class: string; pulse?: boolean }> = {
@@ -43,7 +41,7 @@ const providerIcons: Record<string, string> = {
   baremetal: '🖥️',
 };
 
-export function MachineCard({ machine, style }: MachineCardProps) {
+export function MachineCard({ machine }: MachineCardProps) {
   const { selectedMachineId, setSelectedMachineId, addToast } = useAppStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -95,11 +93,10 @@ export function MachineCard({ machine, style }: MachineCardProps) {
   return (
     <div
       className={clsx(
-        'card group animate-slide-in-up cursor-pointer transition-all duration-200',
+        'card group cursor-pointer transition-all duration-200',
         'hover:border-machine-border-light',
         isSelected && 'border-neon-cyan bg-neon-cyan/5'
       )}
-      style={style}
       onClick={() => setSelectedMachineId(machine.machine_id)}
     >
       <div className="flex items-center gap-4">

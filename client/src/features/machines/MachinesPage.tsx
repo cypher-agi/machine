@@ -115,11 +115,10 @@ function MachinesPage() {
           </div>
         ) : machines && machines.length > 0 ? (
           <div className="grid gap-4">
-            {machines.map((machine, index) => (
+            {machines.map((machine) => (
               <MachineCard 
                 key={machine.machine_id} 
                 machine={machine}
-                style={{ animationDelay: `${index * 50}ms` }}
               />
             ))}
           </div>
