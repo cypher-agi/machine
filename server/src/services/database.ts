@@ -1155,14 +1155,6 @@ write_files:
       PUBLIC_IP=$(curl -s --max-time 10 ifconfig.me || curl -s --max-time 10 api.ipify.org || echo "localhost")
       echo "Public IP: $PUBLIC_IP"
       
-      # Create environment file for the service
-      sudo tee /etc/machine-dashboard.env > /dev/null <<EOF
-NODE_ENV=production
-PORT=3001
-PUBLIC_SERVER_URL=http://$PUBLIC_IP
-CORS_ORIGIN=*
-EOF
-      
       echo "=== Verifying build ==="
       ls -la /home/machine/machine/server/dist/
       ls -la /home/machine/machine/client/dist/
@@ -1181,6 +1173,17 @@ runcmd:
   - su - machine -c '/home/machine/setup-machine.sh'
   
   # Update systemd service to use environment file
+  - |
+    # Create environment file for the service.
+    # NOTE: This must be valid YAML, so keep this logic in runcmd (not embedded unindented in write_files).
+    PUBLIC_IP=$(curl -s --max-time 10 ifconfig.me || curl -s --max-time 10 api.ipify.org || echo "localhost")
+    cat > /etc/machine-dashboard.env <<EOF
+    NODE_ENV=production
+    PORT=3001
+    PUBLIC_SERVER_URL=http://$PUBLIC_IP
+    CORS_ORIGIN=*
+    EOF
+    chmod 0644 /etc/machine-dashboard.env
   - |
     cat > /etc/systemd/system/machine-dashboard.service <<EOF
     [Unit]
