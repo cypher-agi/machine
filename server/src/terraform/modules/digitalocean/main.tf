@@ -84,22 +84,17 @@ provider "digitalocean" {
 }
 
 locals {
-  // DO firewall names must be unique within an account, and must also match DO's
-  // naming constraints. We sanitize user-provided droplet names to avoid 422 errors.
+  // DO firewall names must be unique within an account and follow strict naming rules.
+  // Some Terraform distributions/environments may not support regex functions, so we
+  // avoid regexreplace entirely here.
   //
-  // Strategy:
-  // - lowercase
-  // - replace invalid chars with '-'
-  // - collapse multiple '-' and trim leading/trailing '-'
-  // - cap length (DO max is 64 chars)
-  // - always include a machine_id-derived suffix for uniqueness
-  name_lower         = lower(var.name)
-  name_sanitized_1   = regexreplace(local.name_lower, "[^a-z0-9-]", "-")
-  name_sanitized_2   = regexreplace(local.name_sanitized_1, "-{2,}", "-")
-  name_sanitized     = trim(local.name_sanitized_2, "-")
-  name_base          = length(local.name_sanitized) > 0 ? local.name_sanitized : "machine"
-  firewall_name_raw  = "${local.name_base}-fw-${substr(var.machine_id, 0, 12)}"
-  firewall_name      = trim(substr(local.firewall_name_raw, 0, 64), "-")
+  // We derive the firewall name from machine_id (which is stable + unique) and only
+  // use simple string ops that are widely supported.
+  //
+  // machine_id looks like: "mach_bcd0f0ab753a46b9a746"
+  // -> "mach-bcd0f0ab753a46b9a746"
+  machine_id_slug = replace(lower(var.machine_id), "_", "-")
+  firewall_name   = substr("fw-${local.machine_id_slug}", 0, 64)
 }
 
 resource "digitalocean_droplet" "main" {
