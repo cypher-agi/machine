@@ -111,8 +111,12 @@ body {
   .btn {
     @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md;
     @apply transition-colors duration-100 ease-out;
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-blue focus-visible:ring-offset-2 focus-visible:ring-offset-cursor-bg;
+    @apply focus:outline-none;
     min-height: 28px;
+  }
+
+  .btn:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
   }
 
   .btn-primary {
@@ -149,9 +153,13 @@ body {
   .input {
     @apply w-full px-3 py-1.5 bg-cursor-surface border border-cursor-border rounded-md;
     @apply text-sm text-text-primary placeholder:text-text-muted;
-    @apply focus:outline-none focus:border-accent-blue;
+    @apply focus:outline-none;
     @apply transition-colors duration-100;
     min-height: 32px;
+  }
+
+  .input:focus {
+    border-color: var(--color-accent);
   }
 
   /* Select dropdown styling */
@@ -192,6 +200,7 @@ body {
   }
 
   .badge-provisioning {
-    @apply bg-accent-blue/10 text-accent-blue;
+    background-color: rgba(94, 158, 255, 0.1);
+    color: #5E9EFF;
   }
 }
