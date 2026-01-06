@@ -5,7 +5,36 @@
   background-color: var(--color-bg);
   display: flex;
   flex-direction: column;
-  animation: slide-in-right 150ms ease-out forwards;
+}
+
+.sidekickOpening {
+  animation: sidekick-slide-in 200ms ease-out forwards;
+}
+
+.sidekickClosing {
+  animation: sidekick-slide-out 200ms ease-out forwards;
+}
+
+@keyframes sidekick-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes sidekick-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }
 
 .loading {

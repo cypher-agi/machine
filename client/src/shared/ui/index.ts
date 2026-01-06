@@ -4,3 +4,5 @@ export { Select } from './Select';
 export { Card } from './Card';
 export { Badge } from './Badge';
 export { Modal } from './Modal';
+export { AnimatedTabs } from './AnimatedTabs';
+export type { AnimatedTabsProps, Tab } from './AnimatedTabs';

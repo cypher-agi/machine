@@ -2,9 +2,9 @@ import { format } from 'date-fns';
 import { Copy } from 'lucide-react';
 import type { Machine } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
-import styles from './Inspector.module.css';
+import styles from './Sidekick.module.css';
 
-interface InspectorDetailsProps {
+interface SidekickDetailsProps {
   machine: Machine;
 }
 
@@ -35,7 +35,7 @@ function DetailRow({ label, value, copyable = false }: { label: string; value?: 
   );
 }
 
-export function InspectorDetails({ machine }: InspectorDetailsProps) {
+export function SidekickDetails({ machine }: SidekickDetailsProps) {
   return (
     <div className={styles.panel}>
       {/* Identifiers */}
@@ -105,3 +105,4 @@ export function InspectorDetails({ machine }: InspectorDetailsProps) {
     </div>
   );
 }
+

@@ -1,9 +1,9 @@
 import { Shield, Globe, Lock, Unlock, Server } from 'lucide-react';
 import clsx from 'clsx';
 import type { MachineNetworking, FirewallRule, Protocol } from '@machina/shared';
-import styles from './Inspector.module.css';
+import styles from './Sidekick.module.css';
 
-interface InspectorNetworkingProps {
+interface SidekickNetworkingProps {
   networking?: MachineNetworking;
 }
 
@@ -36,7 +36,7 @@ function FirewallRuleRow({ rule }: { rule: FirewallRule }) {
   );
 }
 
-export function InspectorNetworking({ networking }: InspectorNetworkingProps) {
+export function SidekickNetworking({ networking }: SidekickNetworkingProps) {
   if (!networking) {
     return (
       <div className={styles.panel}>
@@ -201,3 +201,4 @@ export function InspectorNetworking({ networking }: InspectorNetworkingProps) {
     </div>
   );
 }
+

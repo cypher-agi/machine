@@ -11,20 +11,21 @@ import {
   GitBranch
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import clsx from 'clsx';
 import { getDeployments, getMachines } from '@/lib/api';
+import { useAppStore } from '@/store/appStore';
 import { Button, Select } from '@/shared/ui';
+import { ItemCard, ItemCardMeta, ItemCardStatus } from '@/shared/components';
 import type { DeploymentState, DeploymentType } from '@machina/shared';
 import styles from './DeploymentsPage.module.css';
 
-const stateConfig: Record<DeploymentState, { icon: typeof Check; className: string }> = {
-  queued: { icon: Clock, className: styles.stateQueued },
-  planning: { icon: Loader2, className: styles.statePlanning },
-  awaiting_approval: { icon: AlertCircle, className: styles.stateAwaitingApproval },
-  applying: { icon: Loader2, className: styles.stateApplying },
-  succeeded: { icon: Check, className: styles.stateSucceeded },
-  failed: { icon: X, className: styles.stateFailed },
-  cancelled: { icon: StopCircle, className: styles.stateCancelled },
+const stateConfig: Record<DeploymentState, { icon: typeof Check; variant: 'valid' | 'invalid' | 'warning' | 'muted' | 'pending' | 'provisioning'; label: string }> = {
+  queued: { icon: Clock, variant: 'pending', label: 'Queued' },
+  planning: { icon: Loader2, variant: 'provisioning', label: 'Planning' },
+  awaiting_approval: { icon: AlertCircle, variant: 'warning', label: 'Awaiting' },
+  applying: { icon: Loader2, variant: 'provisioning', label: 'Applying' },
+  succeeded: { icon: Check, variant: 'valid', label: 'Succeeded' },
+  failed: { icon: X, variant: 'invalid', label: 'Failed' },
+  cancelled: { icon: StopCircle, variant: 'muted', label: 'Cancelled' },
 };
 
 const typeLabels: Record<DeploymentType, string> = {
@@ -37,6 +38,7 @@ const typeLabels: Record<DeploymentType, string> = {
 };
 
 function DeploymentsPage() {
+  const { sidekickSelection, setSidekickSelection } = useAppStore();
   const [filterState, setFilterState] = useState<DeploymentState | ''>('');
   const [filterType, setFilterType] = useState<DeploymentType | ''>('');
 
@@ -57,6 +59,10 @@ function DeploymentsPage() {
   const getMachineName = (machineId?: string) => {
     if (!machineId) return 'Unknown';
     return machines?.find(m => m.machine_id === machineId)?.name || machineId.substring(0, 12);
+  };
+
+  const handleSelectDeployment = (deploymentId: string) => {
+    setSidekickSelection({ type: 'deployment', id: deploymentId });
   };
 
   return (
@@ -116,47 +122,50 @@ function DeploymentsPage() {
               const state = stateConfig[deployment.state];
               const StateIcon = state.icon;
               const isInProgress = deployment.state === 'planning' || deployment.state === 'applying';
+              const isSelected = sidekickSelection?.type === 'deployment' && sidekickSelection?.id === deployment.deployment_id;
 
               return (
-                <div key={deployment.deployment_id} className={styles.row}>
-                  <div className={clsx(styles.stateIcon, state.className)}>
-                    <StateIcon size={16} className={isInProgress ? 'animate-spin' : ''} />
-                  </div>
-
-                  <div className={styles.info}>
-                    <div className={styles.infoTop}>
-                      <span className={styles.type}>{typeLabels[deployment.type]}</span>
-                      <span className={clsx(styles.state, state.className)}>
-                        {deployment.state.replace(/_/g, ' ')}
-                      </span>
-                    </div>
-
-                    <div className={styles.meta}>
-                      <span className={styles.machineName}>{getMachineName(deployment.machine_id)}</span>
-                      <span>{formatDistanceToNow(new Date(deployment.created_at), { addSuffix: true })}</span>
-                      {deployment.initiated_by && <span>by {deployment.initiated_by}</span>}
-                    </div>
-                  </div>
-
-                  {/* Plan summary */}
-                  {deployment.plan_summary && (
-                    <div className={styles.planSummary}>
-                      {deployment.plan_summary.resources_to_add > 0 && (
-                        <span className={styles.planAdd}>+{deployment.plan_summary.resources_to_add}</span>
+                <ItemCard
+                  key={deployment.deployment_id}
+                  selected={isSelected}
+                  onClick={() => handleSelectDeployment(deployment.deployment_id)}
+                  iconBadge={<StateIcon size={14} className={isInProgress ? 'animate-spin' : ''} />}
+                  title={typeLabels[deployment.type]}
+                  titleSans
+                  statusBadge={
+                    <ItemCardStatus variant={state.variant}>
+                      {state.label}
+                    </ItemCardStatus>
+                  }
+                  meta={
+                    <>
+                      <ItemCardMeta mono>
+                        {getMachineName(deployment.machine_id)}
+                      </ItemCardMeta>
+                      <ItemCardMeta>
+                        {formatDistanceToNow(new Date(deployment.created_at), { addSuffix: true })}
+                      </ItemCardMeta>
+                      {deployment.initiated_by && (
+                        <ItemCardMeta>by {deployment.initiated_by}</ItemCardMeta>
                       )}
-                      {deployment.plan_summary.resources_to_change > 0 && (
-                        <span className={styles.planChange}>~{deployment.plan_summary.resources_to_change}</span>
-                      )}
-                      {deployment.plan_summary.resources_to_destroy > 0 && (
-                        <span className={styles.planDestroy}>-{deployment.plan_summary.resources_to_destroy}</span>
-                      )}
-                    </div>
-                  )}
-
-                  <div className={styles.deploymentId}>
-                    {deployment.deployment_id.substring(0, 8)}
-                  </div>
-                </div>
+                    </>
+                  }
+                  secondary={
+                    deployment.plan_summary && (
+                      <div className={styles.planSummary}>
+                        {deployment.plan_summary.resources_to_add > 0 && (
+                          <span className={styles.planAdd}>+{deployment.plan_summary.resources_to_add}</span>
+                        )}
+                        {deployment.plan_summary.resources_to_change > 0 && (
+                          <span className={styles.planChange}>~{deployment.plan_summary.resources_to_change}</span>
+                        )}
+                        {deployment.plan_summary.resources_to_destroy > 0 && (
+                          <span className={styles.planDestroy}>-{deployment.plan_summary.resources_to_destroy}</span>
+                        )}
+                      </div>
+                    )
+                  }
+                />
               );
             })}
           </div>

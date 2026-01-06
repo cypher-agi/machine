@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Key, Copy, Download, Check, AlertTriangle, Loader2 } from 'lucide-react';
-import clsx from 'clsx';
 import { generateSSHKey } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Modal, Button, Input, Select } from '@/shared/ui';
@@ -111,6 +110,7 @@ export function GenerateKeyModal({ onClose }: GenerateKeyModalProps) {
       onClose={onClose}
       title="Generate SSH Key"
       size="sm"
+      animateHeight
       footer={footer}
     >
       {!generatedKey ? (

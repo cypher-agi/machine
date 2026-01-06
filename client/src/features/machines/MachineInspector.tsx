@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { X, Copy, Terminal } from 'lucide-react';
+import { X, Server, GitBranch, Shield, Activity, FileText, Copy, Terminal } from 'lucide-react';
 import clsx from 'clsx';
 import { getMachine, getMachineServices, getMachineNetworking, getDeployments } from '@/lib/api';
 import type { MachineStatus } from '@machina/shared';
@@ -23,14 +23,15 @@ type TabId = 'overview' | 'deployments' | 'networking' | 'services' | 'details';
 interface Tab {
   id: TabId;
   label: string;
+  icon: typeof Server;
 }
 
 const tabs: Tab[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'deployments', label: 'Deploys' },
-  { id: 'networking', label: 'Network' },
-  { id: 'services', label: 'Services' },
-  { id: 'details', label: 'Details' },
+  { id: 'overview', label: 'Overview', icon: Server },
+  { id: 'deployments', label: 'Deploys', icon: GitBranch },
+  { id: 'networking', label: 'Network', icon: Shield },
+  { id: 'services', label: 'Services', icon: Activity },
+  { id: 'details', label: 'Details', icon: FileText },
 ];
 
 const statusConfig: Record<MachineStatus, { label: string; variant: 'running' | 'stopped' | 'provisioning' | 'pending' | 'error' }> = {
@@ -144,6 +145,7 @@ export function MachineInspector({ machineId, onClose }: MachineInspectorProps) 
               onClick={() => setActiveTab(tab.id)}
               className={clsx(styles.tab, activeTab === tab.id && styles.active)}
             >
+              <tab.icon size={14} />
               {tab.label}
             </button>
           ))}

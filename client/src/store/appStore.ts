@@ -1,10 +1,26 @@
 import { create } from 'zustand';
 import type { MachineListFilter, MachineListSort } from '@machina/shared';
 
+// Item types that can be selected and shown in the Sidekick
+export type SidekickItemType = 'machine' | 'provider' | 'key' | 'deployment' | 'bootstrap';
+
+export interface SidekickSelection {
+  type: SidekickItemType;
+  id: string;
+}
+
 interface AppState {
-  // Selected machine for inspector panel
+  // Selected item for sidekick panel (generic)
+  sidekickSelection: SidekickSelection | null;
+  setSidekickSelection: (selection: SidekickSelection | null) => void;
+  
+  // Legacy: selectedMachineId for backwards compatibility during transition
   selectedMachineId: string | null;
   setSelectedMachineId: (id: string | null) => void;
+
+  // Terminal panel state
+  terminalMachineId: string | null;
+  setTerminalMachineId: (id: string | null) => void;
 
   // Machine list filters
   machineFilters: MachineListFilter;
@@ -41,9 +57,27 @@ const defaultFilters: MachineListFilter = {};
 const defaultSort: MachineListSort = { field: 'created_at', direction: 'desc' };
 
 export const useAppStore = create<AppState>((set) => ({
-  // Selected machine
+  // Sidekick selection (generic)
+  sidekickSelection: null,
+  setSidekickSelection: (selection) => set({ 
+    sidekickSelection: selection,
+    // Keep selectedMachineId in sync for backwards compatibility
+    selectedMachineId: selection?.type === 'machine' ? selection.id : null,
+    // Open terminal when selecting a machine
+    terminalMachineId: selection?.type === 'machine' ? selection.id : null
+  }),
+
+  // Legacy selected machine (synced with sidekickSelection)
   selectedMachineId: null,
-  setSelectedMachineId: (id) => set({ selectedMachineId: id }),
+  setSelectedMachineId: (id) => set({ 
+    selectedMachineId: id,
+    sidekickSelection: id ? { type: 'machine', id } : null,
+    terminalMachineId: id
+  }),
+
+  // Terminal panel
+  terminalMachineId: null,
+  setTerminalMachineId: (id) => set({ terminalMachineId: id }),
 
   // Machine filters
   machineFilters: defaultFilters,
@@ -79,7 +113,3 @@ export const useAppStore = create<AppState>((set) => ({
       toasts: state.toasts.filter((t) => t.id !== id),
     })),
 }));
-
-
-
-

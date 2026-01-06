@@ -3,12 +3,16 @@ import { GlobalHeader } from './GlobalHeader';
 import { Sidebar } from './Sidebar';
 import { RightMenu } from './RightMenu';
 import { useAppStore } from '@/store/appStore';
-import { MachineInspector } from '@/features/machines/MachineInspector';
+import { Sidekick } from '@/shared/components/Sidekick';
 import { Toasts } from '@/shared/components/Toasts';
 import styles from './AppLayout.module.css';
 
 export function AppLayout() {
-  const { selectedMachineId, setSelectedMachineId } = useAppStore();
+  const { sidekickSelection, setSidekickSelection } = useAppStore();
+
+  const handleClose = () => {
+    setSidekickSelection(null);
+  };
 
   return (
     <div className={styles.layout}>
@@ -27,13 +31,11 @@ export function AppLayout() {
             <Outlet />
           </div>
 
-          {/* Inspector Panel (slides in from right) */}
-          {selectedMachineId && (
-            <MachineInspector
-              machineId={selectedMachineId}
-              onClose={() => setSelectedMachineId(null)}
-            />
-          )}
+          {/* Sidekick Panel - handles its own open/close animation */}
+          <Sidekick
+            selection={sidekickSelection}
+            onClose={handleClose}
+          />
         </main>
       </div>
 

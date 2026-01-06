@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { X, Terminal, Key, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react';
-import clsx from 'clsx';
+import { Terminal, Key, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react';
 import { SSHTerminal } from './SSHTerminal';
 import { getSSHKeys } from '@/lib/api';
+import { Modal, Button } from '@/shared/ui';
 import type { Machine } from '@machina/shared';
 
 interface TerminalModalProps {
@@ -35,147 +35,141 @@ export function TerminalModal({ machine, onClose }: TerminalModalProps) {
   };
 
   return (
-    <div className={clsx(
-      'fixed z-50 flex items-center justify-center bg-[#000000]/95 animate-fade-in',
-      isMaximized ? 'inset-0' : 'inset-0 p-4 md:p-8'
-    )}>
-      <div className={clsx(
-        'bg-[#0c0c0e] border border-[#1a1a1d] flex flex-col animate-slide-in-up shadow-2xl overflow-hidden',
-        isMaximized 
-          ? 'w-full h-full rounded-none' 
-          : 'w-full max-w-5xl h-[80vh] rounded-xl'
-      )}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-machine-card border-b border-machine-border flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-neon-cyan/20 to-neon-green/20 border border-neon-cyan/30 flex items-center justify-center">
-              <Terminal className="w-4 h-4 text-neon-cyan" />
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      title="Terminal"
+      subtitle={machine.name}
+      size={isMaximized ? 'full' : 'xl'}
+      fullHeight
+      noPadding
+      animateHeight={!isConnected}
+      headerActions={
+        <Button
+          variant="ghost"
+          size="sm"
+          iconOnly
+          onClick={() => setIsMaximized(!isMaximized)}
+          title={isMaximized ? 'Restore' : 'Maximize'}
+        >
+          {isMaximized ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+        </Button>
+      }
+    >
+      {!isConnected ? (
+        // Key selection screen
+        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-6)' }}>
+          <div style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                margin: '0 auto',
+                borderRadius: 'var(--radius-xl)',
+                background: 'linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(156, 39, 176, 0.1))',
+                border: '1px solid rgba(0, 255, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 'var(--space-4)'
+              }}>
+                <Key size={32} style={{ color: 'var(--color-neon-cyan)' }} />
+              </div>
+              <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 'var(--font-semibold)', color: 'var(--color-text-primary)', marginBottom: 'var(--space-2)' }}>
+                Select SSH Key
+              </h3>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
+                Choose an SSH key to authenticate with {machine.name}
+              </p>
             </div>
-            <div>
-              <h2 className="font-semibold text-text-primary">Terminal</h2>
-              <p className="text-xs text-text-secondary font-mono">{machine.name}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setIsMaximized(!isMaximized)}
-              className="btn btn-ghost btn-icon"
-              title={isMaximized ? 'Restore' : 'Maximize'}
-            >
-              {isMaximized ? (
-                <Minimize2 className="w-4 h-4" />
-              ) : (
-                <Maximize2 className="w-4 h-4" />
-              )}
-            </button>
-            <button onClick={onClose} className="btn btn-ghost btn-icon">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
 
-        {/* Content */}
-        <div className="flex-1 min-h-0">
-          {!isConnected ? (
-            // Key selection screen
-            <div className="h-full flex items-center justify-center p-6">
-              <div className="w-full max-w-md space-y-6">
-                <div className="text-center">
-                  <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-neon-cyan/20 to-neon-purple/20 border border-neon-cyan/30 flex items-center justify-center mb-4">
-                    <Key className="w-8 h-8 text-neon-cyan" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-text-primary mb-2">
-                    Select SSH Key
-                  </h3>
-                  <p className="text-sm text-text-secondary">
-                    Choose an SSH key to authenticate with {machine.name}
-                  </p>
-                </div>
-
-                {isLoading ? (
-                  <div className="flex justify-center py-8">
-                    <span className="text-text-secondary animate-pulse">Loading keys...</span>
-                  </div>
-                ) : availableKeys.length > 0 ? (
-                  <div className="space-y-2">
-                    {availableKeys.map((key) => (
-                      <button
-                        key={key.ssh_key_id}
-                        onClick={() => setSelectedKeyId(key.ssh_key_id)}
-                        className={clsx(
-                          'w-full card text-left transition-all p-3',
-                          selectedKeyId === key.ssh_key_id
-                            ? 'border-neon-cyan bg-neon-cyan/5'
-                            : 'hover:border-machine-border-light'
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Key className={clsx(
-                            'w-5 h-5',
-                            selectedKeyId === key.ssh_key_id ? 'text-neon-cyan' : 'text-text-tertiary'
-                          )} />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-text-primary">{key.name}</p>
-                            <p className="text-xs text-text-tertiary font-mono truncate">
-                              {key.fingerprint}
-                            </p>
-                          </div>
-                          <span className="text-xs text-text-tertiary font-mono">
-                            {key.key_type.toUpperCase()}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="card bg-status-warning/5 border-status-warning/20 p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertTriangle className="w-5 h-5 text-status-warning flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-text-primary mb-1">No SSH Keys Available</p>
-                        <p className="text-sm text-text-secondary">
-                          You need to create and sync an SSH key to {machine.provider} before 
-                          you can connect. Go to <span className="text-neon-cyan">Keys</span> to 
-                          create and sync a key.
+            {isLoading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-8) 0' }}>
+                <span style={{ color: 'var(--color-text-secondary)' }}>Loading keys...</span>
+              </div>
+            ) : availableKeys.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                {availableKeys.map((key) => (
+                  <button
+                    key={key.ssh_key_id}
+                    onClick={() => setSelectedKeyId(key.ssh_key_id)}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: 'var(--space-3)',
+                      borderRadius: 'var(--radius-md)',
+                      border: `1px solid ${selectedKeyId === key.ssh_key_id ? 'var(--color-neon-cyan)' : 'var(--color-border)'}`,
+                      backgroundColor: selectedKeyId === key.ssh_key_id ? 'rgba(0, 255, 255, 0.05)' : 'var(--color-surface)',
+                      cursor: 'pointer',
+                      transition: 'all var(--transition-fast)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                      <Key size={20} style={{ color: selectedKeyId === key.ssh_key_id ? 'var(--color-neon-cyan)' : 'var(--color-text-tertiary)' }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontWeight: 'var(--font-medium)', color: 'var(--color-text-primary)' }}>{key.name}</p>
+                        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {key.fingerprint}
                         </p>
                       </div>
+                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', fontFamily: 'var(--font-mono)' }}>
+                        {key.key_type.toUpperCase()}
+                      </span>
                     </div>
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-3">
-                  <button onClick={onClose} className="btn btn-secondary">
-                    Cancel
                   </button>
-                  <button
-                    onClick={handleConnect}
-                    disabled={!selectedKeyId}
-                    className="btn btn-primary"
-                  >
-                    <Terminal className="w-4 h-4" />
-                    Connect
-                  </button>
-                </div>
-
-                <p className="text-xs text-text-tertiary text-center">
-                  Connecting as <span className="font-mono text-text-secondary">root@{machine.public_ip}</span>
-                </p>
+                ))}
               </div>
+            ) : (
+              <div style={{
+                padding: 'var(--space-4)',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'rgba(250, 204, 21, 0.05)',
+                border: '1px solid rgba(250, 204, 21, 0.2)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)' }}>
+                  <AlertTriangle size={20} style={{ color: 'var(--color-warning)', flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <p style={{ fontWeight: 'var(--font-medium)', color: 'var(--color-text-primary)', marginBottom: 'var(--space-1)' }}>No SSH Keys Available</p>
+                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
+                      You need to create and sync an SSH key to {machine.provider} before 
+                      you can connect. Go to <span style={{ color: 'var(--color-neon-cyan)' }}>Keys</span> to 
+                      create and sync a key.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-3)' }}>
+              <Button variant="secondary" size="sm" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleConnect}
+                disabled={!selectedKeyId}
+              >
+                <Terminal size={14} />
+                Connect
+              </Button>
             </div>
-          ) : (
-            // Terminal
-            <SSHTerminal
-              machineId={machine.machine_id}
-              sshKeyId={selectedKeyId!}
-              machineName={machine.name}
-              machineIp={machine.public_ip || 'unknown'}
-              onDisconnect={() => setIsConnected(false)}
-            />
-          )}
+
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-tertiary)', textAlign: 'center' }}>
+              Connecting as <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-text-secondary)' }}>root@{machine.public_ip}</span>
+            </p>
+          </div>
         </div>
-      </div>
-    </div>
+      ) : (
+        // Terminal
+        <SSHTerminal
+          machineId={machine.machine_id}
+          sshKeyId={selectedKeyId!}
+          machineName={machine.name}
+          machineIp={machine.public_ip || 'unknown'}
+          onDisconnect={() => setIsConnected(false)}
+        />
+      )}
+    </Modal>
   );
 }
-

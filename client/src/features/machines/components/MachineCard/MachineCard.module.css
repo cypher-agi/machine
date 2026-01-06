@@ -1,95 +1,12 @@
-/* MachineCard styles */
-.card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background-color var(--transition-fast);
-}
-
-.card:hover {
-  background-color: var(--color-surface);
-}
-
-.cardSelected {
-  background-color: var(--color-elevated);
-}
-
-.providerIcon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-  background-color: var(--color-elevated);
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.providerIconText {
-  font-size: var(--text-2xs);
-  font-family: var(--font-mono);
-  font-weight: var(--font-medium);
-  color: var(--color-text-secondary);
-}
-
-.info {
-  flex: 1;
-  min-width: 0;
-}
-
-.nameRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.name {
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.stats {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  font-size: var(--text-xs);
-  color: var(--color-text-secondary);
-}
-
-.stat {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.ip {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.ipCode {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-secondary);
-  background-color: var(--color-elevated);
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-md);
-}
+/* MachineCard - dropdown menu styles only */
+/* Card styling is now handled by ItemCard component */
 
 .copyButton {
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
 
-.card:hover .copyButton {
+.copyButton:hover {
   opacity: 1;
 }
 
@@ -97,14 +14,8 @@
   position: relative;
 }
 
-.menuButton {
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-}
-
-.card:hover .menuButton,
 .menuButtonActive {
-  opacity: 1;
+  background-color: var(--color-surface);
 }
 
 .dropdown {
@@ -120,6 +31,17 @@
   z-index: 50;
   padding: var(--space-1) 0;
   animation: fade-in 100ms ease-out forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .menuItem {
@@ -157,5 +79,6 @@
 
 .menuDivider {
   margin: var(--space-1) 0;
+  border: none;
   border-top: 1px solid var(--color-border);
 }

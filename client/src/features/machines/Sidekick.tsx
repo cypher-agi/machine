@@ -4,7 +4,7 @@ import { X, Copy, Terminal } from 'lucide-react';
 import clsx from 'clsx';
 import { getMachine, getMachineServices, getMachineNetworking, getDeployments } from '@/lib/api';
 import type { MachineStatus } from '@machina/shared';
-import { Badge, Button } from '@/shared/ui';
+import { Badge, Button, AnimatedTabs } from '@/shared/ui';
 import { SidekickOverview } from './sidekick/SidekickOverview';
 import { SidekickDeployments } from './sidekick/SidekickDeployments';
 import { SidekickNetworking } from './sidekick/SidekickNetworking';
@@ -16,6 +16,8 @@ import styles from './Sidekick.module.css';
 interface SidekickProps {
   machineId: string;
   onClose: () => void;
+  isClosing?: boolean;
+  isOpening?: boolean;
 }
 
 type TabId = 'overview' | 'deployments' | 'networking' | 'services' | 'details';
@@ -45,7 +47,7 @@ const statusConfig: Record<MachineStatus, { label: string; variant: 'running' | 
   error: { label: 'Error', variant: 'error' },
 };
 
-export function Sidekick({ machineId, onClose }: SidekickProps) {
+export function Sidekick({ machineId, onClose, isClosing, isOpening }: SidekickProps) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [showTerminal, setShowTerminal] = useState(false);
 
@@ -73,9 +75,15 @@ export function Sidekick({ machineId, onClose }: SidekickProps) {
     enabled: !!machine,
   });
 
+  const sidekickClassName = clsx(
+    styles.sidekick,
+    isOpening && styles.sidekickOpening,
+    isClosing && styles.sidekickClosing
+  );
+
   if (isLoading) {
     return (
-      <div className={styles.sidekick}>
+      <div className={sidekickClassName}>
         <div className={styles.loading}>
           <span className={styles.loadingText}>Loading...</span>
         </div>
@@ -85,7 +93,7 @@ export function Sidekick({ machineId, onClose }: SidekickProps) {
 
   if (!machine) {
     return (
-      <div className={styles.sidekick}>
+      <div className={sidekickClassName}>
         <div className={styles.loading}>
           <span className={styles.loadingText}>Machine not found</span>
         </div>
@@ -96,7 +104,7 @@ export function Sidekick({ machineId, onClose }: SidekickProps) {
   const status = statusConfig[machine.actual_status] || statusConfig.error;
 
   return (
-    <div className={styles.sidekick}>
+    <div className={sidekickClassName}>
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerTop}>
@@ -136,19 +144,12 @@ export function Sidekick({ machineId, onClose }: SidekickProps) {
       </div>
 
       {/* Tabs */}
-      <div className={styles.tabs}>
-        <div className={styles.tabList}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={clsx(styles.tab, activeTab === tab.id && styles.active)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <AnimatedTabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={(id) => setActiveTab(id as TabId)}
+        className={styles.tabs}
+      />
 
       {/* Tab content */}
       <div className={styles.tabContent}>

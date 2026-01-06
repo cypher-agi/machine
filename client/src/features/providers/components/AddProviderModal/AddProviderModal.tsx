@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Eye, EyeOff, Loader2, Check } from 'lucide-react';
-import clsx from 'clsx';
 import { createProviderAccount } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
-import { Modal, Button, Input, Select } from '@/shared/ui';
+import { Modal, Button, Input } from '@/shared/ui';
 import type { ProviderType, ProviderCredentials } from '@machina/shared';
 
 interface AddProviderModalProps {
@@ -72,6 +71,7 @@ export function AddProviderModal({ onClose }: AddProviderModalProps) {
       onClose={onClose}
       title="Add Provider"
       size="sm"
+      animateHeight
       footer={
         <>
           <Button variant="secondary" size="sm" onClick={onClose}>

@@ -4,9 +4,9 @@ import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import type { Deployment, DeploymentState, DeploymentType } from '@machina/shared';
 import { DeploymentLogsModal } from './DeploymentLogsModal';
-import styles from './Inspector.module.css';
+import styles from './Sidekick.module.css';
 
-interface InspectorDeploymentsProps {
+interface SidekickDeploymentsProps {
   deployments: Deployment[];
 }
 
@@ -29,7 +29,7 @@ const typeLabels: Record<DeploymentType, string> = {
   refresh: 'Refresh',
 };
 
-export function InspectorDeployments({ deployments }: InspectorDeploymentsProps) {
+export function SidekickDeployments({ deployments }: SidekickDeploymentsProps) {
   const [selectedDeployment, setSelectedDeployment] = useState<Deployment | null>(null);
 
   if (deployments.length === 0) {
@@ -104,3 +104,4 @@ export function InspectorDeployments({ deployments }: InspectorDeploymentsProps)
     </div>
   );
 }
+

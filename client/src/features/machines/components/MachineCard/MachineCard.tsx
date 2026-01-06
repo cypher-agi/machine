@@ -11,12 +11,12 @@ import {
   Copy
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import clsx from 'clsx';
 import type { Machine, MachineStatus } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { rebootMachine, destroyMachine } from '@/lib/api';
 import { Badge, Button } from '@/shared/ui';
+import { ItemCard, ItemCardMeta, ItemCardCode } from '@/shared/components';
 import styles from './MachineCard.module.css';
 
 interface MachineCardProps {
@@ -44,12 +44,12 @@ const providerLabels: Record<string, string> = {
 };
 
 export function MachineCard({ machine }: MachineCardProps) {
-  const { selectedMachineId, setSelectedMachineId, addToast } = useAppStore();
+  const { sidekickSelection, setSidekickSelection, addToast } = useAppStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  const isSelected = selectedMachineId === machine.machine_id;
+  const isSelected = sidekickSelection?.type === 'machine' && sidekickSelection?.id === machine.machine_id;
   const status = statusConfig[machine.actual_status] || statusConfig.error;
 
   const rebootMutation = useMutation({
@@ -91,135 +91,131 @@ export function MachineCard({ machine }: MachineCardProps) {
     }
   };
 
+  const handleSelect = () => {
+    setSidekickSelection({ type: 'machine', id: machine.machine_id });
+  };
+
   return (
-    <div
-      className={clsx(styles.card, isSelected && styles.cardSelected)}
-      onClick={() => setSelectedMachineId(machine.machine_id)}
-    >
-      {/* Provider badge */}
-      <div className={styles.providerIcon}>
-        <span className={styles.providerIconText}>
-          {providerLabels[machine.provider] || '??'}
-        </span>
-      </div>
-
-      {/* Main info */}
-      <div className={styles.info}>
-        <div className={styles.nameRow}>
-          <span className={styles.name}>{machine.name}</span>
-          <Badge variant={status.variant} pulse={status.pulse}>
-            {status.label}
-          </Badge>
-        </div>
-
-        <div className={styles.stats}>
-          <span className={styles.stat}>
+    <ItemCard
+      selected={isSelected}
+      onClick={handleSelect}
+      iconBadge={providerLabels[machine.provider] || '??'}
+      title={machine.name}
+      statusBadge={
+        <Badge variant={status.variant} pulse={status.pulse}>
+          {status.label}
+        </Badge>
+      }
+      meta={
+        <>
+          <ItemCardMeta>
             <Server size={12} />
             {machine.size}
-          </span>
-          <span className={styles.stat}>
+          </ItemCardMeta>
+          <ItemCardMeta>
             <Globe size={12} />
             {machine.region}
-          </span>
-          <span className={styles.stat}>
+          </ItemCardMeta>
+          <ItemCardMeta>
             <Clock size={12} />
             {formatDistanceToNow(new Date(machine.created_at), { addSuffix: true })}
-          </span>
-        </div>
-      </div>
-
-      {/* IP Address */}
-      {machine.public_ip && (
-        <div className={styles.ip}>
-          <code className={styles.ipCode}>{machine.public_ip}</code>
+          </ItemCardMeta>
+        </>
+      }
+      secondary={
+        machine.public_ip && (
+          <>
+            <ItemCardCode>{machine.public_ip}</ItemCardCode>
+            <Button
+              variant="ghost"
+              size="sm"
+              iconOnly
+              onClick={(e) => {
+                e.stopPropagation();
+                copyIp();
+              }}
+              className={styles.copyButton}
+              title="Copy IP"
+            >
+              <Copy size={14} />
+            </Button>
+          </>
+        )
+      }
+      actions={
+        <div className={styles.menu} ref={menuRef}>
           <Button
             variant="ghost"
             size="sm"
             iconOnly
             onClick={(e) => {
               e.stopPropagation();
-              copyIp();
+              setMenuOpen(!menuOpen);
             }}
-            className={styles.copyButton}
-            title="Copy IP"
+            className={menuOpen ? styles.menuButtonActive : ''}
           >
-            <Copy size={14} />
+            <MoreVertical size={16} />
           </Button>
+
+          {menuOpen && (
+            <div className={styles.dropdown}>
+              <button
+                className={styles.menuItem}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSidekickSelection({ type: 'machine', id: machine.machine_id });
+                  setMenuOpen(false);
+                }}
+              >
+                <Info size={14} />
+                Inspect
+              </button>
+
+              <button
+                className={styles.menuItem}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  rebootMutation.mutate();
+                  setMenuOpen(false);
+                }}
+                disabled={machine.actual_status !== 'running'}
+              >
+                <RotateCcw size={14} />
+                Reboot
+              </button>
+
+              <button
+                className={styles.menuItem}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuOpen(false);
+                }}
+                disabled={machine.agent_status !== 'connected'}
+              >
+                <RefreshCw size={14} />
+                Restart Service
+              </button>
+
+              <hr className={styles.menuDivider} />
+
+              <button
+                className={`${styles.menuItem} ${styles.menuItemDanger}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm(`Destroy ${machine.name}? This cannot be undone.`)) {
+                    destroyMutation.mutate();
+                  }
+                  setMenuOpen(false);
+                }}
+              >
+                <Trash2 size={14} />
+                Destroy
+              </button>
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Actions menu */}
-      <div className={styles.menu} ref={menuRef}>
-        <Button
-          variant="ghost"
-          size="sm"
-          iconOnly
-          onClick={(e) => {
-            e.stopPropagation();
-            setMenuOpen(!menuOpen);
-          }}
-          className={clsx(styles.menuButton, menuOpen && styles.menuButtonActive)}
-        >
-          <MoreVertical size={16} />
-        </Button>
-
-        {menuOpen && (
-          <div className={styles.dropdown}>
-            <button
-              className={styles.menuItem}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedMachineId(machine.machine_id);
-                setMenuOpen(false);
-              }}
-            >
-              <Info size={14} />
-              Inspect
-            </button>
-
-            <button
-              className={styles.menuItem}
-              onClick={(e) => {
-                e.stopPropagation();
-                rebootMutation.mutate();
-                setMenuOpen(false);
-              }}
-              disabled={machine.actual_status !== 'running'}
-            >
-              <RotateCcw size={14} />
-              Reboot
-            </button>
-
-            <button
-              className={styles.menuItem}
-              onClick={(e) => {
-                e.stopPropagation();
-                setMenuOpen(false);
-              }}
-              disabled={machine.agent_status !== 'connected'}
-            >
-              <RefreshCw size={14} />
-              Restart Service
-            </button>
-
-            <hr className={styles.menuDivider} />
-
-            <button
-              className={clsx(styles.menuItem, styles.menuItemDanger)}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (confirm(`Destroy ${machine.name}? This cannot be undone.`)) {
-                  destroyMutation.mutate();
-                }
-                setMenuOpen(false);
-              }}
-            >
-              <Trash2 size={14} />
-              Destroy
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+      }
+      actionsAlwaysVisible
+    />
   );
 }

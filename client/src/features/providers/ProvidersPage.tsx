@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, RefreshCw, Check, X, AlertCircle, Trash2, Shield, Clock, KeyRound } from 'lucide-react';
+import { Plus, RefreshCw, Check, X, AlertCircle, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import clsx from 'clsx';
-import { getProviderAccounts, verifyProviderAccount, updateProviderAccount, deleteProviderAccount } from '@/lib/api';
+import { getProviderAccounts, verifyProviderAccount } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
-import { Button, Input, Modal } from '@/shared/ui';
+import { Button } from '@/shared/ui';
+import { ItemCard, ItemCardMeta, ItemCardStatus } from '@/shared/components';
 import { AddProviderModal } from './components/AddProviderModal';
-import type { CredentialStatus, ProviderAccount } from '@machina/shared';
+import type { CredentialStatus } from '@machina/shared';
 import styles from './ProvidersPage.module.css';
 
 const providerLabels: Record<string, string> = {
@@ -18,21 +18,18 @@ const providerLabels: Record<string, string> = {
   baremetal: 'BM',
 };
 
-const credentialStatusConfig: Record<CredentialStatus, { icon: typeof Check; className: string; label: string }> = {
-  valid: { icon: Check, className: styles.statusValid, label: 'Valid' },
-  invalid: { icon: X, className: styles.statusInvalid, label: 'Invalid' },
-  expired: { icon: AlertCircle, className: styles.statusExpired, label: 'Expired' },
-  unchecked: { icon: AlertCircle, className: styles.statusUnchecked, label: 'Unchecked' },
+const credentialStatusConfig: Record<CredentialStatus, { icon: typeof Check; variant: 'valid' | 'invalid' | 'warning' | 'muted'; label: string }> = {
+  valid: { icon: Check, variant: 'valid', label: 'Valid' },
+  invalid: { icon: X, variant: 'invalid', label: 'Invalid' },
+  expired: { icon: AlertCircle, variant: 'warning', label: 'Expired' },
+  unchecked: { icon: AlertCircle, variant: 'muted', label: 'Unchecked' },
 };
 
 function ProvidersPage() {
-  const { addToast } = useAppStore();
+  const { addToast, sidekickSelection, setSidekickSelection } = useAppStore();
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [updatingAccount, setUpdatingAccount] = useState<ProviderAccount | null>(null);
-  const [newToken, setNewToken] = useState('');
 
   const { data: accounts, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['provider-accounts'],
@@ -52,32 +49,9 @@ function ProvidersPage() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteProviderAccount,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['provider-accounts'] });
-      addToast({ type: 'success', title: 'Account deleted' });
-      setDeletingId(null);
-    },
-    onError: (error: Error) => {
-      addToast({ type: 'error', title: 'Delete failed', message: error.message });
-      setDeletingId(null);
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, token }: { id: string; token: string }) =>
-      updateProviderAccount(id, { credentials: { api_token: token } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['provider-accounts'] });
-      addToast({ type: 'success', title: 'Token updated' });
-      setUpdatingAccount(null);
-      setNewToken('');
-    },
-    onError: (error: Error) => {
-      addToast({ type: 'error', title: 'Update failed', message: error.message });
-    },
-  });
+  const handleSelectProvider = (providerId: string) => {
+    setSidekickSelection({ type: 'provider', id: providerId });
+  };
 
   return (
     <div className={styles.page}>
@@ -110,73 +84,54 @@ function ProvidersPage() {
             {accounts.map((account) => {
               const status = credentialStatusConfig[account.credential_status];
               const StatusIcon = status.icon;
+              const isSelected = sidekickSelection?.type === 'provider' && sidekickSelection?.id === account.provider_account_id;
 
               return (
-                <div key={account.provider_account_id} className={styles.card}>
-                  <div className={styles.providerIcon}>
-                    <span className={styles.providerIconText}>
-                      {providerLabels[account.provider_type] || '??'}
-                    </span>
-                  </div>
-
-                  <div className={styles.info}>
-                    <div className={styles.nameRow}>
-                      <span className={styles.name}>{account.label}</span>
-                      <span className={clsx(styles.status, status.className)}>
-                        <StatusIcon size={12} />
-                        {status.label}
-                      </span>
-                    </div>
-                    <div className={styles.meta}>
-                      <span className={styles.metaItem} style={{ textTransform: 'capitalize' }}>
-                        {account.provider_type}
-                      </span>
-                      <span className={styles.metaItem}>
+                <ItemCard
+                  key={account.provider_account_id}
+                  selected={isSelected}
+                  onClick={() => handleSelectProvider(account.provider_account_id)}
+                  iconBadge={providerLabels[account.provider_type] || '??'}
+                  title={account.label}
+                  titleSans
+                  statusBadge={
+                    <ItemCardStatus variant={status.variant}>
+                      <StatusIcon size={12} />
+                      {status.label}
+                    </ItemCardStatus>
+                  }
+                  meta={
+                    <>
+                      <ItemCardMeta>
+                        {account.provider_type.charAt(0).toUpperCase() + account.provider_type.slice(1)}
+                      </ItemCardMeta>
+                      <ItemCardMeta>
                         <Clock size={12} />
                         {formatDistanceToNow(new Date(account.created_at), { addSuffix: true })}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className={styles.actions}>
+                      </ItemCardMeta>
+                    </>
+                  }
+                  actions={
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
+                      iconOnly
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setVerifyingId(account.provider_account_id);
                         verifyMutation.mutate(account.provider_account_id);
                       }}
                       disabled={verifyingId === account.provider_account_id}
+                      title="Verify credentials"
                     >
                       {verifyingId === account.provider_account_id ? (
                         <RefreshCw size={14} className="animate-spin" />
                       ) : (
-                        <Shield size={14} />
+                        <Check size={14} />
                       )}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setUpdatingAccount(account)}>
-                      <KeyRound size={14} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (confirm(`Delete "${account.label}"?`)) {
-                          setDeletingId(account.provider_account_id);
-                          deleteMutation.mutate(account.provider_account_id);
-                        }
-                      }}
-                      disabled={deletingId === account.provider_account_id}
-                      style={{ color: 'var(--color-error)' }}
-                    >
-                      {deletingId === account.provider_account_id ? (
-                        <RefreshCw size={14} className="animate-spin" />
-                      ) : (
-                        <Trash2 size={14} />
-                      )}
-                    </Button>
-                  </div>
-                </div>
+                  }
+                />
               );
             })}
           </div>
@@ -195,54 +150,6 @@ function ProvidersPage() {
 
       {/* Add Provider Modal */}
       {showAddModal && <AddProviderModal onClose={() => setShowAddModal(false)} />}
-
-      {/* Update Token Modal */}
-      {updatingAccount && (
-        <Modal
-          isOpen={true}
-          onClose={() => {
-            setUpdatingAccount(null);
-            setNewToken('');
-          }}
-          title="Update Token"
-          size="sm"
-          footer={
-            <>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  setUpdatingAccount(null);
-                  setNewToken('');
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => updateMutation.mutate({ id: updatingAccount.provider_account_id, token: newToken })}
-                disabled={!newToken || updateMutation.isPending}
-              >
-                {updateMutation.isPending ? 'Updating...' : 'Update'}
-              </Button>
-            </>
-          }
-        >
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-3)' }}>
-            Update API token for <span style={{ color: 'var(--color-text-secondary)' }}>{updatingAccount.label}</span>
-          </p>
-          <Input
-            type="password"
-            value={newToken}
-            onChange={(e) => setNewToken(e.target.value)}
-            placeholder="New API token..."
-            mono
-            size="sm"
-            autoFocus
-          />
-        </Modal>
-      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
@@ -52,17 +52,6 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
     firewall_profile_id: 'none',
     bootstrap_profile_id: 'none',
   });
-
-  // Height animation
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [contentHeight, setContentHeight] = useState<number | 'auto'>('auto');
-
-  useLayoutEffect(() => {
-    if (contentRef.current) {
-      const height = contentRef.current.scrollHeight;
-      setContentHeight(height);
-    }
-  }, [currentStep]);
 
   const { data: providerAccounts } = useQuery({
     queryKey: ['provider-accounts'],
@@ -217,6 +206,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
       title="Deploy Machine"
       className={styles.modal}
       footer={footer}
+      animateHeight
     >
       {/* Steps indicator */}
       <div className={styles.stepsContainer}>
@@ -251,12 +241,8 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
         </div>
       </div>
 
-      {/* Content */}
-      <div
-        className={styles.contentWrapper}
-        style={{ height: contentHeight }}
-      >
-        <div ref={contentRef}>
+      {/* Content - key prop forces re-render for accurate height measurement */}
+      <div key={currentStep}>
         {/* Provider Step */}
         {currentStep === 'provider' && (
           <div>
@@ -505,7 +491,6 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
             </div>
           </div>
         )}
-        </div>
       </div>
     </Modal>
   );

@@ -1,24 +1,20 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Plus, 
   RefreshCw, 
   Package,
-  Trash2,
-  Edit,
   Lock,
   Cloud,
   Terminal,
   Play,
-  Eye,
-  ChevronDown,
-  ChevronUp
+  Clock,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { getBootstrapProfiles, deleteBootstrapProfile } from '@/lib/api';
+import { getBootstrapProfiles } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
-import { Button } from '@/shared/ui';
-import type { BootstrapMethod, BootstrapProfile } from '@machina/shared';
+import { Button, Badge } from '@/shared/ui';
+import { ItemCard, ItemCardMeta, ItemCardBadge, ItemCardTypeBadge } from '@/shared/components';
+import type { BootstrapMethod } from '@machina/shared';
 import styles from './BootstrapPage.module.css';
 
 const methodIcons: Record<BootstrapMethod, typeof Cloud> = {
@@ -34,25 +30,16 @@ const methodLabels: Record<BootstrapMethod, string> = {
 };
 
 function BootstrapPage() {
-  const { addToast } = useAppStore();
-  const queryClient = useQueryClient();
-  const [expandedProfile, setExpandedProfile] = useState<string | null>(null);
+  const { sidekickSelection, setSidekickSelection } = useAppStore();
 
   const { data: profiles, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['bootstrap-profiles'],
     queryFn: getBootstrapProfiles,
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteBootstrapProfile,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bootstrap-profiles'] });
-      addToast({ type: 'success', title: 'Profile deleted' });
-    },
-    onError: (error: Error) => {
-      addToast({ type: 'error', title: 'Delete failed', message: error.message });
-    },
-  });
+  const handleSelectProfile = (profileId: string) => {
+    setSidekickSelection({ type: 'bootstrap', id: profileId });
+  };
 
   return (
     <div className={styles.page}>
@@ -81,117 +68,56 @@ function BootstrapPage() {
             <span className={styles.loadingText}>Loading profiles...</span>
           </div>
         ) : profiles && profiles.length > 0 ? (
-          <div className={styles.grid}>
+          <div className={styles.list}>
             {profiles.map((profile) => {
               const MethodIcon = methodIcons[profile.method];
+              const isSelected = sidekickSelection?.type === 'bootstrap' && sidekickSelection?.id === profile.profile_id;
 
               return (
-                <div key={profile.profile_id} className={styles.card}>
-                  <div className={styles.cardHeader}>
-                    <div className={styles.methodIcon}>
-                      <MethodIcon size={24} />
-                    </div>
-
-                    <div className={styles.cardInfo}>
-                      <div className={styles.cardNameRow}>
-                        <h3 className={styles.cardName}>{profile.name}</h3>
-                        {profile.is_system_profile && (
-                          <span className={styles.systemBadge}>
-                            <Lock size={12} />
-                            System
-                          </span>
-                        )}
-                        <span className={styles.methodBadge}>
-                          {methodLabels[profile.method]}
-                        </span>
-                      </div>
-
-                      <p className={styles.cardDescription}>
+                <ItemCard
+                  key={profile.profile_id}
+                  selected={isSelected}
+                  onClick={() => handleSelectProfile(profile.profile_id)}
+                  iconBadge={<MethodIcon size={14} />}
+                  title={profile.name}
+                  titleSans
+                  statusBadge={
+                    <>
+                      {profile.is_system_profile && (
+                        <Badge variant="pending" style={{ fontSize: 'var(--text-2xs)' }}>
+                          <Lock size={10} style={{ marginRight: '2px' }} />
+                          System
+                        </Badge>
+                      )}
+                      <ItemCardTypeBadge>{methodLabels[profile.method]}</ItemCardTypeBadge>
+                    </>
+                  }
+                  meta={
+                    <>
+                      <ItemCardMeta>
                         {profile.description || 'No description'}
-                      </p>
-
-                      {/* Services */}
-                      {profile.services_to_run.length > 0 && (
-                        <div className={styles.tagSection}>
-                          <span className={styles.tagLabel}>Services:</span>
-                          <div className={styles.tagList}>
-                            {profile.services_to_run.map((svc) => (
-                              <span key={svc.service_name} className={styles.serviceTag}>
-                                {svc.display_name}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Tags */}
-                      {profile.tags && profile.tags.length > 0 && (
-                        <div className={styles.tagSection}>
-                          <span className={styles.tagLabel}>Tags:</span>
-                          <div className={styles.tagList}>
-                            {profile.tags.map((tag) => (
-                              <span key={tag} className={styles.tag}>
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className={styles.cardActions}>
-                      <span className={styles.timestamp}>
+                      </ItemCardMeta>
+                      <ItemCardMeta>
+                        <Clock size={12} />
                         {formatDistanceToNow(new Date(profile.updated_at), { addSuffix: true })}
-                      </span>
-                      {!profile.is_system_profile && (
-                        <>
-                          <Button variant="ghost" size="sm" iconOnly>
-                            <Edit size={16} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            iconOnly
-                            onClick={() => {
-                              if (confirm(`Delete profile "${profile.name}"?`)) {
-                                deleteMutation.mutate(profile.profile_id);
-                              }
-                            }}
-                            style={{ color: 'var(--color-error)' }}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* View Template Button */}
-                  {profile.cloud_init_template && (
-                    <div className={styles.templateSection}>
-                      <button
-                        onClick={() => setExpandedProfile(expandedProfile === profile.profile_id ? null : profile.profile_id)}
-                        className={styles.templateToggle}
-                      >
-                        <Eye size={16} />
-                        View Template
-                        {expandedProfile === profile.profile_id ? (
-                          <ChevronUp size={16} />
-                        ) : (
-                          <ChevronDown size={16} />
+                      </ItemCardMeta>
+                    </>
+                  }
+                  badges={
+                    profile.services_to_run.length > 0 ? (
+                      <>
+                        {profile.services_to_run.slice(0, 3).map((svc: { service_name: string; display_name: string }) => (
+                          <ItemCardBadge key={svc.service_name}>
+                            {svc.display_name}
+                          </ItemCardBadge>
+                        ))}
+                        {profile.services_to_run.length > 3 && (
+                          <ItemCardBadge>+{profile.services_to_run.length - 3}</ItemCardBadge>
                         )}
-                      </button>
-                      
-                      {expandedProfile === profile.profile_id && (
-                        <div className={styles.templateContent}>
-                          <pre className={styles.templateCode}>
-                            {profile.cloud_init_template}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                      </>
+                    ) : undefined
+                  }
+                />
               );
             })}
           </div>
