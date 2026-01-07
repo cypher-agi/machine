@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen } from '../../../test/test-utils';
 
 // Mock PageLayout component test
 describe('PageLayout', () => {
@@ -26,11 +25,9 @@ describe('PageLayout', () => {
   describe('header', () => {
     it('should render title', () => {
       render(
-        <BrowserRouter>
-          <MockPageLayout title="Test Page">
-            <div>Content</div>
-          </MockPageLayout>
-        </BrowserRouter>
+        <MockPageLayout title="Test Page">
+          <div>Content</div>
+        </MockPageLayout>
       );
 
       expect(screen.getByTestId('page-title')).toHaveTextContent('Test Page');
@@ -38,11 +35,9 @@ describe('PageLayout', () => {
 
     it('should render actions when provided', () => {
       render(
-        <BrowserRouter>
-          <MockPageLayout title="Test" actions={<button>Action</button>}>
-            <div>Content</div>
-          </MockPageLayout>
-        </BrowserRouter>
+        <MockPageLayout title="Test" actions={<button>Action</button>}>
+          <div>Content</div>
+        </MockPageLayout>
       );
 
       expect(screen.getByRole('button', { name: 'Action' })).toBeInTheDocument();
@@ -52,11 +47,9 @@ describe('PageLayout', () => {
   describe('content', () => {
     it('should render children in content area', () => {
       render(
-        <BrowserRouter>
-          <MockPageLayout title="Test">
-            <div data-testid="child">Child content</div>
-          </MockPageLayout>
-        </BrowserRouter>
+        <MockPageLayout title="Test">
+          <div data-testid="child">Child content</div>
+        </MockPageLayout>
       );
 
       expect(screen.getByTestId('child')).toBeInTheDocument();

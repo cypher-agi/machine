@@ -26,7 +26,14 @@ function AllTheProviders({ children }: WrapperProps) {
   const queryClient = createTestQueryClient();
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>{children}</BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
+        {children}
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }
