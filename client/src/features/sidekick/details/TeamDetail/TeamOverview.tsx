@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import type { Team } from '@machina/shared';
 import { uploadTeamAvatar, deleteTeamAvatar } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { SidekickSection, SidekickRow } from '../../components';
 import styles from './TeamDetail.module.css';
 
@@ -16,6 +17,7 @@ interface TeamOverviewProps {
 
 export function TeamOverview({ team, memberCount, isAdmin }: TeamOverviewProps) {
   const { addToast } = useAppStore();
+  const { loadTeams } = useAuthStore();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -24,6 +26,8 @@ export function TeamOverview({ team, memberCount, isAdmin }: TeamOverviewProps) 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team', team.team_id] });
       queryClient.invalidateQueries({ queryKey: ['teams'] });
+      // Refresh teams in auth store so TeamSelector updates
+      loadTeams();
       addToast({ type: 'success', title: 'Avatar updated' });
     },
     onError: (error: Error) => {
@@ -36,6 +40,8 @@ export function TeamOverview({ team, memberCount, isAdmin }: TeamOverviewProps) 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team', team.team_id] });
       queryClient.invalidateQueries({ queryKey: ['teams'] });
+      // Refresh teams in auth store so TeamSelector updates
+      loadTeams();
       addToast({ type: 'success', title: 'Avatar removed' });
     },
     onError: (error: Error) => {

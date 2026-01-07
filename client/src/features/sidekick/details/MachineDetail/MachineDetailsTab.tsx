@@ -16,14 +16,18 @@ export function MachineDetailsTab({ machine }: MachineDetailsTabProps) {
           value={machine.provider_resource_id ?? null}
           copyable
         />
-        <SidekickRow label="Terraform Workspace" value={machine.terraform_workspace} copyable />
+        <SidekickRow
+          label="Terraform Workspace"
+          value={machine.terraform_workspace ?? null}
+          copyable
+        />
         {machine.vpc_id && <SidekickRow label="VPC ID" value={machine.vpc_id} copyable />}
         {machine.subnet_id && <SidekickRow label="Subnet ID" value={machine.subnet_id} copyable />}
       </SidekickSection>
 
       <SidekickSection title="Configuration">
         <SidekickRow label="Provider" value={machine.provider} />
-        <SidekickRow label="Provider Account" value={machine.provider_account_id} />
+        <SidekickRow label="Account" value={machine.provider_account_id} copyable />
         <SidekickRow label="Region" value={machine.region} />
         {machine.zone && <SidekickRow label="Zone" value={machine.zone} />}
         <SidekickRow label="Size" value={machine.size} />

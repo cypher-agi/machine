@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Lock, Clock } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Plus, Lock } from 'lucide-react';
 import { getBootstrapProfiles } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Button, Badge, RefreshButton } from '@/shared/ui';
 import {
   PageLayout,
@@ -18,6 +18,7 @@ import styles from './BootstrapApp.module.css';
 
 export function BootstrapApp() {
   const { sidekickSelection, setSidekickSelection } = useAppStore();
+  const { currentTeamId } = useAuthStore();
 
   const {
     data: profiles,
@@ -25,7 +26,7 @@ export function BootstrapApp() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['bootstrap-profiles'],
+    queryKey: ['bootstrap-profiles', currentTeamId],
     queryFn: getBootstrapProfiles,
   });
 
@@ -76,15 +77,7 @@ export function BootstrapApp() {
                     <ItemCardTypeBadge>{BOOTSTRAP_METHOD_LABELS[profile.method]}</ItemCardTypeBadge>
                   </>
                 }
-                meta={
-                  <>
-                    <ItemCardMeta>{profile.description || 'No description'}</ItemCardMeta>
-                    <ItemCardMeta>
-                      <Clock size={12} />
-                      {formatDistanceToNow(new Date(profile.updated_at), { addSuffix: true })}
-                    </ItemCardMeta>
-                  </>
-                }
+                meta={<ItemCardMeta>{profile.description || 'No description'}</ItemCardMeta>}
                 badges={
                   profile.services_to_run.length > 0 ? (
                     <>

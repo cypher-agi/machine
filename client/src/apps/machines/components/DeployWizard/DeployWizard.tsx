@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ChevronLeft,
@@ -11,6 +12,7 @@ import {
   FileText,
   Loader2,
   Key,
+  CloudOff,
 } from 'lucide-react';
 import clsx from 'clsx';
 import {
@@ -23,6 +25,7 @@ import {
 } from '@/lib/api';
 import type { MachineCreateRequest } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Modal, Button, Input, Select } from '@/shared/ui';
 import styles from './DeployWizard.module.css';
 
@@ -43,6 +46,7 @@ const steps: { id: WizardStep; label: string; icon: typeof Cloud }[] = [
 
 export function DeployWizard({ onClose }: DeployWizardProps) {
   const { addToast } = useAppStore();
+  const { currentTeamId } = useAuthStore();
   const queryClient = useQueryClient();
 
   const [currentStep, setCurrentStep] = useState<WizardStep>('provider');
@@ -53,17 +57,20 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
     bootstrap_profile_id: 'none',
   });
 
-  const { data: providerAccounts } = useQuery({
-    queryKey: ['provider-accounts'],
+  const { data: providerAccounts, isLoading: isLoadingProviders } = useQuery({
+    queryKey: ['provider-accounts', currentTeamId],
     queryFn: getProviderAccounts,
   });
+
+  const hasNoProviders =
+    !isLoadingProviders && (!providerAccounts || providerAccounts.length === 0);
 
   const selectedAccount = providerAccounts?.find(
     (a) => a.provider_account_id === formData.provider_account_id
   );
 
   const { data: providerOptions } = useQuery({
-    queryKey: ['provider-options', selectedAccount?.provider_type],
+    queryKey: ['provider-options', currentTeamId, selectedAccount?.provider_type],
     queryFn: () => getProviderOptions(selectedAccount?.provider_type ?? 'digitalocean'),
     enabled: !!selectedAccount,
   });
@@ -108,17 +115,17 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
   }, [providerOptions, formData.region, formData.size, formData.image]);
 
   const { data: bootstrapProfiles } = useQuery({
-    queryKey: ['bootstrap-profiles'],
+    queryKey: ['bootstrap-profiles', currentTeamId],
     queryFn: getBootstrapProfiles,
   });
 
   const { data: firewallProfiles } = useQuery({
-    queryKey: ['firewall-profiles'],
+    queryKey: ['firewall-profiles', currentTeamId],
     queryFn: getFirewallProfiles,
   });
 
   const { data: sshKeys } = useQuery({
-    queryKey: ['ssh-keys'],
+    queryKey: ['ssh-keys', currentTeamId],
     queryFn: getSSHKeys,
   });
 
@@ -291,39 +298,55 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
         {currentStep === 'provider' && (
           <div>
             <p className={styles.sectionTitle}>Select provider account</p>
-            <div className={styles.providerList}>
-              {providerAccounts?.map((account) => (
-                <button
-                  key={account.provider_account_id}
-                  onClick={() =>
-                    setFormData({ ...formData, provider_account_id: account.provider_account_id })
-                  }
-                  className={clsx(
-                    styles.providerButton,
-                    formData.provider_account_id === account.provider_account_id &&
-                      styles.providerButtonSelected
-                  )}
-                >
-                  <div className={styles.providerIcon}>
-                    {account.provider_type.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div className={styles.providerInfo}>
-                    <p className={styles.providerLabel}>{account.label}</p>
-                    <p className={styles.providerType}>{account.provider_type}</p>
-                  </div>
-                  <span
+            {hasNoProviders ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyStateIcon}>
+                  <CloudOff size={32} />
+                </div>
+                <p className={styles.emptyStateTitle}>No providers configured</p>
+                <p className={styles.emptyStateDesc}>
+                  You need to add a cloud provider before you can deploy machines.
+                </p>
+                <Link to="/providers" className={styles.emptyStateLink} onClick={onClose}>
+                  <Cloud size={14} />
+                  Add a Provider
+                </Link>
+              </div>
+            ) : (
+              <div className={styles.providerList}>
+                {providerAccounts?.map((account) => (
+                  <button
+                    key={account.provider_account_id}
+                    onClick={() =>
+                      setFormData({ ...formData, provider_account_id: account.provider_account_id })
+                    }
                     className={clsx(
-                      styles.credentialBadge,
-                      account.credential_status === 'valid'
-                        ? styles.credentialValid
-                        : styles.credentialWarning
+                      styles.providerButton,
+                      formData.provider_account_id === account.provider_account_id &&
+                        styles.providerButtonSelected
                     )}
                   >
-                    {account.credential_status}
-                  </span>
-                </button>
-              ))}
-            </div>
+                    <div className={styles.providerIcon}>
+                      {account.provider_type.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className={styles.providerInfo}>
+                      <p className={styles.providerLabel}>{account.label}</p>
+                      <p className={styles.providerType}>{account.provider_type}</p>
+                    </div>
+                    <span
+                      className={clsx(
+                        styles.credentialBadge,
+                        account.credential_status === 'valid'
+                          ? styles.credentialValid
+                          : styles.credentialWarning
+                      )}
+                    >
+                      {account.credential_status}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -505,9 +528,19 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                 );
               })
             ) : (
-              <p className={styles.emptyText}>
-                No SSH keys available. You can add keys in the Keys page.
-              </p>
+              <div className={styles.emptyState}>
+                <div className={styles.emptyStateIcon}>
+                  <Key size={32} />
+                </div>
+                <p className={styles.emptyStateTitle}>No SSH keys available</p>
+                <p className={styles.emptyStateDesc}>
+                  Add an SSH key to enable secure access to your machines.
+                </p>
+                <Link to="/keys" className={styles.emptyStateLink} onClick={onClose}>
+                  <Key size={14} />
+                  Add SSH Key
+                </Link>
+              </div>
             )}
           </div>
         )}

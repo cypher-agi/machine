@@ -14,6 +14,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import { getAgentMetrics } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import type { Machine } from '@machina/shared';
 import { PROVIDER_FULL_LABELS } from '@/shared/constants';
 import {
@@ -56,8 +57,10 @@ function formatUptime(seconds: number): string {
 }
 
 export function MachineOverviewTab({ machine }: MachineOverviewTabProps) {
+  const { currentTeamId } = useAuthStore();
+
   const { data: agentMetrics } = useQuery({
-    queryKey: ['agent-metrics', machine.machine_id],
+    queryKey: ['agent-metrics', currentTeamId, machine.machine_id],
     queryFn: () => getAgentMetrics(machine.machine_id),
     enabled: machine.agent_status === 'connected',
     refetchInterval: 30000,

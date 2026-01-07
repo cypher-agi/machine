@@ -10,3 +10,4 @@ export * from './types/api';
 export * from './types/ssh';
 export * from './types/user';
 export * from './types/team';
+export * from './types/integration';

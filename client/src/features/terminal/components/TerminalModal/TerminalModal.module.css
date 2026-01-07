@@ -24,8 +24,8 @@
   height: 64px;
   margin: 0 auto;
   border-radius: var(--radius-xl);
-  background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(156, 39, 176, 0.1));
-  border: 1px solid rgba(0, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(1, 244, 203, 0.1), rgba(203, 1, 244, 0.1));
+  border: 1px solid rgba(1, 244, 203, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,7 +81,7 @@
 
 .keyButtonSelected {
   border-color: var(--color-neon-cyan);
-  background-color: rgba(0, 255, 255, 0.05);
+  background-color: rgba(1, 244, 203, 0.05);
 }
 
 .keyButtonContent {
@@ -125,8 +125,8 @@
 .warningContainer {
   padding: var(--space-4);
   border-radius: var(--radius-md);
-  background-color: rgba(250, 204, 21, 0.05);
-  border: 1px solid rgba(250, 204, 21, 0.2);
+  background-color: rgba(1, 164, 244, 0.05);
+  border: 1px solid rgba(1, 164, 244, 0.2);
 }
 
 .warningContent {

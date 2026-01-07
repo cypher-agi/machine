@@ -189,7 +189,7 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
     provider: providerAccount.provider_type,
     provider_account_id: body.provider_account_id,
     region: body.region,
-    ...(body.zone && { zone: body.zone }),
+    zone: body.zone || null,
     size: body.size,
     image: body.image,
     desired_status: 'running',

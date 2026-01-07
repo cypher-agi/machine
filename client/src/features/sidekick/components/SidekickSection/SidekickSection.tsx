@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import styles from './SidekickSection.module.css';
 
 export interface SidekickSectionProps {
-  title: string;
+  title: ReactNode;
   icon?: ReactNode;
   children: ReactNode;
   defaultOpen?: boolean;

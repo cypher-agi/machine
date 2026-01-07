@@ -18,6 +18,15 @@ import type {
   TeamInvite,
   TeamWithMembership,
   TeamMemberWithUser,
+  TeamIntegration,
+  GitHubRepository,
+  GitHubMember,
+  GitHubRepoFilter,
+  GitHubMemberFilter,
+  IntegrationStatus,
+  IntegrationType,
+  SyncOperationStatus,
+  SyncStatus,
 } from '@machina/shared';
 
 // Raw database row types (before JSON parsing)
@@ -66,6 +75,67 @@ interface UserRow extends Omit<User, 'profile_picture_url'> {
 
 interface SessionRow extends Session {
   token_hash: string;
+}
+
+interface TeamIntegrationRow {
+  integration_id: string;
+  team_id: string;
+  type: string;
+  status: string;
+  external_id: string;
+  external_account_id: string | null;
+  external_account_name: string;
+  external_account_avatar: string | null;
+  connected_by_user_id: string;
+  connected_by_external_id: string | null;
+  connected_by_external_name: string | null;
+  last_sync_at: string | null;
+  last_sync_status: string | null;
+  last_sync_error: string | null;
+  next_sync_at: string | null;
+  config: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface GitHubRepositoryRow {
+  repo_id: string;
+  team_id: string;
+  integration_id: string;
+  github_repo_id: number;
+  name: string;
+  full_name: string;
+  description: string | null;
+  private: number;
+  archived: number;
+  disabled: number;
+  default_branch: string;
+  html_url: string;
+  language: string | null;
+  stargazers_count: number;
+  forks_count: number;
+  open_issues_count: number;
+  pushed_at: string | null;
+  sync_status: string;
+  last_error: string | null;
+  imported_at: string;
+  updated_at: string;
+}
+
+interface GitHubMemberRow {
+  member_id: string;
+  team_id: string;
+  integration_id: string;
+  github_user_id: number;
+  login: string;
+  avatar_url: string | null;
+  html_url: string;
+  organization: string;
+  role: string | null;
+  sync_status: string;
+  last_error: string | null;
+  imported_at: string;
+  updated_at: string;
 }
 
 interface AgentMetricsRow {
@@ -370,6 +440,122 @@ db.exec(`
     used_by TEXT REFERENCES users(user_id)
   );
 
+  -- ============ Integration Framework Tables ============
+
+  -- Team Integrations (base table for all integrations)
+  CREATE TABLE IF NOT EXISTS team_integrations (
+    integration_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
+    type TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active',
+    
+    -- External provider identity
+    external_id TEXT NOT NULL,
+    external_account_id TEXT,
+    external_account_name TEXT NOT NULL,
+    external_account_avatar TEXT,
+    
+    -- Connection metadata
+    connected_by_user_id TEXT NOT NULL,
+    connected_by_external_id TEXT,
+    connected_by_external_name TEXT,
+    
+    -- Sync state  
+    last_sync_at TEXT,
+    last_sync_status TEXT,
+    last_sync_error TEXT,
+    next_sync_at TEXT,
+    
+    -- Provider-specific config (JSON, non-sensitive)
+    config TEXT,
+    
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    FOREIGN KEY (connected_by_user_id) REFERENCES users(user_id),
+    UNIQUE(team_id, type)
+  );
+
+  -- Integration Credentials (encrypted, separate table)
+  CREATE TABLE IF NOT EXISTS integration_credentials (
+    integration_id TEXT PRIMARY KEY,
+    encrypted_data TEXT NOT NULL,
+    key_version INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    rotated_at TEXT,
+    FOREIGN KEY (integration_id) REFERENCES team_integrations(integration_id) ON DELETE CASCADE
+  );
+
+  -- OAuth State (temporary, for CSRF protection)
+  CREATE TABLE IF NOT EXISTS oauth_states (
+    state TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL
+  );
+
+  -- Team OAuth App Configurations (stores client_id/client_secret per team per integration type)
+  CREATE TABLE IF NOT EXISTS integration_oauth_configs (
+    config_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
+    type TEXT NOT NULL, -- 'github', 'slack', etc.
+    encrypted_credentials TEXT NOT NULL, -- encrypted JSON with client_id, client_secret
+    configured_by_user_id TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    UNIQUE(team_id, type)
+  );
+
+  -- GitHub Repositories
+  CREATE TABLE IF NOT EXISTS github_repositories (
+    repo_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
+    integration_id TEXT NOT NULL,
+    github_repo_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    full_name TEXT NOT NULL,
+    description TEXT,
+    private INTEGER NOT NULL DEFAULT 0,
+    archived INTEGER NOT NULL DEFAULT 0,
+    disabled INTEGER NOT NULL DEFAULT 0,
+    default_branch TEXT NOT NULL DEFAULT 'main',
+    html_url TEXT NOT NULL,
+    language TEXT,
+    stargazers_count INTEGER DEFAULT 0,
+    forks_count INTEGER DEFAULT 0,
+    open_issues_count INTEGER DEFAULT 0,
+    pushed_at TEXT,
+    sync_status TEXT NOT NULL DEFAULT 'ok',
+    last_error TEXT,
+    imported_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    FOREIGN KEY (integration_id) REFERENCES team_integrations(integration_id) ON DELETE CASCADE,
+    UNIQUE(integration_id, github_repo_id)
+  );
+
+  -- GitHub Members
+  CREATE TABLE IF NOT EXISTS github_members (
+    member_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
+    integration_id TEXT NOT NULL,
+    github_user_id INTEGER NOT NULL,
+    login TEXT NOT NULL,
+    avatar_url TEXT,
+    html_url TEXT NOT NULL,
+    organization TEXT NOT NULL DEFAULT 'Unknown',
+    role TEXT,
+    sync_status TEXT NOT NULL DEFAULT 'ok',
+    last_error TEXT,
+    imported_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    FOREIGN KEY (integration_id) REFERENCES team_integrations(integration_id) ON DELETE CASCADE
+  );
+
   -- Create indexes
   CREATE INDEX IF NOT EXISTS idx_machines_status ON machines(actual_status);
   CREATE INDEX IF NOT EXISTS idx_machines_provider ON machines(provider);
@@ -385,6 +571,20 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_team_members_user ON team_members(user_id);
   CREATE INDEX IF NOT EXISTS idx_team_invites_team ON team_invites(team_id);
   CREATE INDEX IF NOT EXISTS idx_team_invites_code ON team_invites(invite_code);
+
+  -- Integration indexes
+  CREATE INDEX IF NOT EXISTS idx_team_integrations_team ON team_integrations(team_id);
+  CREATE INDEX IF NOT EXISTS idx_team_integrations_type ON team_integrations(type);
+  CREATE INDEX IF NOT EXISTS idx_team_integrations_status ON team_integrations(status);
+  CREATE INDEX IF NOT EXISTS idx_github_repos_team ON github_repositories(team_id);
+  CREATE INDEX IF NOT EXISTS idx_github_repos_integration ON github_repositories(integration_id);
+  CREATE INDEX IF NOT EXISTS idx_github_repos_sync ON github_repositories(sync_status);
+  CREATE INDEX IF NOT EXISTS idx_github_members_team ON github_members(team_id);
+  CREATE INDEX IF NOT EXISTS idx_github_members_integration ON github_members(integration_id);
+  CREATE INDEX IF NOT EXISTS idx_github_members_sync ON github_members(sync_status);
+  CREATE INDEX IF NOT EXISTS idx_oauth_states_expires ON oauth_states(expires_at);
+  CREATE INDEX IF NOT EXISTS idx_oauth_configs_team ON integration_oauth_configs(team_id);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_oauth_configs_team_type ON integration_oauth_configs(team_id, type);
 `);
 
 // Add last_health_check column if it doesn't exist
@@ -441,6 +641,61 @@ try {
   db.exec('CREATE INDEX IF NOT EXISTS idx_ssh_keys_team ON ssh_keys(team_id)');
 } catch {
   // Indexes already exist, ignore
+}
+
+// Add organization column to github_members table
+try {
+  db.exec('ALTER TABLE github_members ADD COLUMN organization TEXT');
+} catch {
+  // Column already exists, ignore
+}
+
+// Migrate github_members table to remove the old UNIQUE(integration_id, github_user_id) constraint
+// This allows the same user to appear in multiple organizations
+try {
+  // Check if the old constraint exists by trying to insert a duplicate
+  // If it fails, we need to migrate
+  const hasOldConstraint = db
+    .prepare(
+      `
+    SELECT sql FROM sqlite_master 
+    WHERE type='table' AND name='github_members' AND sql LIKE '%UNIQUE(integration_id, github_user_id)%'
+  `
+    )
+    .get();
+
+  if (hasOldConstraint) {
+    console.log('Migrating github_members table to support multi-org membership...');
+
+    // Create new table with correct schema (no unique constraint on integration_id + github_user_id)
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS github_members_new (
+        member_id TEXT PRIMARY KEY,
+        team_id TEXT NOT NULL,
+        integration_id TEXT NOT NULL,
+        github_user_id INTEGER NOT NULL,
+        login TEXT NOT NULL,
+        avatar_url TEXT,
+        html_url TEXT NOT NULL,
+        organization TEXT NOT NULL DEFAULT 'Unknown',
+        role TEXT,
+        sync_status TEXT NOT NULL DEFAULT 'ok',
+        last_error TEXT,
+        imported_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+        FOREIGN KEY (integration_id) REFERENCES team_integrations(integration_id) ON DELETE CASCADE
+      )
+    `);
+
+    // Drop old table and rename new one
+    db.exec('DROP TABLE github_members');
+    db.exec('ALTER TABLE github_members_new RENAME TO github_members');
+
+    console.log('github_members table migration complete. Please re-sync GitHub integration.');
+  }
+} catch (err) {
+  console.warn('github_members migration check failed:', err);
 }
 
 // Add handle column to teams table (for existing databases)
@@ -767,6 +1022,143 @@ const statements = {
     WHERE tm.user_id = ?
     ORDER BY t.created_at ASC
   `),
+
+  // ============ Integration Framework ============
+
+  // Team Integrations
+  getTeamIntegrations: db.prepare(
+    'SELECT * FROM team_integrations WHERE team_id = ? ORDER BY created_at DESC'
+  ),
+  getTeamIntegration: db.prepare('SELECT * FROM team_integrations WHERE team_id = ? AND type = ?'),
+  getTeamIntegrationById: db.prepare('SELECT * FROM team_integrations WHERE integration_id = ?'),
+  insertTeamIntegration: db.prepare(`
+    INSERT INTO team_integrations (
+      integration_id, team_id, type, status, external_id, external_account_id,
+      external_account_name, external_account_avatar, connected_by_user_id,
+      connected_by_external_id, connected_by_external_name, last_sync_at,
+      last_sync_status, last_sync_error, next_sync_at, config, created_at, updated_at
+    ) VALUES (
+      @integration_id, @team_id, @type, @status, @external_id, @external_account_id,
+      @external_account_name, @external_account_avatar, @connected_by_user_id,
+      @connected_by_external_id, @connected_by_external_name, @last_sync_at,
+      @last_sync_status, @last_sync_error, @next_sync_at, @config, @created_at, @updated_at
+    )
+  `),
+  updateTeamIntegration: db.prepare(`
+    UPDATE team_integrations SET
+      status = @status, last_sync_at = @last_sync_at, last_sync_status = @last_sync_status,
+      last_sync_error = @last_sync_error, next_sync_at = @next_sync_at,
+      config = @config, updated_at = @updated_at
+    WHERE integration_id = @integration_id
+  `),
+  deleteTeamIntegration: db.prepare('DELETE FROM team_integrations WHERE integration_id = ?'),
+
+  // Integration Credentials
+  getIntegrationCredentials: db.prepare(
+    'SELECT encrypted_data FROM integration_credentials WHERE integration_id = ?'
+  ),
+  insertIntegrationCredentials: db.prepare(
+    'INSERT OR REPLACE INTO integration_credentials (integration_id, encrypted_data, key_version, created_at) VALUES (?, ?, 1, ?)'
+  ),
+  deleteIntegrationCredentials: db.prepare(
+    'DELETE FROM integration_credentials WHERE integration_id = ?'
+  ),
+
+  // OAuth States
+  insertOAuthState: db.prepare(
+    'INSERT INTO oauth_states (state, team_id, user_id, created_at, expires_at) VALUES (?, ?, ?, ?, ?)'
+  ),
+  getOAuthState: db.prepare('SELECT * FROM oauth_states WHERE state = ?'),
+  deleteOAuthState: db.prepare('DELETE FROM oauth_states WHERE state = ?'),
+  cleanupExpiredOAuthStates: db.prepare('DELETE FROM oauth_states WHERE expires_at < ?'),
+
+  // Integration OAuth Configs (team-level OAuth app credentials)
+  getOAuthConfig: db.prepare(
+    'SELECT * FROM integration_oauth_configs WHERE team_id = ? AND type = ?'
+  ),
+  upsertOAuthConfig: db.prepare(`
+    INSERT INTO integration_oauth_configs (
+      config_id, team_id, type, encrypted_credentials, configured_by_user_id, created_at, updated_at
+    ) VALUES (
+      @config_id, @team_id, @type, @encrypted_credentials, @configured_by_user_id, @created_at, @updated_at
+    )
+    ON CONFLICT(team_id, type) DO UPDATE SET
+      encrypted_credentials = @encrypted_credentials,
+      configured_by_user_id = @configured_by_user_id,
+      updated_at = @updated_at
+  `),
+  deleteOAuthConfig: db.prepare(
+    'DELETE FROM integration_oauth_configs WHERE team_id = ? AND type = ?'
+  ),
+
+  // GitHub Repositories
+  getGitHubRepositories: db.prepare(
+    'SELECT * FROM github_repositories WHERE team_id = ? ORDER BY updated_at DESC'
+  ),
+  getGitHubRepositoriesByIntegration: db.prepare(
+    'SELECT * FROM github_repositories WHERE integration_id = ? ORDER BY updated_at DESC'
+  ),
+  getGitHubRepository: db.prepare('SELECT * FROM github_repositories WHERE repo_id = ?'),
+  getGitHubRepositoryWithTeam: db.prepare(
+    'SELECT * FROM github_repositories WHERE repo_id = ? AND team_id = ?'
+  ),
+  upsertGitHubRepository: db.prepare(`
+    INSERT INTO github_repositories (
+      repo_id, team_id, integration_id, github_repo_id, name, full_name,
+      description, private, archived, disabled, default_branch, html_url,
+      language, stargazers_count, forks_count, open_issues_count, pushed_at,
+      sync_status, last_error, imported_at, updated_at
+    ) VALUES (
+      @repo_id, @team_id, @integration_id, @github_repo_id, @name, @full_name,
+      @description, @private, @archived, @disabled, @default_branch, @html_url,
+      @language, @stargazers_count, @forks_count, @open_issues_count, @pushed_at,
+      @sync_status, @last_error, @imported_at, @updated_at
+    ) ON CONFLICT(integration_id, github_repo_id) DO UPDATE SET
+      name = @name, full_name = @full_name, description = @description,
+      private = @private, archived = @archived, disabled = @disabled,
+      default_branch = @default_branch, html_url = @html_url, language = @language,
+      stargazers_count = @stargazers_count, forks_count = @forks_count,
+      open_issues_count = @open_issues_count, pushed_at = @pushed_at,
+      sync_status = @sync_status, last_error = @last_error, updated_at = @updated_at
+  `),
+  markRemovedGitHubRepos: db.prepare(
+    "UPDATE github_repositories SET sync_status = 'removed', updated_at = ? WHERE integration_id = ? AND github_repo_id NOT IN (SELECT value FROM json_each(?))"
+  ),
+  countGitHubRepositories: db.prepare(
+    "SELECT COUNT(*) as count FROM github_repositories WHERE integration_id = ? AND sync_status != 'removed'"
+  ),
+
+  // GitHub Members
+  getGitHubMembers: db.prepare('SELECT * FROM github_members WHERE team_id = ? ORDER BY login ASC'),
+  getGitHubMembersByIntegration: db.prepare(
+    'SELECT * FROM github_members WHERE integration_id = ? ORDER BY login ASC'
+  ),
+  getGitHubMember: db.prepare('SELECT * FROM github_members WHERE member_id = ?'),
+  getGitHubMemberWithTeam: db.prepare(
+    'SELECT * FROM github_members WHERE member_id = ? AND team_id = ?'
+  ),
+  upsertGitHubMember: db.prepare(`
+    INSERT INTO github_members (
+      member_id, team_id, integration_id, github_user_id, login, avatar_url,
+      html_url, organization, role, sync_status, last_error, imported_at, updated_at
+    ) VALUES (
+      @member_id, @team_id, @integration_id, @github_user_id, @login, @avatar_url,
+      @html_url, @organization, @role, @sync_status, @last_error, @imported_at, @updated_at
+    ) ON CONFLICT(member_id) DO UPDATE SET
+      login = @login, avatar_url = @avatar_url, html_url = @html_url,
+      organization = @organization, role = @role, sync_status = @sync_status, last_error = @last_error,
+      updated_at = @updated_at
+  `),
+  markRemovedGitHubMembers: db.prepare(
+    "UPDATE github_members SET sync_status = 'removed', updated_at = ? WHERE integration_id = ? AND github_user_id NOT IN (SELECT value FROM json_each(?))"
+  ),
+  markRemovedGitHubMembersByIds: db.prepare(
+    "UPDATE github_members SET sync_status = 'removed', updated_at = ? WHERE integration_id = ? AND member_id NOT IN (SELECT value FROM json_each(?))"
+  ),
+  countGitHubMembers: db.prepare(
+    "SELECT COUNT(*) as count FROM github_members WHERE integration_id = ? AND sync_status != 'removed'"
+  ),
+  clearGitHubMembers: db.prepare('DELETE FROM github_members WHERE integration_id = ?'),
 };
 
 // Helper to parse JSON fields from DB rows
@@ -837,6 +1229,73 @@ function parseAuditEvent(row: AuditEventRow): AuditEvent {
   };
 }
 
+function parseTeamIntegration(row: TeamIntegrationRow): TeamIntegration {
+  return {
+    integration_id: row.integration_id,
+    team_id: row.team_id,
+    type: row.type as IntegrationType,
+    status: row.status as IntegrationStatus,
+    external_id: row.external_id,
+    external_account_id: row.external_account_id || undefined,
+    external_account_name: row.external_account_name,
+    external_account_avatar: row.external_account_avatar || undefined,
+    connected_by_user_id: row.connected_by_user_id,
+    connected_by_external_id: row.connected_by_external_id || undefined,
+    connected_by_external_name: row.connected_by_external_name || undefined,
+    last_sync_at: row.last_sync_at || undefined,
+    last_sync_status: (row.last_sync_status as SyncOperationStatus) || undefined,
+    last_sync_error: row.last_sync_error || undefined,
+    next_sync_at: row.next_sync_at || undefined,
+    config: row.config ? JSON.parse(row.config) : undefined,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+function parseGitHubRepository(row: GitHubRepositoryRow): GitHubRepository {
+  return {
+    repo_id: row.repo_id,
+    team_id: row.team_id,
+    integration_id: row.integration_id,
+    github_repo_id: row.github_repo_id,
+    name: row.name,
+    full_name: row.full_name,
+    description: row.description || undefined,
+    private: Boolean(row.private),
+    archived: Boolean(row.archived),
+    disabled: Boolean(row.disabled),
+    default_branch: row.default_branch,
+    html_url: row.html_url,
+    language: row.language || undefined,
+    stargazers_count: row.stargazers_count,
+    forks_count: row.forks_count,
+    open_issues_count: row.open_issues_count,
+    pushed_at: row.pushed_at || undefined,
+    sync_status: row.sync_status as SyncStatus,
+    last_error: row.last_error || undefined,
+    imported_at: row.imported_at,
+    updated_at: row.updated_at,
+  };
+}
+
+function parseGitHubMember(row: GitHubMemberRow): GitHubMember {
+  return {
+    member_id: row.member_id,
+    team_id: row.team_id,
+    integration_id: row.integration_id,
+    github_user_id: row.github_user_id,
+    login: row.login,
+    avatar_url: row.avatar_url || undefined,
+    html_url: row.html_url,
+    organization: row.organization,
+    role: (row.role as 'admin' | 'member') || undefined,
+    sync_status: row.sync_status as SyncStatus,
+    last_error: row.last_error || undefined,
+    imported_at: row.imported_at,
+    updated_at: row.updated_at,
+  };
+}
+
 function parseSSHKey(row: SSHKeyRow): SSHKey {
   return {
     ...row,
@@ -895,6 +1354,7 @@ export const database = {
       provider_resource_id: machine.provider_resource_id || null,
       vpc_id: machine.vpc_id || null,
       subnet_id: machine.subnet_id || null,
+      bootstrap_profile_id: machine.bootstrap_profile_id || null,
       firewall_profile_id: machine.firewall_profile_id || null,
       tags: JSON.stringify(machine.tags || {}),
     });
@@ -1550,6 +2010,310 @@ export const database = {
     this.insertTeamMember(member);
 
     return team;
+  },
+
+  // ============ Integration Framework ============
+
+  // Team Integrations
+  getTeamIntegrations(teamId: string): TeamIntegration[] {
+    const rows = statements.getTeamIntegrations.all(teamId) as TeamIntegrationRow[];
+    return rows.map(parseTeamIntegration);
+  },
+  getTeamIntegration(teamId: string, type: string): TeamIntegration | undefined {
+    const row = statements.getTeamIntegration.get(teamId, type) as TeamIntegrationRow | undefined;
+    return row ? parseTeamIntegration(row) : undefined;
+  },
+  getTeamIntegrationById(integrationId: string): TeamIntegration | undefined {
+    const row = statements.getTeamIntegrationById.get(integrationId) as
+      | TeamIntegrationRow
+      | undefined;
+    return row ? parseTeamIntegration(row) : undefined;
+  },
+  insertTeamIntegration(integration: TeamIntegration): void {
+    statements.insertTeamIntegration.run({
+      integration_id: integration.integration_id,
+      team_id: integration.team_id,
+      type: integration.type,
+      status: integration.status,
+      external_id: integration.external_id,
+      external_account_id: integration.external_account_id || null,
+      external_account_name: integration.external_account_name,
+      external_account_avatar: integration.external_account_avatar || null,
+      connected_by_user_id: integration.connected_by_user_id,
+      connected_by_external_id: integration.connected_by_external_id || null,
+      connected_by_external_name: integration.connected_by_external_name || null,
+      last_sync_at: integration.last_sync_at || null,
+      last_sync_status: integration.last_sync_status || null,
+      last_sync_error: integration.last_sync_error || null,
+      next_sync_at: integration.next_sync_at || null,
+      config: integration.config ? JSON.stringify(integration.config) : null,
+      created_at: integration.created_at,
+      updated_at: integration.updated_at,
+    });
+  },
+  updateTeamIntegration(integration: Partial<TeamIntegration> & { integration_id: string }): void {
+    const existing = this.getTeamIntegrationById(integration.integration_id);
+    if (!existing) return;
+    statements.updateTeamIntegration.run({
+      integration_id: integration.integration_id,
+      status: integration.status || existing.status,
+      last_sync_at:
+        integration.last_sync_at !== undefined
+          ? integration.last_sync_at
+          : existing.last_sync_at || null,
+      last_sync_status:
+        integration.last_sync_status !== undefined
+          ? integration.last_sync_status
+          : existing.last_sync_status || null,
+      last_sync_error:
+        integration.last_sync_error !== undefined
+          ? integration.last_sync_error
+          : existing.last_sync_error || null,
+      next_sync_at:
+        integration.next_sync_at !== undefined
+          ? integration.next_sync_at
+          : existing.next_sync_at || null,
+      config: integration.config
+        ? JSON.stringify(integration.config)
+        : existing.config
+          ? JSON.stringify(existing.config)
+          : null,
+      updated_at: integration.updated_at || new Date().toISOString(),
+    });
+  },
+  deleteTeamIntegration(integrationId: string): void {
+    statements.deleteTeamIntegration.run(integrationId);
+  },
+
+  // Integration Credentials
+  getIntegrationCredentials(integrationId: string): string | undefined {
+    const row = statements.getIntegrationCredentials.get(integrationId) as
+      | { encrypted_data: string }
+      | undefined;
+    return row?.encrypted_data;
+  },
+  storeIntegrationCredentials(integrationId: string, encryptedData: string): void {
+    statements.insertIntegrationCredentials.run(
+      integrationId,
+      encryptedData,
+      new Date().toISOString()
+    );
+  },
+  deleteIntegrationCredentials(integrationId: string): void {
+    statements.deleteIntegrationCredentials.run(integrationId);
+  },
+
+  // OAuth States
+  storeOAuthState(state: string, teamId: string, userId: string, ttlMinutes: number): void {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + ttlMinutes * 60 * 1000);
+    statements.insertOAuthState.run(
+      state,
+      teamId,
+      userId,
+      now.toISOString(),
+      expiresAt.toISOString()
+    );
+  },
+  getOAuthState(state: string): { team_id: string; user_id: string } | undefined {
+    const row = statements.getOAuthState.get(state) as
+      | { team_id: string; user_id: string; expires_at: string }
+      | undefined;
+    if (!row) return undefined;
+    // Check if expired
+    if (new Date(row.expires_at) < new Date()) {
+      statements.deleteOAuthState.run(state);
+      return undefined;
+    }
+    return { team_id: row.team_id, user_id: row.user_id };
+  },
+  deleteOAuthState(state: string): void {
+    statements.deleteOAuthState.run(state);
+  },
+  cleanupExpiredOAuthStates(): number {
+    const result = statements.cleanupExpiredOAuthStates.run(new Date().toISOString());
+    return result.changes;
+  },
+
+  // Integration OAuth Configs
+  getOAuthConfig(
+    teamId: string,
+    type: string
+  ): { encrypted_credentials: string; configured_by_user_id: string } | undefined {
+    return statements.getOAuthConfig.get(teamId, type) as
+      | { encrypted_credentials: string; configured_by_user_id: string }
+      | undefined;
+  },
+  upsertOAuthConfig(
+    configId: string,
+    teamId: string,
+    type: string,
+    encryptedCredentials: string,
+    userId: string
+  ): void {
+    const now = new Date().toISOString();
+    statements.upsertOAuthConfig.run({
+      config_id: configId,
+      team_id: teamId,
+      type,
+      encrypted_credentials: encryptedCredentials,
+      configured_by_user_id: userId,
+      created_at: now,
+      updated_at: now,
+    });
+  },
+  deleteOAuthConfig(teamId: string, type: string): void {
+    statements.deleteOAuthConfig.run(teamId, type);
+  },
+  hasOAuthConfig(teamId: string, type: string): boolean {
+    const config = statements.getOAuthConfig.get(teamId, type);
+    return !!config;
+  },
+
+  // GitHub Repositories
+  getGitHubRepositories(teamId: string, filter?: GitHubRepoFilter): GitHubRepository[] {
+    let rows = statements.getGitHubRepositories.all(teamId) as GitHubRepositoryRow[];
+
+    // Apply filters in memory (for MVP simplicity)
+    if (filter) {
+      if (filter.search) {
+        const search = filter.search.toLowerCase();
+        rows = rows.filter(
+          (r) =>
+            r.name.toLowerCase().includes(search) ||
+            r.full_name.toLowerCase().includes(search) ||
+            r.description?.toLowerCase().includes(search)
+        );
+      }
+      if (filter.visibility && filter.visibility !== 'all') {
+        const isPrivate = filter.visibility === 'private';
+        rows = rows.filter((r) => Boolean(r.private) === isPrivate);
+      }
+      if (filter.archived !== undefined) {
+        rows = rows.filter((r) => Boolean(r.archived) === filter.archived);
+      }
+      if (filter.language) {
+        rows = rows.filter((r) => r.language === filter.language);
+      }
+      if (filter.sync_status) {
+        rows = rows.filter((r) => r.sync_status === filter.sync_status);
+      }
+    }
+
+    return rows.map(parseGitHubRepository);
+  },
+  getGitHubRepository(repoId: string, teamId?: string): GitHubRepository | undefined {
+    const row = teamId
+      ? (statements.getGitHubRepositoryWithTeam.get(repoId, teamId) as
+          | GitHubRepositoryRow
+          | undefined)
+      : (statements.getGitHubRepository.get(repoId) as GitHubRepositoryRow | undefined);
+    return row ? parseGitHubRepository(row) : undefined;
+  },
+  upsertGitHubRepository(repo: GitHubRepository): void {
+    statements.upsertGitHubRepository.run({
+      repo_id: repo.repo_id,
+      team_id: repo.team_id,
+      integration_id: repo.integration_id,
+      github_repo_id: repo.github_repo_id,
+      name: repo.name,
+      full_name: repo.full_name,
+      description: repo.description || null,
+      private: repo.private ? 1 : 0,
+      archived: repo.archived ? 1 : 0,
+      disabled: repo.disabled ? 1 : 0,
+      default_branch: repo.default_branch,
+      html_url: repo.html_url,
+      language: repo.language || null,
+      stargazers_count: repo.stargazers_count,
+      forks_count: repo.forks_count,
+      open_issues_count: repo.open_issues_count,
+      pushed_at: repo.pushed_at || null,
+      sync_status: repo.sync_status,
+      last_error: repo.last_error || null,
+      imported_at: repo.imported_at,
+      updated_at: repo.updated_at,
+    });
+  },
+  markRemovedGitHubRepositories(integrationId: string, activeIds: number[]): void {
+    const now = new Date().toISOString();
+    statements.markRemovedGitHubRepos.run(now, integrationId, JSON.stringify(activeIds));
+  },
+  getIntegrationStats(integrationId: string): Record<string, number> {
+    const repoCount = statements.countGitHubRepositories.get(integrationId) as { count: number };
+    const memberCount = statements.countGitHubMembers.get(integrationId) as { count: number };
+    return {
+      repositories: repoCount?.count || 0,
+      members: memberCount?.count || 0,
+    };
+  },
+
+  // GitHub Members
+  getGitHubMembers(teamId: string, filter?: GitHubMemberFilter): GitHubMember[] {
+    let rows = statements.getGitHubMembers.all(teamId) as GitHubMemberRow[];
+
+    // Apply filters in memory
+    if (filter) {
+      if (filter.search) {
+        const search = filter.search.toLowerCase();
+        rows = rows.filter((r) => r.login.toLowerCase().includes(search));
+      }
+      if (filter.role) {
+        rows = rows.filter((r) => r.role === filter.role);
+      }
+      if (filter.sync_status) {
+        rows = rows.filter((r) => r.sync_status === filter.sync_status);
+      }
+    }
+
+    return rows.map(parseGitHubMember);
+  },
+  getGitHubMember(memberId: string, teamId?: string): GitHubMember | undefined {
+    const row = teamId
+      ? (statements.getGitHubMemberWithTeam.get(memberId, teamId) as GitHubMemberRow | undefined)
+      : (statements.getGitHubMember.get(memberId) as GitHubMemberRow | undefined);
+    return row ? parseGitHubMember(row) : undefined;
+  },
+  upsertGitHubMember(member: GitHubMember): void {
+    statements.upsertGitHubMember.run({
+      member_id: member.member_id,
+      team_id: member.team_id,
+      integration_id: member.integration_id,
+      github_user_id: member.github_user_id,
+      login: member.login,
+      avatar_url: member.avatar_url || null,
+      html_url: member.html_url,
+      organization: member.organization,
+      role: member.role || null,
+      sync_status: member.sync_status,
+      last_error: member.last_error || null,
+      imported_at: member.imported_at,
+      updated_at: member.updated_at,
+    });
+  },
+  markRemovedGitHubMembers(integrationId: string, activeIds: number[]): void {
+    const now = new Date().toISOString();
+    statements.markRemovedGitHubMembers.run(now, integrationId, JSON.stringify(activeIds));
+  },
+  markRemovedGitHubMembersByIds(integrationId: string, activeMemberIds: string[]): void {
+    const now = new Date().toISOString();
+    statements.markRemovedGitHubMembersByIds.run(
+      now,
+      integrationId,
+      JSON.stringify(activeMemberIds)
+    );
+  },
+  clearGitHubMembers(integrationId: string): void {
+    statements.clearGitHubMembers.run(integrationId);
+  },
+  markAllGitHubDataRemoved(integrationId: string): void {
+    const now = new Date().toISOString();
+    db.prepare(
+      "UPDATE github_repositories SET sync_status = 'removed', updated_at = ? WHERE integration_id = ?"
+    ).run(now, integrationId);
+    db.prepare(
+      "UPDATE github_members SET sync_status = 'removed', updated_at = ? WHERE integration_id = ?"
+    ).run(now, integrationId);
   },
 
   // Close database

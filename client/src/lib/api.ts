@@ -29,6 +29,16 @@ import type {
   CreateTeamRequest,
   UpdateTeamRequest,
   HandleAvailabilityResponse,
+  IntegrationListItem,
+  IntegrationType,
+  IntegrationStatusResponse,
+  IntegrationSetupInfo,
+  ConnectStartResponse,
+  SyncResponse,
+  GitHubRepository,
+  GitHubMember,
+  GitHubRepoFilter,
+  GitHubMemberFilter,
 } from '@machina/shared';
 
 const API_BASE = '/api';
@@ -572,4 +582,83 @@ export async function updateTeamMemberRole(
     method: 'PUT',
     body: JSON.stringify({ role }),
   });
+}
+
+// ============ Integrations API ============
+
+export async function getIntegrations(): Promise<IntegrationListItem[]> {
+  return fetchApi<IntegrationListItem[]>('/integrations');
+}
+
+export async function getIntegrationStatus(
+  type: IntegrationType
+): Promise<IntegrationStatusResponse> {
+  return fetchApi<IntegrationStatusResponse>(`/integrations/${type}/status`);
+}
+
+export async function getIntegrationSetupInfo(
+  type: IntegrationType
+): Promise<IntegrationSetupInfo> {
+  return fetchApi<IntegrationSetupInfo>(`/integrations/${type}/setup`);
+}
+
+export async function configureIntegration(
+  type: IntegrationType,
+  credentials: Record<string, string>
+): Promise<{ configured: boolean }> {
+  return fetchApi<{ configured: boolean }>(`/integrations/${type}/configure`, {
+    method: 'POST',
+    body: JSON.stringify({ credentials }),
+  });
+}
+
+export async function removeIntegrationConfig(
+  type: IntegrationType
+): Promise<{ removed: boolean }> {
+  return fetchApi<{ removed: boolean }>(`/integrations/${type}/configure`, {
+    method: 'DELETE',
+  });
+}
+
+export async function startIntegrationConnect(
+  type: IntegrationType
+): Promise<ConnectStartResponse> {
+  return fetchApi<ConnectStartResponse>(`/integrations/${type}/connect/start`);
+}
+
+export async function getManageAccessUrl(type: IntegrationType): Promise<ConnectStartResponse> {
+  return fetchApi<ConnectStartResponse>(`/integrations/${type}/manage-access`);
+}
+
+export async function syncIntegration(type: IntegrationType): Promise<SyncResponse> {
+  return fetchApi<SyncResponse>(`/integrations/${type}/sync`, {
+    method: 'POST',
+  });
+}
+
+export async function disconnectIntegration(
+  type: IntegrationType
+): Promise<{ disconnected: boolean }> {
+  return fetchApi<{ disconnected: boolean }>(`/integrations/${type}`, {
+    method: 'DELETE',
+  });
+}
+
+// GitHub-specific endpoints
+export async function getGitHubRepositories(
+  filter?: GitHubRepoFilter
+): Promise<GitHubRepository[]> {
+  return fetchApi<GitHubRepository[]>(`/integrations/github/repos${buildQueryString(filter)}`);
+}
+
+export async function getGitHubRepository(id: string): Promise<GitHubRepository> {
+  return fetchApi<GitHubRepository>(`/integrations/github/repos/${id}`);
+}
+
+export async function getGitHubMembers(filter?: GitHubMemberFilter): Promise<GitHubMember[]> {
+  return fetchApi<GitHubMember[]>(`/integrations/github/members${buildQueryString(filter)}`);
+}
+
+export async function getGitHubMember(id: string): Promise<GitHubMember> {
+  return fetchApi<GitHubMember>(`/integrations/github/members/${id}`);
 }

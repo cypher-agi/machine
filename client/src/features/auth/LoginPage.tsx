@@ -152,7 +152,7 @@ export function LoginPage() {
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Your name"
                   disabled={submitting}
-                  autoComplete="name"
+                  autoComplete="off"
                 />
               )}
 
@@ -163,7 +163,7 @@ export function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
                 disabled={submitting}
-                autoComplete="email"
+                autoComplete="off"
                 autoFocus
               />
 
@@ -175,7 +175,7 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
                   disabled={submitting}
-                  autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
+                  autoComplete="off"
                   style={{ paddingRight: '40px' }}
                 />
                 <button
@@ -196,7 +196,7 @@ export function LoginPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm Password"
                   disabled={submitting}
-                  autoComplete="new-password"
+                  autoComplete="off"
                 />
               )}
 

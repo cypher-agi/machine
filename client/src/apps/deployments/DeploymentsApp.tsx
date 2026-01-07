@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { getDeployments, getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Select, RefreshButton } from '@/shared/ui';
 import {
   PageLayout,
@@ -18,6 +19,7 @@ import styles from './DeploymentsApp.module.css';
 
 export function DeploymentsApp() {
   const { sidekickSelection, setSidekickSelection } = useAppStore();
+  const { currentTeamId } = useAuthStore();
   const [filterState, setFilterState] = useState<DeploymentState | ''>('');
   const [filterType, setFilterType] = useState<DeploymentType | ''>('');
 
@@ -27,7 +29,7 @@ export function DeploymentsApp() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['deployments', { state: filterState, type: filterType }],
+    queryKey: ['deployments', currentTeamId, { state: filterState, type: filterType }],
     queryFn: () =>
       getDeployments({
         ...(filterState && { state: filterState }),
@@ -37,7 +39,7 @@ export function DeploymentsApp() {
   });
 
   const { data: machines } = useQuery({
-    queryKey: ['machines'],
+    queryKey: ['machines', currentTeamId],
     queryFn: () => getMachines(),
   });
 

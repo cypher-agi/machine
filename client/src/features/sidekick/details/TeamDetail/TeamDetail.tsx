@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Trash2, Users } from 'lucide-react';
 import { getTeam, deleteTeam } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Button, Modal } from '@/shared/ui';
 import {
   SidekickHeader,
@@ -26,6 +27,7 @@ type TabId = 'overview' | 'members' | 'settings';
 
 export function TeamDetail({ teamId, onClose, onMinimize }: TeamDetailProps) {
   const { addToast, setSidekickSelection } = useAppStore();
+  const { loadTeams } = useAuthStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -39,6 +41,8 @@ export function TeamDetail({ teamId, onClose, onMinimize }: TeamDetailProps) {
     mutationFn: deleteTeam,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams'] });
+      // Refresh teams in auth store so TeamSelector updates
+      loadTeams();
       addToast({ type: 'success', title: 'Team deleted' });
       setSidekickSelection(null);
     },

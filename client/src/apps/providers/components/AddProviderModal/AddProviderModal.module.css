@@ -26,7 +26,11 @@
 }
 
 .providerButton {
-  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   background-color: var(--color-bg);
@@ -37,6 +41,7 @@
 
 .providerButton:hover:not(:disabled) {
   border-color: var(--color-border-light);
+  background-color: var(--color-surface);
 }
 
 .providerButton:disabled {
@@ -49,10 +54,44 @@
   background-color: var(--color-elevated);
 }
 
-.providerLabel {
+.providerIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.providerIcon {
+  width: 28px;
+  height: 28px;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.providerButton:hover:not(:disabled) .providerIcon {
+  color: var(--color-text-primary);
+}
+
+.providerButtonSelected .providerIcon {
+  color: var(--color-text-primary);
+}
+
+.providerName {
   font-size: var(--text-2xs);
-  font-family: var(--font-mono);
   color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.providerButton:hover:not(:disabled) .providerName {
+  color: var(--color-text-secondary);
+}
+
+.providerButtonSelected .providerName {
+  color: var(--color-text-secondary);
 }
 
 .tokenInputWrapper {

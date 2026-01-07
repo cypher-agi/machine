@@ -12,9 +12,28 @@ export interface SidekickRowProps {
   accent?: boolean;
   copyable?: boolean;
   mono?: boolean;
+  /** Max characters before middle truncation kicks in */
+  maxLength?: number;
 }
 
-export function SidekickRow({ label, value, icon, accent, copyable, mono }: SidekickRowProps) {
+/** Truncate string in the middle with ellipsis */
+function truncateMiddle(str: string, maxLength: number): string {
+  if (str.length <= maxLength) return str;
+  const charsToShow = maxLength - 3; // account for "..."
+  const frontChars = Math.ceil(charsToShow / 2);
+  const backChars = Math.floor(charsToShow / 2);
+  return `${str.slice(0, frontChars)}...${str.slice(-backChars)}`;
+}
+
+export function SidekickRow({
+  label,
+  value,
+  icon,
+  accent,
+  copyable,
+  mono,
+  maxLength = 22,
+}: SidekickRowProps) {
   const { addToast } = useAppStore();
 
   const handleCopy = async () => {
@@ -23,6 +42,8 @@ export function SidekickRow({ label, value, icon, accent, copyable, mono }: Side
       addToast({ type: 'info', title: 'Copied', message: `${label} copied` });
     }
   };
+
+  const displayValue = value ? truncateMiddle(value, maxLength) : null;
 
   return (
     <div className={styles.row}>
@@ -36,7 +57,7 @@ export function SidekickRow({ label, value, icon, accent, copyable, mono }: Side
             className={clsx(styles.value, accent && styles.valueAccent, mono && styles.valueMono)}
             title={value}
           >
-            {value}
+            {displayValue}
           </span>
           <button onClick={handleCopy} className={styles.copyButton}>
             <Copy size={12} />
@@ -47,7 +68,7 @@ export function SidekickRow({ label, value, icon, accent, copyable, mono }: Side
           className={clsx(styles.value, accent && styles.valueAccent, mono && styles.valueMono)}
           title={value || undefined}
         >
-          {value || '—'}
+          {displayValue || '—'}
         </span>
       )}
     </div>

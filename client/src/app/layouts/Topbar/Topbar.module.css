@@ -9,31 +9,36 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  user-select: none;
 }
 
-/* Logo */
-.logo {
+/* Logo Icon - stays on the left */
+.logoIcon {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  justify-content: center;
   cursor: pointer;
-  padding: 2px var(--space-1);
+  padding: var(--space-1);
   border-radius: var(--radius-sm);
   transition: background-color var(--transition-fast);
 }
 
-.logo:hover {
+.logoIcon:hover {
   background-color: var(--color-surface);
 }
 
-.logoIcon {
+.logoImage {
   width: 18px;
   height: 18px;
   border-radius: var(--radius-sm);
   object-fit: contain;
 }
 
+/* Logo Text - centered in the topbar */
 .logoText {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   font-weight: var(--font-semibold);
   font-size: var(--text-sm);
   color: var(--color-text-primary);

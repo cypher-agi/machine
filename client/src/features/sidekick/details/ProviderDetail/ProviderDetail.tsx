@@ -8,6 +8,7 @@ import {
   getMachines,
 } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Badge, Button, Modal } from '@/shared/ui';
 import {
   PROVIDER_LABELS,
@@ -42,18 +43,19 @@ const tabs: { id: TabId; label: string }[] = [
 
 export function ProviderDetail({ providerId, onClose, onMinimize }: ProviderDetailProps) {
   const { addToast, setSidekickSelection } = useAppStore();
+  const { currentTeamId } = useAuthStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [isVerifying, setIsVerifying] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: accounts, isLoading } = useQuery({
-    queryKey: ['provider-accounts'],
+    queryKey: ['provider-accounts', currentTeamId],
     queryFn: getProviderAccounts,
   });
 
   const { data: machines } = useQuery({
-    queryKey: ['machines'],
+    queryKey: ['machines', currentTeamId],
     queryFn: () => getMachines(),
   });
 

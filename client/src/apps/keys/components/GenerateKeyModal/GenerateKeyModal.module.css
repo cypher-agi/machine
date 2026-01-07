@@ -59,8 +59,8 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2);
-  background-color: rgba(74, 222, 128, 0.05);
-  border: 1px solid rgba(74, 222, 128, 0.2);
+  background-color: rgba(1, 244, 203, 0.05);
+  border: 1px solid rgba(1, 244, 203, 0.2);
   border-radius: var(--radius-md);
 }
 
@@ -92,8 +92,8 @@
   align-items: flex-start;
   gap: var(--space-2);
   padding: var(--space-2);
-  background-color: rgba(250, 204, 21, 0.05);
-  border: 1px solid rgba(250, 204, 21, 0.2);
+  background-color: rgba(1, 164, 244, 0.05);
+  border: 1px solid rgba(1, 164, 244, 0.2);
   border-radius: var(--radius-md);
 }
 

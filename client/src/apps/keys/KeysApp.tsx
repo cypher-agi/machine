@@ -4,6 +4,7 @@ import { Plus, Key, Clock, Upload, Fingerprint } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { getSSHKeys } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Button, RefreshButton } from '@/shared/ui';
 import {
   PageLayout,
@@ -20,6 +21,7 @@ import { KEY_TYPE_LABELS, PROVIDER_LABELS } from '@/shared/constants';
 
 export function KeysApp() {
   const { sidekickSelection, setSidekickSelection } = useAppStore();
+  const { currentTeamId } = useAuthStore();
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
 
@@ -29,7 +31,7 @@ export function KeysApp() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['ssh-keys'],
+    queryKey: ['ssh-keys', currentTeamId],
     queryFn: getSSHKeys,
   });
 

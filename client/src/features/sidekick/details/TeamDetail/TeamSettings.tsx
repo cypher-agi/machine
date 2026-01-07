@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import type { Team, TeamInvite } from '@machina/shared';
 import { updateTeam, createTeamInvite, revokeTeamInvite, checkHandleAvailability } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Button, Input } from '@/shared/ui';
 import { SidekickSection } from '../../components';
 import styles from './TeamDetail.module.css';
@@ -20,6 +21,7 @@ type HandleStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'u
 
 export function TeamSettings({ teamId, team, pendingInvites, onDeleteTeam }: TeamSettingsProps) {
   const { addToast } = useAppStore();
+  const { loadTeams } = useAuthStore();
   const queryClient = useQueryClient();
   const [editName, setEditName] = useState(team.name);
   const [editHandle, setEditHandle] = useState(team.handle);
@@ -97,6 +99,8 @@ export function TeamSettings({ teamId, team, pendingInvites, onDeleteTeam }: Tea
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team', teamId] });
       queryClient.invalidateQueries({ queryKey: ['teams'] });
+      // Refresh teams in auth store so TeamSelector updates
+      loadTeams();
       addToast({ type: 'success', title: 'Team name updated' });
     },
     onError: (error: Error) => {
@@ -109,6 +113,8 @@ export function TeamSettings({ teamId, team, pendingInvites, onDeleteTeam }: Tea
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team', teamId] });
       queryClient.invalidateQueries({ queryKey: ['teams'] });
+      // Refresh teams in auth store so TeamSelector updates
+      loadTeams();
       addToast({ type: 'success', title: 'Team handle updated' });
       setHandleStatus('unchanged');
     },

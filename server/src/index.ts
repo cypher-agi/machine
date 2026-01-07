@@ -17,6 +17,7 @@ import { agentRouter } from './routes/agent';
 import { sshRouter } from './routes/ssh';
 import { authRouter } from './routes/auth';
 import { teamsRouter } from './routes/teams';
+import { integrationsRouter } from './routes/integrations';
 import { errorHandler } from './middleware/errorHandler';
 import { requireAuth, requireTeamContext } from './middleware/auth';
 import { setupTerminalWebSocket } from './services/terminal';
@@ -77,6 +78,10 @@ app.get('/health', (_, res) => {
 // Auth routes (public - handles its own auth)
 app.use('/api/auth', authRouter);
 
+// Public OAuth callback routes (no auth required - validated via state parameter)
+import { publicIntegrationCallbackRouter } from './routes/integrations';
+app.use('/api/integrations', publicIntegrationCallbackRouter);
+
 // Protected API routes - require authentication and team context
 // These routes filter data by team and enforce team membership
 app.use('/api/machines', requireAuth, requireTeamContext, machinesRouter);
@@ -84,6 +89,7 @@ app.use('/api/providers', requireAuth, requireTeamContext, providersRouter);
 app.use('/api/deployments', requireAuth, requireTeamContext, deploymentsRouter);
 app.use('/api/bootstrap', requireAuth, requireTeamContext, bootstrapRouter);
 app.use('/api/ssh', requireAuth, requireTeamContext, sshRouter);
+app.use('/api/integrations', requireAuth, requireTeamContext, integrationsRouter);
 
 // Protected routes without team context (global resources)
 app.use('/api/audit', requireAuth, auditRouter);

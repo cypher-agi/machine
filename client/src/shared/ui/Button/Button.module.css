@@ -63,11 +63,11 @@
 .danger {
   background-color: transparent;
   color: var(--color-error);
-  border-color: rgba(248, 113, 113, 0.3);
+  border-color: rgba(244, 1, 42, 0.3);
 }
 
 .danger:hover:not(:disabled) {
-  background-color: rgba(248, 113, 113, 0.1);
+  background-color: rgba(244, 1, 42, 0.1);
 }
 
 .sm {

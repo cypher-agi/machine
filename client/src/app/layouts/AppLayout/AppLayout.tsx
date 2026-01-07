@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { Topbar } from '../Topbar';
-import { Appbar } from '../Appbar';
+import { Teambar } from '../Teambar';
+import { Appbar, TeamSelector, UserSelector } from '../Appbar';
 import { useAppStore } from '@/store/appStore';
 import { Sidekick } from '@/features/sidekick';
 import { Toasts } from '@/shared/components';
@@ -18,10 +19,22 @@ export function AppLayout() {
       {/* Topbar - Always visible */}
       <Topbar />
 
-      {/* Main Area with Appbar */}
+      {/* Main Area with Sidebar and Content */}
       <div className={styles.mainWrapper}>
-        {/* Left Appbar */}
-        <Appbar />
+        {/* Left Sidebar */}
+        <aside className={styles.sidebar}>
+          {/* Top section: Teambar + Navigation side by side */}
+          <div className={styles.sidebarTop}>
+            <Teambar />
+            <Appbar />
+          </div>
+
+          {/* Bottom section: Selectors spanning full width */}
+          <div className={styles.sidebarBottom}>
+            <TeamSelector />
+            <UserSelector />
+          </div>
+        </aside>
 
         {/* Main Content Area */}
         <main className={styles.main}>

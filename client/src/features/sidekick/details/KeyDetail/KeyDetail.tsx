@@ -4,6 +4,7 @@ import { Key, Copy, Download, Trash2 } from 'lucide-react';
 import { getSSHKeys, deleteSSHKey, getSSHKeyPrivate, getProviderAccounts } from '@/lib/api';
 import { copyToClipboard, downloadTextFile } from '@/shared/lib';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Badge, Button, ConfirmModal } from '@/shared/ui';
 import { KEY_TYPE_LABELS } from '@/shared/constants';
 import {
@@ -34,17 +35,18 @@ const tabs: { id: TabId; label: string }[] = [
 
 export function KeyDetail({ keyId, onClose, onMinimize }: KeyDetailProps) {
   const { addToast, setSidekickSelection } = useAppStore();
+  const { currentTeamId } = useAuthStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: keys, isLoading } = useQuery({
-    queryKey: ['ssh-keys'],
+    queryKey: ['ssh-keys', currentTeamId],
     queryFn: getSSHKeys,
   });
 
   const { data: providerAccounts } = useQuery({
-    queryKey: ['provider-accounts'],
+    queryKey: ['provider-accounts', currentTeamId],
     queryFn: getProviderAccounts,
   });
 

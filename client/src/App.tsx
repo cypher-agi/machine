@@ -22,6 +22,9 @@ const SettingsApp = lazy(() =>
   import('./apps/settings/SettingsApp').then((m) => ({ default: m.SettingsApp }))
 );
 const TeamsApp = lazy(() => import('./apps/teams/TeamsApp').then((m) => ({ default: m.TeamsApp })));
+const IntegrationsApp = lazy(() =>
+  import('./apps/integrations/IntegrationsApp').then((m) => ({ default: m.IntegrationsApp }))
+);
 
 function App() {
   return (
@@ -84,6 +87,14 @@ function App() {
           element={
             <Suspense fallback={<PageLoader />}>
               <TeamsApp />
+            </Suspense>
+          }
+        />
+        <Route
+          path="integrations"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <IntegrationsApp />
             </Suspense>
           }
         />

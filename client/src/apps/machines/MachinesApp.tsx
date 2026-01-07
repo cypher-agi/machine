@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Filter, X, Layers } from 'lucide-react';
 import { getMachines, syncMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { MachineCard, DeployWizard, MachineFilters } from './components';
 import { useMachineGroups } from './hooks';
 import { TerminalPanel } from '@/features/terminal';
@@ -21,6 +22,7 @@ export function MachinesApp() {
     setTerminalMachineId,
     addToast,
   } = useAppStore();
+  const { currentTeamId } = useAuthStore();
 
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,7 +56,7 @@ export function MachinesApp() {
   const isSyncing = syncMutation.isPending;
 
   const { data: machines, isLoading } = useQuery({
-    queryKey: ['machines', machineFilters, machineSort, searchQuery],
+    queryKey: ['machines', currentTeamId, machineFilters, machineSort, searchQuery],
     queryFn: () =>
       getMachines({
         ...machineFilters,

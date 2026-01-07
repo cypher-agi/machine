@@ -4,6 +4,7 @@ import { Plus, Check, Clock, RefreshCw } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { getProviderAccounts, verifyProviderAccount } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Button, RefreshButton } from '@/shared/ui';
 import {
   PageLayout,
@@ -18,6 +19,7 @@ import { PROVIDER_LABELS, CREDENTIAL_STATUS_CONFIG } from '@/shared/constants';
 
 export function ProvidersApp() {
   const { addToast, sidekickSelection, setSidekickSelection } = useAppStore();
+  const { currentTeamId } = useAuthStore();
   const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
@@ -28,7 +30,7 @@ export function ProvidersApp() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ['provider-accounts'],
+    queryKey: ['provider-accounts', currentTeamId],
     queryFn: getProviderAccounts,
   });
 

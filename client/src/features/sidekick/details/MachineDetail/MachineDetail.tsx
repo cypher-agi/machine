@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Terminal } from 'lucide-react';
 import { getMachine, getMachineServices, getMachineNetworking, getDeployments } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { Badge, Button } from '@/shared/ui';
 import { TerminalModal } from '@/features/terminal';
 import { PROVIDER_LABELS, MACHINE_STATUS_CONFIG } from '@/shared/constants';
@@ -29,29 +30,30 @@ const tabs: { id: TabId; label: string }[] = [
 ];
 
 export function MachineDetail({ machineId, onClose, onMinimize }: MachineDetailProps) {
+  const { currentTeamId } = useAuthStore();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [showTerminal, setShowTerminal] = useState(false);
 
   const { data: machine, isLoading } = useQuery({
-    queryKey: ['machine', machineId],
+    queryKey: ['machine', currentTeamId, machineId],
     queryFn: () => getMachine(machineId),
     refetchInterval: 5000,
   });
 
   const { data: services } = useQuery({
-    queryKey: ['machine-services', machineId],
+    queryKey: ['machine-services', currentTeamId, machineId],
     queryFn: () => getMachineServices(machineId),
     enabled: !!machine,
   });
 
   const { data: networking } = useQuery({
-    queryKey: ['machine-networking', machineId],
+    queryKey: ['machine-networking', currentTeamId, machineId],
     queryFn: () => getMachineNetworking(machineId),
     enabled: !!machine,
   });
 
   const { data: deployments } = useQuery({
-    queryKey: ['deployments', { machine_id: machineId }],
+    queryKey: ['deployments', currentTeamId, { machine_id: machineId }],
     queryFn: () => getDeployments({ machine_id: machineId }),
     enabled: !!machine,
   });

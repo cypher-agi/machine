@@ -15,3 +15,6 @@ export type { BootstrapDetailProps } from './BootstrapDetail';
 
 export { TeamDetail } from './TeamDetail';
 export type { TeamDetailProps } from './TeamDetail';
+
+export { IntegrationDetail } from './IntegrationDetail';
+export type { IntegrationDetailProps } from './IntegrationDetail';

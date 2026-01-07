@@ -6,11 +6,13 @@ export function Topbar() {
 
   return (
     <header className={styles.topbar}>
-      {/* Logo */}
-      <div className={styles.logo} onClick={() => navigate('/machines')}>
-        <img src="/machina_icon.png" alt="Machina" className={styles.logoIcon} />
-        <span className={styles.logoText}>MACHINA</span>
+      {/* Logo Icon */}
+      <div className={styles.logoIcon} onClick={() => navigate('/machines')}>
+        <img src="/machina_icon.png" alt="Machina" className={styles.logoImage} />
       </div>
+
+      {/* Centered App Name */}
+      <span className={styles.logoText}>MACHINA</span>
     </header>
   );
 }

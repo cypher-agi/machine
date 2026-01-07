@@ -851,7 +851,7 @@
 /* Error box */
 .errorBox {
   padding: var(--space-2);
-  background-color: rgba(248, 113, 113, 0.1);
+  background-color: rgba(244, 1, 42, 0.1);
   border-radius: var(--radius-md);
   color: var(--color-error);
   font-size: var(--text-xs);

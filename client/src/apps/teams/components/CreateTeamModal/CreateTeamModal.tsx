@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Check, X, AtSign } from 'lucide-react';
 import { createTeam, checkHandleAvailability } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Modal, Button, Input } from '@/shared/ui';
 import styles from './CreateTeamModal.module.css';
 
@@ -14,6 +15,7 @@ type HandleStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
 export function CreateTeamModal({ onClose }: CreateTeamModalProps) {
   const { addToast, setSidekickSelection } = useAppStore();
+  const { loadTeams } = useAuthStore();
   const queryClient = useQueryClient();
 
   const [name, setName] = useState('');
@@ -87,6 +89,8 @@ export function CreateTeamModal({ onClose }: CreateTeamModalProps) {
     mutationFn: createTeam,
     onSuccess: (team) => {
       queryClient.invalidateQueries({ queryKey: ['teams'] });
+      // Refresh teams in auth store so TeamSelector updates
+      loadTeams();
       addToast({ type: 'success', title: 'Team created', message: `"${team.name}" is ready` });
       setSidekickSelection({ type: 'team', id: team.team_id });
       onClose();

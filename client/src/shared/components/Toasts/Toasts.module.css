@@ -61,7 +61,7 @@
 }
 
 .success {
-  border-color: rgba(74, 222, 128, 0.3);
+  border-color: rgba(1, 244, 203, 0.3);
 }
 
 .success .icon {
@@ -69,7 +69,7 @@
 }
 
 .error {
-  border-color: rgba(248, 113, 113, 0.3);
+  border-color: rgba(244, 1, 42, 0.3);
 }
 
 .error .icon {
@@ -77,7 +77,7 @@
 }
 
 .warning {
-  border-color: rgba(250, 204, 21, 0.3);
+  border-color: rgba(1, 164, 244, 0.3);
 }
 
 .warning .icon {

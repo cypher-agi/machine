@@ -4,6 +4,7 @@ import { Server, User, FileText, Terminal } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { getDeployments, getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Badge } from '@/shared/ui';
 import { DEPLOYMENT_STATE_BADGE_CONFIG, DEPLOYMENT_TYPE_FULL_LABELS } from '@/shared/constants';
 import type { Deployment, Machine } from '@machina/shared';
@@ -38,16 +39,17 @@ const tabs: { id: TabId; label: string }[] = [
 
 export function DeploymentDetail({ deploymentId, onClose, onMinimize }: DeploymentDetailProps) {
   const { setSidekickSelection } = useAppStore();
+  const { currentTeamId } = useAuthStore();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
 
   const { data: deployments, isLoading } = useQuery({
-    queryKey: ['deployments'],
+    queryKey: ['deployments', currentTeamId],
     queryFn: () => getDeployments(),
     refetchInterval: 5000,
   });
 
   const { data: machines } = useQuery({
-    queryKey: ['machines'],
+    queryKey: ['machines', currentTeamId],
     queryFn: () => getMachines(),
   });
 
@@ -206,9 +208,13 @@ function DeploymentLogs({ deployment }: { deployment: Deployment }) {
   }
 
   return (
-    <SidekickPanel>
-      <SidekickSection title="Logs">
-        <div ref={logsContainerRef} className={styles.logsContainer}>
+    <SidekickContentFull>
+      <div className={styles.logsFullContainer}>
+        <div className={styles.logsFullHeader}>
+          <span className={styles.logsFullTitle}>Deployment Logs</span>
+          <span className={styles.logsCount}>{deployment.logs.length} entries</span>
+        </div>
+        <div ref={logsContainerRef} className={styles.logsFullContent}>
           {deployment.logs.map((log, index) => (
             <div key={index} className={styles.logEntry}>
               <span className={styles.logTimestamp}>
@@ -221,8 +227,8 @@ function DeploymentLogs({ deployment }: { deployment: Deployment }) {
             </div>
           ))}
         </div>
-      </SidekickSection>
-    </SidekickPanel>
+      </div>
+    </SidekickContentFull>
   );
 }
 
@@ -232,13 +238,11 @@ function DeploymentDetails({ deployment }: { deployment: Deployment }) {
       <SidekickSection title="Identifiers">
         <SidekickRow label="Deployment ID" value={deployment.deployment_id} copyable />
         <SidekickRow label="Machine ID" value={deployment.machine_id ?? null} copyable />
-        {deployment.terraform_workspace && (
-          <SidekickRow
-            label="Terraform Workspace"
-            value={deployment.terraform_workspace}
-            copyable
-          />
-        )}
+        <SidekickRow
+          label="Terraform Workspace"
+          value={deployment.terraform_workspace ?? null}
+          copyable
+        />
       </SidekickSection>
 
       <SidekickSection title="Configuration">

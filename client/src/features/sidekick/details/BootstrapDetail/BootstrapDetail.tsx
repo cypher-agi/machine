@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Lock, Trash2, Edit } from 'lucide-react';
 import { getBootstrapProfiles, deleteBootstrapProfile, getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Badge, Button, ConfirmModal } from '@/shared/ui';
 import { BOOTSTRAP_METHOD_ICONS } from '@/shared/constants';
 import {
@@ -35,17 +36,18 @@ const tabs: { id: TabId; label: string }[] = [
 
 export function BootstrapDetail({ profileId, onClose, onMinimize }: BootstrapDetailProps) {
   const { addToast, setSidekickSelection } = useAppStore();
+  const { currentTeamId } = useAuthStore();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: profiles, isLoading } = useQuery({
-    queryKey: ['bootstrap-profiles'],
+    queryKey: ['bootstrap-profiles', currentTeamId],
     queryFn: getBootstrapProfiles,
   });
 
   const { data: machines } = useQuery({
-    queryKey: ['machines'],
+    queryKey: ['machines', currentTeamId],
     queryFn: () => getMachines(),
   });
 

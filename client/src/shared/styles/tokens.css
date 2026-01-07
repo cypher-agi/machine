@@ -11,17 +11,20 @@
   --color-text-secondary: #8b8b8d;
   --color-text-muted: #6b7280;
 
-  --color-accent: #5e9eff;
-  --color-success: #4ade80;
-  --color-warning: #facc15;
-  --color-error: #f87171;
-  --color-pending: #a78bfa;
-  --color-provisioning: #5e9eff;
+  --color-accent: #01a4f4;
+  --color-success: #01f4cb;
+  --color-warning: #01a4f4;
+  --color-error: #f4012a;
+  --color-danger: #f4012a;
+  --color-danger-bg: rgba(244, 1, 42, 0.1);
+  --color-danger-hover: #d9012a;
+  --color-pending: #cb01f4;
+  --color-provisioning: #01a4f4;
 
   /* Neon accent colors */
-  --color-neon-cyan: #22d3ee;
-  --color-neon-green: #4ade80;
-  --color-neon-purple: #a78bfa;
+  --color-neon-cyan: #01f4cb;
+  --color-neon-green: #01f4cb;
+  --color-neon-purple: #cb01f4;
 
   /* Spacing scale */
   --space-1: 4px;

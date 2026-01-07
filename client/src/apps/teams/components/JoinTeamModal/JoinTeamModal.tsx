@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, UserPlus } from 'lucide-react';
 import { joinTeam } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
+import { useAuthStore } from '@/store/authStore';
 import { Modal, Button, Input } from '@/shared/ui';
 import styles from './JoinTeamModal.module.css';
 
@@ -12,6 +13,7 @@ export interface JoinTeamModalProps {
 
 export function JoinTeamModal({ onClose }: JoinTeamModalProps) {
   const { addToast, setSidekickSelection } = useAppStore();
+  const { loadTeams } = useAuthStore();
   const queryClient = useQueryClient();
 
   const [inviteCode, setInviteCode] = useState('');
@@ -20,6 +22,8 @@ export function JoinTeamModal({ onClose }: JoinTeamModalProps) {
     mutationFn: (code: string) => joinTeam(code),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['teams'] });
+      // Refresh teams in auth store so TeamSelector updates
+      loadTeams();
       addToast({
         type: 'success',
         title: 'Joined team',
