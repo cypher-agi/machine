@@ -12,10 +12,15 @@ import { AppError } from '../middleware/errorHandler';
 export const bootstrapRouter = Router();
 
 // GET /bootstrap/profiles - List all bootstrap profiles
-bootstrapRouter.get('/profiles', (_req: Request, res: Response) => {
+bootstrapRouter.get('/profiles', (req: Request, res: Response) => {
+  const teamId = req.teamId;
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
+
   const response: ApiResponse<BootstrapProfile[]> = {
     success: true,
-    data: database.getBootstrapProfiles(),
+    data: database.getBootstrapProfilesByTeam(teamId),
   };
 
   res.json(response);
@@ -24,11 +29,15 @@ bootstrapRouter.get('/profiles', (_req: Request, res: Response) => {
 // GET /bootstrap/profiles/:id - Get single bootstrap profile
 bootstrapRouter.get('/profiles/:id', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing profile ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const profile = database.getBootstrapProfile(id);
+  const profile = database.getBootstrapProfileWithTeam(id, teamId);
 
   if (!profile) {
     throw new AppError(404, 'PROFILE_NOT_FOUND', `Bootstrap profile ${id} not found`);
@@ -44,6 +53,11 @@ bootstrapRouter.get('/profiles/:id', (req: Request, res: Response) => {
 
 // POST /bootstrap/profiles - Create new bootstrap profile
 bootstrapRouter.post('/profiles', (req: Request, res: Response) => {
+  const teamId = req.teamId;
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
+
   const body: BootstrapProfileCreateRequest = req.body;
 
   if (!body.name || !body.method) {
@@ -75,6 +89,7 @@ bootstrapRouter.post('/profiles', (req: Request, res: Response) => {
 
   const newProfile: BootstrapProfile = {
     profile_id: `bp_${uuidv4().substring(0, 12)}`,
+    team_id: teamId,
     name: body.name,
     ...(body.description && { description: body.description }),
     method: body.method,
@@ -85,7 +100,7 @@ bootstrapRouter.post('/profiles', (req: Request, res: Response) => {
     ...(body.config_schema && { config_schema: body.config_schema }),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    created_by: 'user_current',
+    created_by: req.user?.user_id || 'system',
     ...(body.tags && { tags: body.tags }),
     is_system_profile: false,
   };
@@ -103,11 +118,15 @@ bootstrapRouter.post('/profiles', (req: Request, res: Response) => {
 // PUT /bootstrap/profiles/:id - Update bootstrap profile
 bootstrapRouter.put('/profiles/:id', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing profile ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const profile = database.getBootstrapProfile(id);
+  const profile = database.getBootstrapProfileWithTeam(id, teamId);
 
   if (!profile) {
     throw new AppError(404, 'PROFILE_NOT_FOUND', `Bootstrap profile ${id} not found`);
@@ -177,11 +196,15 @@ bootstrapRouter.put('/profiles/:id', (req: Request, res: Response) => {
 // DELETE /bootstrap/profiles/:id - Delete bootstrap profile
 bootstrapRouter.delete('/profiles/:id', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing profile ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const profile = database.getBootstrapProfile(id);
+  const profile = database.getBootstrapProfileWithTeam(id, teamId);
 
   if (!profile) {
     throw new AppError(404, 'PROFILE_NOT_FOUND', `Bootstrap profile ${id} not found`);

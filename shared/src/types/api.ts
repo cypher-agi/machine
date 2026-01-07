@@ -45,20 +45,5 @@ export interface SSEEvent<T = unknown> {
   data: T;
 }
 
-// User and auth types
-export type UserRole = 'admin' | 'operator' | 'viewer';
-
-export interface User {
-  user_id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  created_at: string;
-  last_login?: string;
-}
-
-export interface AuthSession {
-  user: User;
-  token: string;
-  expires_at: string;
-}
+// Auth session is now in types/user.ts
+// User and Session types are re-exported from there

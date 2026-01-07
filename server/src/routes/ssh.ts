@@ -154,8 +154,13 @@ function getKeyTypeFromPublicKey(publicKey: string): {
 }
 
 // GET /ssh/keys - List all SSH keys
-sshRouter.get('/keys', (_req: Request, res: Response) => {
-  const keys = database.getSSHKeys();
+sshRouter.get('/keys', (req: Request, res: Response) => {
+  const teamId = req.teamId;
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
+
+  const keys = database.getSSHKeysByTeam(teamId);
 
   const response: ApiResponse<SSHKey[]> = {
     success: true,
@@ -168,11 +173,15 @@ sshRouter.get('/keys', (_req: Request, res: Response) => {
 // GET /ssh/keys/:id - Get single SSH key
 sshRouter.get('/keys/:id', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing key ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const key = database.getSSHKey(id);
+  const key = database.getSSHKeyWithTeam(id, teamId);
 
   if (!key) {
     throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);
@@ -188,6 +197,11 @@ sshRouter.get('/keys/:id', (req: Request, res: Response) => {
 
 // POST /ssh/keys/generate - Generate a new SSH key pair
 sshRouter.post('/keys/generate', async (req: Request, res: Response) => {
+  const teamId = req.teamId;
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
+
   const body: SSHKeyCreateRequest = req.body;
 
   if (!body.name) {
@@ -207,8 +221,8 @@ sshRouter.post('/keys/generate', async (req: Request, res: Response) => {
     throw new AppError(500, 'KEY_GENERATION_FAILED', `Failed to generate SSH key: ${errorMessage}`);
   }
 
-  // Check for duplicate fingerprint
-  const existingKey = database.getSSHKeyByFingerprint(keyData.fingerprint);
+  // Check for duplicate fingerprint within team
+  const existingKey = database.getSSHKeyByFingerprintAndTeam(keyData.fingerprint, teamId);
   if (existingKey) {
     throw new AppError(
       409,
@@ -221,6 +235,7 @@ sshRouter.post('/keys/generate', async (req: Request, res: Response) => {
 
   const newKey: SSHKey = {
     ssh_key_id: keyId,
+    team_id: teamId,
     name: body.name,
     fingerprint: keyData.fingerprint,
     public_key: keyData.publicKey,
@@ -251,6 +266,11 @@ sshRouter.post('/keys/generate', async (req: Request, res: Response) => {
 
 // POST /ssh/keys/import - Import an existing SSH key
 sshRouter.post('/keys/import', (req: Request, res: Response) => {
+  const teamId = req.teamId;
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
+
   const body: SSHKeyImportRequest = req.body;
 
   if (!body.name || !body.public_key) {
@@ -269,8 +289,8 @@ sshRouter.post('/keys/import', (req: Request, res: Response) => {
     throw new AppError(400, 'INVALID_KEY', `Invalid public key format: ${errorMessage}`);
   }
 
-  // Check for duplicate fingerprint
-  const existingKey = database.getSSHKeyByFingerprint(fingerprint);
+  // Check for duplicate fingerprint within team
+  const existingKey = database.getSSHKeyByFingerprintAndTeam(fingerprint, teamId);
   if (existingKey) {
     throw new AppError(
       409,
@@ -288,6 +308,7 @@ sshRouter.post('/keys/import', (req: Request, res: Response) => {
 
   const newKey: SSHKey = {
     ssh_key_id: keyId,
+    team_id: teamId,
     name: body.name,
     fingerprint,
     public_key: body.public_key.trim(),
@@ -318,11 +339,15 @@ sshRouter.post('/keys/import', (req: Request, res: Response) => {
 // GET /ssh/keys/:id/private - Download private key (one-time or authorized access)
 sshRouter.get('/keys/:id/private', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing key ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const key = database.getSSHKey(id);
+  const key = database.getSSHKeyWithTeam(id, teamId);
 
   if (!key) {
     throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);
@@ -345,17 +370,21 @@ sshRouter.get('/keys/:id/private', (req: Request, res: Response) => {
 // POST /ssh/keys/:id/sync/:providerAccountId - Sync key to a provider
 sshRouter.post('/keys/:id/sync/:providerAccountId', async (req: Request, res: Response) => {
   const { id, providerAccountId } = req.params;
+  const teamId = req.teamId;
   if (!id || !providerAccountId) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing key ID or provider account ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const key = database.getSSHKey(id);
+  const key = database.getSSHKeyWithTeam(id, teamId);
 
   if (!key) {
     throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);
   }
 
-  const providerAccount = database.getProviderAccount(providerAccountId);
+  const providerAccount = database.getProviderAccountWithTeam(providerAccountId, teamId);
   if (!providerAccount) {
     throw new AppError(404, 'ACCOUNT_NOT_FOUND', `Provider account ${providerAccountId} not found`);
   }
@@ -440,11 +469,15 @@ sshRouter.post('/keys/:id/sync/:providerAccountId', async (req: Request, res: Re
 // DELETE /ssh/keys/:id/sync/:providerType - Remove key from a provider
 sshRouter.delete('/keys/:id/sync/:providerType', async (req: Request, res: Response) => {
   const { id, providerType } = req.params;
+  const teamId = req.teamId;
   if (!id || !providerType) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing key ID or provider type');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const key = database.getSSHKey(id);
+  const key = database.getSSHKeyWithTeam(id, teamId);
 
   if (!key) {
     throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);
@@ -457,7 +490,7 @@ sshRouter.delete('/keys/:id/sync/:providerType', async (req: Request, res: Respo
   }
 
   // Find a provider account with credentials for this provider type
-  const providerAccounts = database.getProviderAccounts();
+  const providerAccounts = database.getProviderAccountsByTeam(teamId);
   const account = providerAccounts.find((a) => a.provider_type === providerType);
 
   if (!account) {
@@ -524,11 +557,15 @@ sshRouter.delete('/keys/:id/sync/:providerType', async (req: Request, res: Respo
 // PATCH /ssh/keys/:id - Update SSH key name
 sshRouter.patch('/keys/:id', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing key ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const key = database.getSSHKey(id);
+  const key = database.getSSHKeyWithTeam(id, teamId);
 
   if (!key) {
     throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);
@@ -560,11 +597,15 @@ sshRouter.patch('/keys/:id', (req: Request, res: Response) => {
 // DELETE /ssh/keys/:id - Delete SSH key
 sshRouter.delete('/keys/:id', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing key ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const key = database.getSSHKey(id);
+  const key = database.getSSHKeyWithTeam(id, teamId);
 
   if (!key) {
     throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);

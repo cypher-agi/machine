@@ -3,6 +3,7 @@ export type BootstrapMethod = 'cloud_init' | 'ssh_script' | 'ansible';
 
 export interface BootstrapProfile {
   profile_id: string;
+  team_id?: string; // Team this profile belongs to (optional for system profiles)
   name: string;
   description?: string;
   method: BootstrapMethod;

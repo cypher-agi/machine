@@ -2,6 +2,7 @@
 
 export interface SSHKey {
   ssh_key_id: string;
+  team_id: string; // Team this SSH key belongs to
   name: string;
   fingerprint: string;
   public_key: string;

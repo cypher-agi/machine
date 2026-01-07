@@ -30,6 +30,11 @@ export { addDeploymentLogListener, removeDeploymentLogListener };
 
 // GET /machines - List machines with filtering
 machinesRouter.get('/', (req: Request, res: Response) => {
+  const teamId = req.teamId;
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
+
   const filters = {
     ...(req.query.status && { status: req.query.status as MachineListFilter['status'] }),
     ...(req.query.provider && { provider: req.query.provider as MachineListFilter['provider'] }),
@@ -39,7 +44,7 @@ machinesRouter.get('/', (req: Request, res: Response) => {
     ...(req.query.search && { search: req.query.search as string }),
   } as MachineListFilter;
 
-  let filtered = database.getMachines();
+  let filtered = database.getMachinesByTeam(teamId);
 
   // Apply filters
   if (filters.status) {
@@ -121,11 +126,15 @@ machinesRouter.get('/', (req: Request, res: Response) => {
 // GET /machines/:id - Get single machine
 machinesRouter.get('/:id', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const machine = database.getMachine(id);
+  const machine = database.getMachineWithTeam(id, teamId);
 
   if (!machine) {
     throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
@@ -141,6 +150,11 @@ machinesRouter.get('/:id', (req: Request, res: Response) => {
 
 // POST /machines - Create new machine (with real Terraform!)
 machinesRouter.post('/', async (req: Request, res: Response) => {
+  const teamId = req.teamId;
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
+
   const body: MachineCreateRequest = req.body;
 
   // Validate required fields
@@ -148,8 +162,8 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
     throw new AppError(400, 'VALIDATION_ERROR', 'Missing required fields');
   }
 
-  // Get provider account
-  const providerAccount = database.getProviderAccount(body.provider_account_id);
+  // Get provider account and verify team access
+  const providerAccount = database.getProviderAccountWithTeam(body.provider_account_id, teamId);
   if (!providerAccount) {
     throw new AppError(404, 'ACCOUNT_NOT_FOUND', 'Provider account not found');
   }
@@ -170,6 +184,7 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
 
   const newMachine: Machine = {
     machine_id: machineId,
+    team_id: teamId,
     name: body.name,
     provider: providerAccount.provider_type,
     provider_account_id: body.provider_account_id,
@@ -192,17 +207,19 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
     agent_status: 'not_installed',
   };
 
-  // Create deployment record
+  // Create deployment record - use authenticated user's ID
   const deploymentId = `deploy_${uuidv4().substring(0, 12)}`;
+  const initiatedBy = req.user?.user_id || 'system';
   const deployment: Deployment = {
     deployment_id: deploymentId,
+    team_id: teamId,
     machine_id: machineId,
     type: 'create',
     state: 'planning',
     terraform_workspace: workspaceName,
     created_at: new Date().toISOString(),
     started_at: new Date().toISOString(),
-    initiated_by: 'user_current',
+    initiated_by: initiatedBy,
   };
 
   // Save to database
@@ -264,11 +281,15 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
 // POST /machines/:id/reboot - Reboot machine via DigitalOcean API
 machinesRouter.post('/:id/reboot', async (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const machine = database.getMachine(id);
+  const machine = database.getMachineWithTeam(id, teamId);
 
   if (!machine) {
     throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
@@ -298,16 +319,17 @@ machinesRouter.post('/:id/reboot', async (req: Request, res: Response) => {
     updated_at: new Date().toISOString(),
   });
 
-  // Create deployment for tracking
+  // Create deployment for tracking - use authenticated user's ID
   const deployment: Deployment = {
     deployment_id: `deploy_${uuidv4().substring(0, 12)}`,
+    team_id: teamId,
     machine_id: machine.machine_id,
     type: 'reboot',
     state: 'applying',
     terraform_workspace: machine.terraform_workspace,
     created_at: new Date().toISOString(),
     started_at: new Date().toISOString(),
-    initiated_by: 'user_current',
+    initiated_by: req.user?.user_id || 'system',
   };
 
   database.insertDeployment(deployment);
@@ -333,11 +355,15 @@ machinesRouter.post('/:id/reboot', async (req: Request, res: Response) => {
 // POST /machines/:id/destroy - Destroy machine (with real Terraform!)
 machinesRouter.post('/:id/destroy', async (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const machine = database.getMachine(id);
+  const machine = database.getMachineWithTeam(id, teamId);
 
   if (!machine) {
     throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
@@ -361,16 +387,17 @@ machinesRouter.post('/:id/destroy', async (req: Request, res: Response) => {
     updated_at: new Date().toISOString(),
   });
 
-  // Create deployment for tracking
+  // Create deployment for tracking - use authenticated user's ID
   const deployment: Deployment = {
     deployment_id: `deploy_${uuidv4().substring(0, 12)}`,
+    team_id: teamId,
     machine_id: machine.machine_id,
     type: 'destroy',
     state: 'applying',
     terraform_workspace: machine.terraform_workspace,
     created_at: new Date().toISOString(),
     started_at: new Date().toISOString(),
-    initiated_by: 'user_current',
+    initiated_by: req.user?.user_id || 'system',
   };
 
   database.insertDeployment(deployment);
@@ -395,11 +422,15 @@ machinesRouter.post('/:id/destroy', async (req: Request, res: Response) => {
 // GET /machines/:id/services - Get machine services
 machinesRouter.get('/:id/services', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const machine = database.getMachine(id);
+  const machine = database.getMachineWithTeam(id, teamId);
 
   if (!machine) {
     throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
@@ -422,11 +453,15 @@ machinesRouter.get('/:id/services', (req: Request, res: Response) => {
 // POST /machines/:id/services/:serviceName/restart - Restart service
 machinesRouter.post('/:id/services/:serviceName/restart', (req: Request, _res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const machine = database.getMachine(id);
+  const machine = database.getMachineWithTeam(id, teamId);
 
   if (!machine) {
     throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
@@ -451,11 +486,15 @@ machinesRouter.post('/:id/services/:serviceName/restart', (req: Request, _res: R
 // GET /machines/:id/networking - Get machine networking info
 machinesRouter.get('/:id/networking', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const machine = database.getMachine(id);
+  const machine = database.getMachineWithTeam(id, teamId);
 
   if (!machine) {
     throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
@@ -525,7 +564,13 @@ machinesRouter.get('/:id/networking', (req: Request, res: Response) => {
 });
 
 // POST /machines/sync - Sync all machines with provider state
-machinesRouter.post('/sync', async (_req: Request, res: Response) => {
+machinesRouter.post('/sync', async (req: Request, res: Response) => {
+  const teamId = req.teamId;
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
+
+  // TODO: Update syncMachinesWithProvider to accept teamId filter
   const result = await syncMachinesWithProvider();
 
   const response: ApiResponse<typeof result> = {

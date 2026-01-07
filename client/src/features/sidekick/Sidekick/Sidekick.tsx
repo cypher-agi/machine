@@ -10,6 +10,7 @@ import { ProviderDetail } from '../details/ProviderDetail';
 import { KeyDetail } from '../details/KeyDetail';
 import { DeploymentDetail } from '../details/DeploymentDetail';
 import { BootstrapDetail } from '../details/BootstrapDetail';
+import { TeamDetail } from '../details/TeamDetail';
 
 const SIDEKICK_MIN_WIDTH = 320;
 const SIDEKICK_MAX_WIDTH = 600;
@@ -147,6 +148,8 @@ export function Sidekick({ selection, onClose }: SidekickProps) {
         return <DeploymentDetail deploymentId={displayedSelection.id} {...commonProps} />;
       case 'bootstrap':
         return <BootstrapDetail profileId={displayedSelection.id} {...commonProps} />;
+      case 'team':
+        return <TeamDetail teamId={displayedSelection.id} {...commonProps} />;
       default:
         return (
           <div className={styles.loading}>

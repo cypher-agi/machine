@@ -32,6 +32,7 @@ export interface ResourceChange {
 
 export interface Deployment {
   deployment_id: string;
+  team_id: string; // Team this deployment belongs to
   machine_id?: string;
   type: DeploymentType;
   state: DeploymentState;

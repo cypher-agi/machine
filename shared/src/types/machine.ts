@@ -18,6 +18,7 @@ export type AgentStatus = 'connected' | 'disconnected' | 'not_installed' | 'unkn
 
 export interface Machine {
   machine_id: string;
+  team_id: string; // Team this machine belongs to
   name: string;
   provider: ProviderType;
   provider_account_id: string;

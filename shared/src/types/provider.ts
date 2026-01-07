@@ -5,6 +5,7 @@ export type CredentialStatus = 'valid' | 'invalid' | 'expired' | 'unchecked';
 
 export interface ProviderAccount {
   provider_account_id: string;
+  team_id: string; // Team this provider account belongs to
   provider_type: ProviderType;
   label: string;
   credential_status: CredentialStatus;

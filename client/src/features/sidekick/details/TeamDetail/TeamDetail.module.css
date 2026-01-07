@@ -1,0 +1,356 @@
+.dangerButton {
+  color: var(--status-error) !important;
+}
+
+.dangerButton:hover {
+  background: var(--status-error-bg) !important;
+}
+
+.confirmText {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.confirmText strong {
+  color: var(--text-primary);
+}
+
+.warningText {
+  display: block;
+  margin-top: 8px;
+  color: var(--status-error);
+}
+
+/* Avatar section */
+.avatarSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface-1);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.avatarLarge {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  overflow: hidden;
+  position: relative;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.avatarLarge:hover .avatarOverlay {
+  opacity: 1;
+}
+
+.avatarButton {
+  padding: 6px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.avatarButton:hover {
+  background: var(--surface-3);
+}
+
+.avatarInput {
+  display: none;
+}
+
+.teamName {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.teamHandle {
+  font-size: 13px;
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+/* Members list */
+.membersList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.memberItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface-1);
+  border-radius: 8px;
+}
+
+.memberAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.memberInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.memberName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.memberEmail {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.memberRole {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.memberRoleAdmin {
+  background: var(--status-running-bg);
+  color: var(--status-running);
+}
+
+.memberRoleMember {
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+.memberActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.youBadge {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-left: 4px;
+}
+
+/* Invites section */
+.inviteSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inviteItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface-1);
+  border-radius: 8px;
+}
+
+.inviteCode {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  background: var(--surface-2);
+  padding: 6px 10px;
+  border-radius: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inviteExpiry {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.emptyMessage {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 24px 16px;
+}
+
+/* Settings section */
+.settingsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settingsField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settingsLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.dangerZone {
+  padding: 16px;
+  background: var(--status-error-bg);
+  border-radius: 8px;
+  border: 1px solid var(--status-error);
+}
+
+.dangerTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--status-error);
+  margin-bottom: 8px;
+}
+
+.dangerText {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+/* Handle input styles */
+.handleInputWrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.handlePrefix {
+  position: absolute;
+  left: 12px;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.handleInput {
+  padding-left: 32px !important;
+  padding-right: 36px !important;
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+}
+
+.handleStatus {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.statusChecking {
+  color: var(--text-tertiary);
+  animation: spin 1s linear infinite;
+}
+
+.statusAvailable {
+  color: var(--status-running);
+}
+
+.statusTaken {
+  color: var(--status-error);
+}
+
+.statusInvalid {
+  color: var(--status-warning);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.handleHint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.handleAvailable {
+  font-size: 12px;
+  color: var(--status-running);
+  margin-top: 4px;
+}
+
+.suggestionLink {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.suggestionLink:hover {
+  text-decoration: underline;
+}

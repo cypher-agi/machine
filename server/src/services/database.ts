@@ -11,15 +11,24 @@ import type {
   AuditEvent,
   SSHKey,
   DeploymentLog,
+  User,
+  Session,
+  Team,
+  TeamMember,
+  TeamInvite,
+  TeamWithMembership,
+  TeamMemberWithUser,
 } from '@machina/shared';
 
 // Raw database row types (before JSON parsing)
 interface MachineRow extends Omit<Machine, 'tags' | 'last_health_check'> {
+  team_id: string;
   tags: string;
   last_health_check?: string | null;
 }
 
 interface DeploymentRow extends Omit<Deployment, 'plan_summary' | 'outputs' | 'logs'> {
+  team_id: string;
   plan_summary: string | null;
   outputs: string | null;
   logs: string | null;
@@ -27,8 +36,9 @@ interface DeploymentRow extends Omit<Deployment, 'plan_summary' | 'outputs' | 'l
 
 interface BootstrapProfileRow extends Omit<
   BootstrapProfile,
-  'services_to_run' | 'config_schema' | 'tags' | 'is_system_profile'
+  'services_to_run' | 'config_schema' | 'tags' | 'is_system_profile' | 'team_id'
 > {
+  team_id: string | null;
   services_to_run: string;
   config_schema: string | null;
   tags: string | null;
@@ -44,7 +54,18 @@ interface AuditEventRow extends Omit<AuditEvent, 'details'> {
 }
 
 interface SSHKeyRow extends Omit<SSHKey, 'provider_key_ids'> {
+  team_id: string;
   provider_key_ids: string;
+}
+
+interface UserRow extends Omit<User, 'profile_picture_url'> {
+  password_hash: string;
+  profile_picture_path: string | null;
+  is_active: number;
+}
+
+interface SessionRow extends Session {
+  token_hash: string;
 }
 
 interface AgentMetricsRow {
@@ -138,6 +159,7 @@ db.exec(`
   -- Machines table
   CREATE TABLE IF NOT EXISTS machines (
     machine_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
     name TEXT NOT NULL,
     provider TEXT NOT NULL,
     provider_account_id TEXT NOT NULL,
@@ -160,12 +182,14 @@ db.exec(`
     provisioning_method TEXT,
     bootstrap_profile_id TEXT,
     firewall_profile_id TEXT,
-    agent_status TEXT DEFAULT 'not_installed'
+    agent_status TEXT DEFAULT 'not_installed',
+    FOREIGN KEY (team_id) REFERENCES teams(team_id)
   );
 
   -- Deployments table
   CREATE TABLE IF NOT EXISTS deployments (
     deployment_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
     machine_id TEXT NOT NULL,
     type TEXT NOT NULL,
     state TEXT NOT NULL,
@@ -178,18 +202,21 @@ db.exec(`
     outputs TEXT,
     error_message TEXT,
     logs TEXT,
-    FOREIGN KEY (machine_id) REFERENCES machines(machine_id)
+    FOREIGN KEY (machine_id) REFERENCES machines(machine_id),
+    FOREIGN KEY (team_id) REFERENCES teams(team_id)
   );
 
   -- Provider accounts table
   CREATE TABLE IF NOT EXISTS provider_accounts (
     provider_account_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
     provider_type TEXT NOT NULL,
     label TEXT NOT NULL,
     credential_status TEXT NOT NULL,
     created_at TEXT NOT NULL,
     updated_at TEXT,
-    last_verified_at TEXT
+    last_verified_at TEXT,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id)
   );
 
   -- Credentials table (encrypted)
@@ -202,6 +229,7 @@ db.exec(`
   -- Bootstrap profiles table
   CREATE TABLE IF NOT EXISTS bootstrap_profiles (
     profile_id TEXT PRIMARY KEY,
+    team_id TEXT,
     name TEXT NOT NULL,
     description TEXT,
     method TEXT NOT NULL,
@@ -214,7 +242,8 @@ db.exec(`
     updated_at TEXT NOT NULL,
     created_by TEXT,
     tags TEXT,
-    is_system_profile INTEGER DEFAULT 0
+    is_system_profile INTEGER DEFAULT 0,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id)
   );
 
   -- Firewall profiles table
@@ -260,6 +289,7 @@ db.exec(`
   -- SSH keys table
   CREATE TABLE IF NOT EXISTS ssh_keys (
     ssh_key_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
     name TEXT NOT NULL,
     fingerprint TEXT NOT NULL UNIQUE,
     public_key TEXT NOT NULL,
@@ -268,7 +298,8 @@ db.exec(`
     comment TEXT,
     provider_key_ids TEXT NOT NULL DEFAULT '{}',
     created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id)
   );
 
   -- SSH key private keys (encrypted separately)
@@ -278,6 +309,67 @@ db.exec(`
     FOREIGN KEY (ssh_key_id) REFERENCES ssh_keys(ssh_key_id)
   );
 
+  -- Users table
+  CREATE TABLE IF NOT EXISTS users (
+    user_id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    profile_picture_path TEXT,
+    role TEXT NOT NULL DEFAULT 'user',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    last_login_at TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1
+  );
+
+  -- Sessions table
+  CREATE TABLE IF NOT EXISTS sessions (
+    session_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    last_activity_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+  );
+
+  -- Teams table
+  CREATE TABLE IF NOT EXISTS teams (
+    team_id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    handle TEXT NOT NULL UNIQUE,
+    avatar_path TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    created_by TEXT NOT NULL REFERENCES users(user_id)
+  );
+
+  -- Team Members table
+  CREATE TABLE IF NOT EXISTS team_members (
+    team_member_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL REFERENCES teams(team_id) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(user_id),
+    role TEXT NOT NULL DEFAULT 'member',
+    joined_at TEXT NOT NULL,
+    invited_by TEXT REFERENCES users(user_id),
+    UNIQUE(team_id, user_id)
+  );
+
+  -- Team Invites table
+  CREATE TABLE IF NOT EXISTS team_invites (
+    invite_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL REFERENCES teams(team_id) ON DELETE CASCADE,
+    invite_code TEXT NOT NULL UNIQUE,
+    created_by TEXT NOT NULL REFERENCES users(user_id),
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used_at TEXT,
+    used_by TEXT REFERENCES users(user_id)
+  );
+
   -- Create indexes
   CREATE INDEX IF NOT EXISTS idx_machines_status ON machines(actual_status);
   CREATE INDEX IF NOT EXISTS idx_machines_provider ON machines(provider);
@@ -285,6 +377,14 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_deployments_state ON deployments(state);
   CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_events(timestamp);
   CREATE INDEX IF NOT EXISTS idx_ssh_keys_fingerprint ON ssh_keys(fingerprint);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email ON users(email);
+  CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+  CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token_hash);
+  CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+  CREATE INDEX IF NOT EXISTS idx_team_members_team ON team_members(team_id);
+  CREATE INDEX IF NOT EXISTS idx_team_members_user ON team_members(user_id);
+  CREATE INDEX IF NOT EXISTS idx_team_invites_team ON team_invites(team_id);
+  CREATE INDEX IF NOT EXISTS idx_team_invites_code ON team_invites(invite_code);
 `);
 
 // Add last_health_check column if it doesn't exist
@@ -297,6 +397,83 @@ try {
 // Add firewall_profile_id column if it doesn't exist
 try {
   db.exec('ALTER TABLE machines ADD COLUMN firewall_profile_id TEXT');
+} catch {
+  // Column already exists, ignore
+}
+
+// Add team_id columns to existing tables
+try {
+  db.exec('ALTER TABLE machines ADD COLUMN team_id TEXT');
+} catch {
+  // Column already exists, ignore
+}
+
+try {
+  db.exec('ALTER TABLE deployments ADD COLUMN team_id TEXT');
+} catch {
+  // Column already exists, ignore
+}
+
+try {
+  db.exec('ALTER TABLE provider_accounts ADD COLUMN team_id TEXT');
+} catch {
+  // Column already exists, ignore
+}
+
+try {
+  db.exec('ALTER TABLE bootstrap_profiles ADD COLUMN team_id TEXT');
+} catch {
+  // Column already exists, ignore
+}
+
+try {
+  db.exec('ALTER TABLE ssh_keys ADD COLUMN team_id TEXT');
+} catch {
+  // Column already exists, ignore
+}
+
+// Create indexes for team_id columns
+try {
+  db.exec('CREATE INDEX IF NOT EXISTS idx_machines_team ON machines(team_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_deployments_team ON deployments(team_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_provider_accounts_team ON provider_accounts(team_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_bootstrap_profiles_team ON bootstrap_profiles(team_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_ssh_keys_team ON ssh_keys(team_id)');
+} catch {
+  // Indexes already exist, ignore
+}
+
+// Add handle column to teams table (for existing databases)
+try {
+  db.exec('ALTER TABLE teams ADD COLUMN handle TEXT');
+  // Generate handles for existing teams (lowercase name with only alphanumeric and hyphens)
+  const teams = db.prepare('SELECT team_id, name FROM teams WHERE handle IS NULL').all() as Array<{
+    team_id: string;
+    name: string;
+  }>;
+  const updateHandle = db.prepare('UPDATE teams SET handle = ? WHERE team_id = ?');
+  const checkHandle = db.prepare('SELECT 1 FROM teams WHERE handle = ?');
+
+  for (const team of teams) {
+    let baseHandle = team.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    if (!baseHandle) baseHandle = 'team';
+
+    let handle = baseHandle;
+    let counter = 1;
+    while (checkHandle.get(handle)) {
+      handle = `${baseHandle}-${counter}`;
+      counter++;
+    }
+    updateHandle.run(handle, team.team_id);
+  }
+
+  // Now add the NOT NULL and UNIQUE constraints by recreating the table
+  // SQLite doesn't support adding constraints to existing columns, so we need to handle this gracefully
+  // The UNIQUE index will enforce uniqueness for new handles
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_teams_handle ON teams(handle)');
 } catch {
   // Column already exists, ignore
 }
@@ -331,13 +508,17 @@ try {
 const statements = {
   // Machines
   getMachines: db.prepare('SELECT * FROM machines ORDER BY created_at DESC'),
+  getMachinesByTeam: db.prepare(
+    'SELECT * FROM machines WHERE team_id = ? ORDER BY created_at DESC'
+  ),
   getMachine: db.prepare('SELECT * FROM machines WHERE machine_id = ?'),
+  getMachineWithTeam: db.prepare('SELECT * FROM machines WHERE machine_id = ? AND team_id = ?'),
   insertMachine: db.prepare(`
-    INSERT INTO machines (machine_id, name, provider, provider_account_id, region, zone, size, image,
+    INSERT INTO machines (machine_id, team_id, name, provider, provider_account_id, region, zone, size, image,
       desired_status, actual_status, public_ip, private_ip, provider_resource_id, vpc_id, subnet_id,
       created_at, updated_at, tags, terraform_workspace, terraform_state_status, provisioning_method,
       bootstrap_profile_id, firewall_profile_id, agent_status)
-    VALUES (@machine_id, @name, @provider, @provider_account_id, @region, @zone, @size, @image,
+    VALUES (@machine_id, @team_id, @name, @provider, @provider_account_id, @region, @zone, @size, @image,
       @desired_status, @actual_status, @public_ip, @private_ip, @provider_resource_id, @vpc_id, @subnet_id,
       @created_at, @updated_at, @tags, @terraform_workspace, @terraform_state_status, @provisioning_method,
       @bootstrap_profile_id, @firewall_profile_id, @agent_status)
@@ -367,14 +548,20 @@ const statements = {
 
   // Deployments
   getDeployments: db.prepare('SELECT * FROM deployments ORDER BY created_at DESC'),
+  getDeploymentsByTeam: db.prepare(
+    'SELECT * FROM deployments WHERE team_id = ? ORDER BY created_at DESC'
+  ),
   getDeploymentsByMachine: db.prepare(
     'SELECT * FROM deployments WHERE machine_id = ? ORDER BY created_at DESC'
   ),
   getDeployment: db.prepare('SELECT * FROM deployments WHERE deployment_id = ?'),
+  getDeploymentWithTeam: db.prepare(
+    'SELECT * FROM deployments WHERE deployment_id = ? AND team_id = ?'
+  ),
   insertDeployment: db.prepare(`
-    INSERT INTO deployments (deployment_id, machine_id, type, state, terraform_workspace, created_at,
+    INSERT INTO deployments (deployment_id, team_id, machine_id, type, state, terraform_workspace, created_at,
       started_at, finished_at, initiated_by, plan_summary, outputs, error_message, logs)
-    VALUES (@deployment_id, @machine_id, @type, @state, @terraform_workspace, @created_at,
+    VALUES (@deployment_id, @team_id, @machine_id, @type, @state, @terraform_workspace, @created_at,
       @started_at, @finished_at, @initiated_by, @plan_summary, @outputs, @error_message, @logs)
   `),
   updateDeployment: db.prepare(`
@@ -386,10 +573,16 @@ const statements = {
 
   // Provider accounts
   getProviderAccounts: db.prepare('SELECT * FROM provider_accounts ORDER BY created_at DESC'),
+  getProviderAccountsByTeam: db.prepare(
+    'SELECT * FROM provider_accounts WHERE team_id = ? ORDER BY created_at DESC'
+  ),
   getProviderAccount: db.prepare('SELECT * FROM provider_accounts WHERE provider_account_id = ?'),
+  getProviderAccountWithTeam: db.prepare(
+    'SELECT * FROM provider_accounts WHERE provider_account_id = ? AND team_id = ?'
+  ),
   insertProviderAccount: db.prepare(`
-    INSERT INTO provider_accounts (provider_account_id, provider_type, label, credential_status, created_at, updated_at, last_verified_at)
-    VALUES (@provider_account_id, @provider_type, @label, @credential_status, @created_at, @updated_at, @last_verified_at)
+    INSERT INTO provider_accounts (provider_account_id, team_id, provider_type, label, credential_status, created_at, updated_at, last_verified_at)
+    VALUES (@provider_account_id, @team_id, @provider_type, @label, @credential_status, @created_at, @updated_at, @last_verified_at)
   `),
   updateProviderAccount: db.prepare(`
     UPDATE provider_accounts SET
@@ -411,12 +604,18 @@ const statements = {
   getBootstrapProfiles: db.prepare(
     'SELECT * FROM bootstrap_profiles ORDER BY is_system_profile DESC, created_at ASC'
   ),
+  getBootstrapProfilesByTeam: db.prepare(
+    'SELECT * FROM bootstrap_profiles WHERE team_id = ? OR is_system_profile = 1 ORDER BY is_system_profile DESC, created_at ASC'
+  ),
   getBootstrapProfile: db.prepare('SELECT * FROM bootstrap_profiles WHERE profile_id = ?'),
+  getBootstrapProfileWithTeam: db.prepare(
+    'SELECT * FROM bootstrap_profiles WHERE profile_id = ? AND (team_id = ? OR is_system_profile = 1)'
+  ),
   insertBootstrapProfile: db.prepare(`
-    INSERT INTO bootstrap_profiles (profile_id, name, description, method, cloud_init_template,
+    INSERT INTO bootstrap_profiles (profile_id, team_id, name, description, method, cloud_init_template,
       ssh_bootstrap_script, ansible_playbook_ref, services_to_run, config_schema, created_at,
       updated_at, created_by, tags, is_system_profile)
-    VALUES (@profile_id, @name, @description, @method, @cloud_init_template,
+    VALUES (@profile_id, @team_id, @name, @description, @method, @cloud_init_template,
       @ssh_bootstrap_script, @ansible_playbook_ref, @services_to_run, @config_schema, @created_at,
       @updated_at, @created_by, @tags, @is_system_profile)
   `),
@@ -448,11 +647,16 @@ const statements = {
 
   // SSH Keys
   getSSHKeys: db.prepare('SELECT * FROM ssh_keys ORDER BY created_at DESC'),
+  getSSHKeysByTeam: db.prepare('SELECT * FROM ssh_keys WHERE team_id = ? ORDER BY created_at DESC'),
   getSSHKey: db.prepare('SELECT * FROM ssh_keys WHERE ssh_key_id = ?'),
+  getSSHKeyWithTeam: db.prepare('SELECT * FROM ssh_keys WHERE ssh_key_id = ? AND team_id = ?'),
   getSSHKeyByFingerprint: db.prepare('SELECT * FROM ssh_keys WHERE fingerprint = ?'),
+  getSSHKeyByFingerprintAndTeam: db.prepare(
+    'SELECT * FROM ssh_keys WHERE fingerprint = ? AND team_id = ?'
+  ),
   insertSSHKey: db.prepare(`
-    INSERT INTO ssh_keys (ssh_key_id, name, fingerprint, public_key, key_type, key_bits, comment, provider_key_ids, created_at, updated_at)
-    VALUES (@ssh_key_id, @name, @fingerprint, @public_key, @key_type, @key_bits, @comment, @provider_key_ids, @created_at, @updated_at)
+    INSERT INTO ssh_keys (ssh_key_id, team_id, name, fingerprint, public_key, key_type, key_bits, comment, provider_key_ids, created_at, updated_at)
+    VALUES (@ssh_key_id, @team_id, @name, @fingerprint, @public_key, @key_type, @key_bits, @comment, @provider_key_ids, @created_at, @updated_at)
   `),
   updateSSHKey: db.prepare(`
     UPDATE ssh_keys SET
@@ -469,6 +673,100 @@ const statements = {
     'INSERT OR REPLACE INTO ssh_key_secrets (ssh_key_id, encrypted_private_key) VALUES (?, ?)'
   ),
   deleteSSHKeySecret: db.prepare('DELETE FROM ssh_key_secrets WHERE ssh_key_id = ?'),
+
+  // Users
+  getUsers: db.prepare('SELECT * FROM users WHERE is_active = 1 ORDER BY created_at DESC'),
+  getUser: db.prepare('SELECT * FROM users WHERE user_id = ?'),
+  getUserByEmail: db.prepare('SELECT * FROM users WHERE email = ? AND is_active = 1'),
+  getUserCount: db.prepare('SELECT COUNT(*) as count FROM users WHERE is_active = 1'),
+  insertUser: db.prepare(`
+    INSERT INTO users (user_id, email, password_hash, display_name, profile_picture_path, role, created_at, updated_at, is_active)
+    VALUES (@user_id, @email, @password_hash, @display_name, @profile_picture_path, @role, @created_at, @updated_at, @is_active)
+  `),
+  updateUser: db.prepare(`
+    UPDATE users SET
+      email = @email, display_name = @display_name, profile_picture_path = @profile_picture_path,
+      role = @role, updated_at = @updated_at, last_login_at = @last_login_at
+    WHERE user_id = @user_id
+  `),
+  updateUserPassword: db.prepare(
+    'UPDATE users SET password_hash = ?, updated_at = ? WHERE user_id = ?'
+  ),
+  deleteUser: db.prepare('UPDATE users SET is_active = 0, updated_at = ? WHERE user_id = ?'),
+
+  // Sessions
+  getSessions: db.prepare('SELECT * FROM sessions WHERE user_id = ? ORDER BY created_at DESC'),
+  getSession: db.prepare('SELECT * FROM sessions WHERE session_id = ?'),
+  getSessionByToken: db.prepare('SELECT * FROM sessions WHERE token_hash = ?'),
+  insertSession: db.prepare(`
+    INSERT INTO sessions (session_id, user_id, token_hash, ip_address, user_agent, created_at, expires_at, last_activity_at)
+    VALUES (@session_id, @user_id, @token_hash, @ip_address, @user_agent, @created_at, @expires_at, @last_activity_at)
+  `),
+  updateSessionActivity: db.prepare(
+    'UPDATE sessions SET last_activity_at = ? WHERE session_id = ?'
+  ),
+  deleteSession: db.prepare('DELETE FROM sessions WHERE session_id = ?'),
+  deleteUserSessions: db.prepare('DELETE FROM sessions WHERE user_id = ?'),
+  deleteExpiredSessions: db.prepare('DELETE FROM sessions WHERE expires_at < ?'),
+
+  // Teams
+  getTeam: db.prepare('SELECT * FROM teams WHERE team_id = ?'),
+  insertTeam: db.prepare(`
+    INSERT INTO teams (team_id, name, handle, avatar_path, created_at, updated_at, created_by)
+    VALUES (@team_id, @name, @handle, @avatar_path, @created_at, @updated_at, @created_by)
+  `),
+  updateTeam: db.prepare(`
+    UPDATE teams SET name = @name, handle = @handle, avatar_path = @avatar_path, updated_at = @updated_at
+    WHERE team_id = @team_id
+  `),
+  getTeamByHandle: db.prepare('SELECT * FROM teams WHERE handle = ?'),
+  checkHandleAvailable: db.prepare('SELECT 1 FROM teams WHERE handle = ? AND team_id != ?'),
+  deleteTeam: db.prepare('DELETE FROM teams WHERE team_id = ?'),
+
+  // Team Members
+  getTeamMembers: db.prepare(`
+    SELECT tm.*, u.display_name, u.email, u.profile_picture_path
+    FROM team_members tm
+    JOIN users u ON tm.user_id = u.user_id
+    WHERE tm.team_id = ?
+    ORDER BY tm.joined_at ASC
+  `),
+  getTeamMember: db.prepare('SELECT * FROM team_members WHERE team_id = ? AND user_id = ?'),
+  getTeamMemberById: db.prepare('SELECT * FROM team_members WHERE team_member_id = ?'),
+  insertTeamMember: db.prepare(`
+    INSERT INTO team_members (team_member_id, team_id, user_id, role, joined_at, invited_by)
+    VALUES (@team_member_id, @team_id, @user_id, @role, @joined_at, @invited_by)
+  `),
+  updateTeamMemberRole: db.prepare('UPDATE team_members SET role = ? WHERE team_member_id = ?'),
+  deleteTeamMember: db.prepare('DELETE FROM team_members WHERE team_member_id = ?'),
+  countTeamAdmins: db.prepare(
+    "SELECT COUNT(*) as count FROM team_members WHERE team_id = ? AND role = 'admin'"
+  ),
+
+  // Team Invites
+  getTeamInvites: db.prepare(
+    'SELECT * FROM team_invites WHERE team_id = ? AND used_at IS NULL ORDER BY created_at DESC'
+  ),
+  getTeamInviteByCode: db.prepare('SELECT * FROM team_invites WHERE invite_code = ?'),
+  getTeamInvite: db.prepare('SELECT * FROM team_invites WHERE invite_id = ?'),
+  insertTeamInvite: db.prepare(`
+    INSERT INTO team_invites (invite_id, team_id, invite_code, created_by, created_at, expires_at)
+    VALUES (@invite_id, @team_id, @invite_code, @created_by, @created_at, @expires_at)
+  `),
+  markInviteUsed: db.prepare(
+    'UPDATE team_invites SET used_at = ?, used_by = ? WHERE invite_id = ?'
+  ),
+  deleteTeamInvite: db.prepare('DELETE FROM team_invites WHERE invite_id = ?'),
+
+  // User's teams
+  getUserTeams: db.prepare(`
+    SELECT t.*, tm.role,
+      (SELECT COUNT(*) FROM team_members WHERE team_id = t.team_id) as member_count
+    FROM teams t
+    JOIN team_members tm ON t.team_id = tm.team_id
+    WHERE tm.user_id = ?
+    ORDER BY t.created_at ASC
+  `),
 };
 
 // Helper to parse JSON fields from DB rows
@@ -510,13 +808,19 @@ function serializeJsonField(value: unknown): string | null {
 }
 
 function parseBootstrapProfile(row: BootstrapProfileRow): BootstrapProfile {
-  return {
-    ...row,
-    services_to_run: JSON.parse(row.services_to_run || '[]'),
-    config_schema: row.config_schema ? JSON.parse(row.config_schema) : undefined,
-    tags: row.tags ? JSON.parse(row.tags) : undefined,
-    is_system_profile: Boolean(row.is_system_profile),
+  // Destructure to omit team_id from spread, handle it separately
+  const { team_id, services_to_run, config_schema, tags, is_system_profile, ...rest } = row;
+  const profile: BootstrapProfile = {
+    ...rest,
+    services_to_run: JSON.parse(services_to_run || '[]'),
+    config_schema: config_schema ? JSON.parse(config_schema) : undefined,
+    tags: tags ? JSON.parse(tags) : undefined,
+    is_system_profile: Boolean(is_system_profile),
   };
+  if (team_id) {
+    profile.team_id = team_id;
+  }
+  return profile;
 }
 
 function parseFirewallProfile(row: FirewallProfileRow): FirewallProfile {
@@ -540,19 +844,52 @@ function parseSSHKey(row: SSHKeyRow): SSHKey {
   };
 }
 
+function parseUser(row: UserRow): User {
+  const user: User = {
+    user_id: row.user_id,
+    email: row.email,
+    display_name: row.display_name,
+    role: row.role as User['role'],
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+  if (row.profile_picture_path) {
+    user.profile_picture_url = row.profile_picture_path;
+  }
+  if (row.last_login_at) {
+    user.last_login_at = row.last_login_at;
+  }
+  return user;
+}
+
+function parseUserWithPassword(row: UserRow): User & { password_hash: string } {
+  return {
+    ...parseUser(row),
+    password_hash: row.password_hash,
+  };
+}
+
 // Database operations
 export const database = {
   // Machines
   getMachines(): Machine[] {
     return (statements.getMachines.all() as MachineRow[]).map(parseMachine);
   },
+  getMachinesByTeam(teamId: string): Machine[] {
+    return (statements.getMachinesByTeam.all(teamId) as MachineRow[]).map(parseMachine);
+  },
   getMachine(id: string): Machine | undefined {
     const row = statements.getMachine.get(id) as MachineRow | undefined;
+    return row ? parseMachine(row) : undefined;
+  },
+  getMachineWithTeam(id: string, teamId: string): Machine | undefined {
+    const row = statements.getMachineWithTeam.get(id, teamId) as MachineRow | undefined;
     return row ? parseMachine(row) : undefined;
   },
   insertMachine(machine: Machine): void {
     statements.insertMachine.run({
       ...machine,
+      team_id: machine.team_id,
       public_ip: machine.public_ip || null,
       private_ip: machine.private_ip || null,
       provider_resource_id: machine.provider_resource_id || null,
@@ -613,6 +950,9 @@ export const database = {
   getDeployments(): Deployment[] {
     return (statements.getDeployments.all() as DeploymentRow[]).map(parseDeployment);
   },
+  getDeploymentsByTeam(teamId: string): Deployment[] {
+    return (statements.getDeploymentsByTeam.all(teamId) as DeploymentRow[]).map(parseDeployment);
+  },
   getDeploymentsByMachine(machineId: string): Deployment[] {
     return (statements.getDeploymentsByMachine.all(machineId) as DeploymentRow[]).map(
       parseDeployment
@@ -622,9 +962,14 @@ export const database = {
     const row = statements.getDeployment.get(id) as DeploymentRow | undefined;
     return row ? parseDeployment(row) : undefined;
   },
+  getDeploymentWithTeam(id: string, teamId: string): Deployment | undefined {
+    const row = statements.getDeploymentWithTeam.get(id, teamId) as DeploymentRow | undefined;
+    return row ? parseDeployment(row) : undefined;
+  },
   insertDeployment(deployment: Deployment): void {
     statements.insertDeployment.run({
       ...deployment,
+      team_id: deployment.team_id,
       started_at: deployment.started_at || null,
       finished_at: deployment.finished_at || null,
       initiated_by: deployment.initiated_by || null,
@@ -666,8 +1011,14 @@ export const database = {
   getProviderAccounts(): ProviderAccount[] {
     return statements.getProviderAccounts.all() as ProviderAccount[];
   },
+  getProviderAccountsByTeam(teamId: string): ProviderAccount[] {
+    return statements.getProviderAccountsByTeam.all(teamId) as ProviderAccount[];
+  },
   getProviderAccount(id: string): ProviderAccount | undefined {
     return statements.getProviderAccount.get(id) as ProviderAccount | undefined;
+  },
+  getProviderAccountWithTeam(id: string, teamId: string): ProviderAccount | undefined {
+    return statements.getProviderAccountWithTeam.get(id, teamId) as ProviderAccount | undefined;
   },
   insertProviderAccount(account: ProviderAccount): void {
     statements.insertProviderAccount.run(account);
@@ -712,13 +1063,25 @@ export const database = {
       parseBootstrapProfile
     );
   },
+  getBootstrapProfilesByTeam(teamId: string): BootstrapProfile[] {
+    return (statements.getBootstrapProfilesByTeam.all(teamId) as BootstrapProfileRow[]).map(
+      parseBootstrapProfile
+    );
+  },
   getBootstrapProfile(id: string): BootstrapProfile | undefined {
     const row = statements.getBootstrapProfile.get(id) as BootstrapProfileRow | undefined;
+    return row ? parseBootstrapProfile(row) : undefined;
+  },
+  getBootstrapProfileWithTeam(id: string, teamId: string): BootstrapProfile | undefined {
+    const row = statements.getBootstrapProfileWithTeam.get(id, teamId) as
+      | BootstrapProfileRow
+      | undefined;
     return row ? parseBootstrapProfile(row) : undefined;
   },
   insertBootstrapProfile(profile: BootstrapProfile): void {
     statements.insertBootstrapProfile.run({
       profile_id: profile.profile_id,
+      team_id: profile.team_id || null,
       name: profile.name,
       description: profile.description || null,
       method: profile.method,
@@ -787,17 +1150,31 @@ export const database = {
   getSSHKeys(): SSHKey[] {
     return (statements.getSSHKeys.all() as SSHKeyRow[]).map(parseSSHKey);
   },
+  getSSHKeysByTeam(teamId: string): SSHKey[] {
+    return (statements.getSSHKeysByTeam.all(teamId) as SSHKeyRow[]).map(parseSSHKey);
+  },
   getSSHKey(id: string): SSHKey | undefined {
     const row = statements.getSSHKey.get(id) as SSHKeyRow | undefined;
+    return row ? parseSSHKey(row) : undefined;
+  },
+  getSSHKeyWithTeam(id: string, teamId: string): SSHKey | undefined {
+    const row = statements.getSSHKeyWithTeam.get(id, teamId) as SSHKeyRow | undefined;
     return row ? parseSSHKey(row) : undefined;
   },
   getSSHKeyByFingerprint(fingerprint: string): SSHKey | undefined {
     const row = statements.getSSHKeyByFingerprint.get(fingerprint) as SSHKeyRow | undefined;
     return row ? parseSSHKey(row) : undefined;
   },
+  getSSHKeyByFingerprintAndTeam(fingerprint: string, teamId: string): SSHKey | undefined {
+    const row = statements.getSSHKeyByFingerprintAndTeam.get(fingerprint, teamId) as
+      | SSHKeyRow
+      | undefined;
+    return row ? parseSSHKey(row) : undefined;
+  },
   insertSSHKey(key: SSHKey): void {
     statements.insertSSHKey.run({
       ...key,
+      team_id: key.team_id,
       comment: key.comment || null,
       provider_key_ids: JSON.stringify(key.provider_key_ids || {}),
     });
@@ -836,6 +1213,343 @@ export const database = {
   },
   deleteSSHKeyPrivateKey(keyId: string): void {
     statements.deleteSSHKeySecret.run(keyId);
+  },
+
+  // Users
+  getUsers(): User[] {
+    return (statements.getUsers.all() as UserRow[]).map(parseUser);
+  },
+  getUser(id: string): (User & { password_hash: string }) | undefined {
+    const row = statements.getUser.get(id) as UserRow | undefined;
+    return row ? parseUserWithPassword(row) : undefined;
+  },
+  getUserByEmail(email: string): (User & { password_hash: string }) | undefined {
+    const row = statements.getUserByEmail.get(email.toLowerCase()) as UserRow | undefined;
+    return row ? parseUserWithPassword(row) : undefined;
+  },
+  getUserCount(): number {
+    const result = statements.getUserCount.get() as { count: number };
+    return result.count;
+  },
+  insertUser(user: User & { password_hash: string }): void {
+    statements.insertUser.run({
+      user_id: user.user_id,
+      email: user.email.toLowerCase(),
+      password_hash: user.password_hash,
+      display_name: user.display_name,
+      profile_picture_path: null,
+      role: user.role,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+      is_active: 1,
+    });
+  },
+  updateUser(user: Partial<User> & { user_id: string }): void {
+    const existing = this.getUser(user.user_id);
+    if (!existing) return;
+    statements.updateUser.run({
+      user_id: user.user_id,
+      email: user.email?.toLowerCase() || existing.email,
+      display_name: user.display_name || existing.display_name,
+      profile_picture_path: user.profile_picture_url || null,
+      role: user.role || existing.role,
+      updated_at: new Date().toISOString(),
+      last_login_at: user.last_login_at || existing.last_login_at || null,
+    });
+  },
+  updateUserPassword(userId: string, passwordHash: string): void {
+    statements.updateUserPassword.run(passwordHash, new Date().toISOString(), userId);
+  },
+  updateUserLastLogin(userId: string): void {
+    const now = new Date().toISOString();
+    db.prepare('UPDATE users SET last_login_at = ?, updated_at = ? WHERE user_id = ?').run(
+      now,
+      now,
+      userId
+    );
+  },
+  updateUserProfilePicture(userId: string, path: string | null): void {
+    const now = new Date().toISOString();
+    db.prepare('UPDATE users SET profile_picture_path = ?, updated_at = ? WHERE user_id = ?').run(
+      path,
+      now,
+      userId
+    );
+  },
+  deleteUser(id: string): void {
+    // Soft delete - set is_active = 0
+    statements.deleteUser.run(new Date().toISOString(), id);
+    // Also delete all sessions
+    statements.deleteUserSessions.run(id);
+  },
+
+  // Sessions
+  getSessions(userId: string): Session[] {
+    return statements.getSessions.all(userId) as Session[];
+  },
+  getSession(id: string): SessionRow | undefined {
+    return statements.getSession.get(id) as SessionRow | undefined;
+  },
+  getSessionByToken(tokenHash: string): SessionRow | undefined {
+    return statements.getSessionByToken.get(tokenHash) as SessionRow | undefined;
+  },
+  insertSession(session: Session & { token_hash: string }): void {
+    statements.insertSession.run(session);
+  },
+  updateSessionActivity(sessionId: string): void {
+    statements.updateSessionActivity.run(new Date().toISOString(), sessionId);
+  },
+  deleteSession(id: string): void {
+    statements.deleteSession.run(id);
+  },
+  deleteUserSessions(userId: string): void {
+    statements.deleteUserSessions.run(userId);
+  },
+  cleanupExpiredSessions(): number {
+    const result = statements.deleteExpiredSessions.run(new Date().toISOString());
+    return result.changes;
+  },
+
+  // Teams
+  getTeam(id: string): Team | undefined {
+    const row = statements.getTeam.get(id) as
+      | {
+          team_id: string;
+          name: string;
+          handle: string;
+          avatar_path: string | null;
+          created_at: string;
+          updated_at: string;
+          created_by: string;
+        }
+      | undefined;
+    if (!row) return undefined;
+    return {
+      team_id: row.team_id,
+      name: row.name,
+      handle: row.handle,
+      avatar_url: row.avatar_path ? `/api/teams/avatars/${row.avatar_path}` : undefined,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      created_by: row.created_by,
+    };
+  },
+  getTeamByHandle(handle: string): Team | undefined {
+    const row = statements.getTeamByHandle.get(handle) as
+      | {
+          team_id: string;
+          name: string;
+          handle: string;
+          avatar_path: string | null;
+          created_at: string;
+          updated_at: string;
+          created_by: string;
+        }
+      | undefined;
+    if (!row) return undefined;
+    return {
+      team_id: row.team_id,
+      name: row.name,
+      handle: row.handle,
+      avatar_url: row.avatar_path ? `/api/teams/avatars/${row.avatar_path}` : undefined,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      created_by: row.created_by,
+    };
+  },
+  isHandleAvailable(handle: string, excludeTeamId?: string): boolean {
+    const result = statements.checkHandleAvailable.get(handle, excludeTeamId || '') as
+      | { 1: number }
+      | undefined;
+    // Also check if handle exists at all for new teams
+    if (!excludeTeamId) {
+      const existing = statements.getTeamByHandle.get(handle);
+      return !existing;
+    }
+    return !result;
+  },
+  getUserTeams(userId: string): TeamWithMembership[] {
+    const rows = statements.getUserTeams.all(userId) as Array<{
+      team_id: string;
+      name: string;
+      handle: string;
+      avatar_path: string | null;
+      created_at: string;
+      updated_at: string;
+      created_by: string;
+      role: 'admin' | 'member';
+      member_count: number;
+    }>;
+    return rows.map((row) => ({
+      team_id: row.team_id,
+      name: row.name,
+      handle: row.handle,
+      avatar_url: row.avatar_path ? `/api/teams/avatars/${row.avatar_path}` : undefined,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      created_by: row.created_by,
+      role: row.role,
+      member_count: row.member_count,
+    }));
+  },
+  insertTeam(team: Team): void {
+    statements.insertTeam.run({
+      team_id: team.team_id,
+      name: team.name,
+      handle: team.handle,
+      avatar_path: null,
+      created_at: team.created_at,
+      updated_at: team.updated_at,
+      created_by: team.created_by,
+    });
+  },
+  updateTeam(
+    teamId: string,
+    updates: { name?: string; handle?: string; avatar_path?: string | null }
+  ): void {
+    const existing = statements.getTeam.get(teamId) as
+      | { name: string; handle: string; avatar_path: string | null }
+      | undefined;
+    if (!existing) return;
+    statements.updateTeam.run({
+      team_id: teamId,
+      name: updates.name ?? existing.name,
+      handle: updates.handle ?? existing.handle,
+      avatar_path: updates.avatar_path !== undefined ? updates.avatar_path : existing.avatar_path,
+      updated_at: new Date().toISOString(),
+    });
+  },
+  deleteTeam(id: string): void {
+    statements.deleteTeam.run(id);
+  },
+
+  // Team Members
+  getTeamMembers(teamId: string): TeamMemberWithUser[] {
+    const rows = statements.getTeamMembers.all(teamId) as Array<{
+      team_member_id: string;
+      team_id: string;
+      user_id: string;
+      role: 'admin' | 'member';
+      joined_at: string;
+      invited_by: string | null;
+      display_name: string;
+      email: string;
+      profile_picture_path: string | null;
+    }>;
+    return rows.map((row) => ({
+      team_member_id: row.team_member_id,
+      team_id: row.team_id,
+      user_id: row.user_id,
+      role: row.role,
+      joined_at: row.joined_at,
+      invited_by: row.invited_by || undefined,
+      user: {
+        user_id: row.user_id,
+        display_name: row.display_name,
+        email: row.email,
+        profile_picture_url: row.profile_picture_path
+          ? `/api/auth/avatars/${row.profile_picture_path}`
+          : undefined,
+      },
+    }));
+  },
+  getTeamMember(teamId: string, userId: string): TeamMember | undefined {
+    return statements.getTeamMember.get(teamId, userId) as TeamMember | undefined;
+  },
+  getTeamMemberById(memberId: string): TeamMember | undefined {
+    return statements.getTeamMemberById.get(memberId) as TeamMember | undefined;
+  },
+  insertTeamMember(member: TeamMember): void {
+    statements.insertTeamMember.run({
+      team_member_id: member.team_member_id,
+      team_id: member.team_id,
+      user_id: member.user_id,
+      role: member.role,
+      joined_at: member.joined_at,
+      invited_by: member.invited_by || null,
+    });
+  },
+  updateTeamMemberRole(memberId: string, role: 'admin' | 'member'): void {
+    statements.updateTeamMemberRole.run(role, memberId);
+  },
+  deleteTeamMember(memberId: string): void {
+    statements.deleteTeamMember.run(memberId);
+  },
+  countTeamAdmins(teamId: string): number {
+    const result = statements.countTeamAdmins.get(teamId) as { count: number };
+    return result.count;
+  },
+
+  // Team Invites
+  getTeamInvites(teamId: string): TeamInvite[] {
+    return statements.getTeamInvites.all(teamId) as TeamInvite[];
+  },
+  getTeamInviteByCode(code: string): TeamInvite | undefined {
+    return statements.getTeamInviteByCode.get(code) as TeamInvite | undefined;
+  },
+  getTeamInvite(inviteId: string): TeamInvite | undefined {
+    return statements.getTeamInvite.get(inviteId) as TeamInvite | undefined;
+  },
+  insertTeamInvite(invite: TeamInvite): void {
+    statements.insertTeamInvite.run({
+      invite_id: invite.invite_id,
+      team_id: invite.team_id,
+      invite_code: invite.invite_code,
+      created_by: invite.created_by,
+      created_at: invite.created_at,
+      expires_at: invite.expires_at,
+    });
+  },
+  markInviteUsed(inviteId: string, usedBy: string): void {
+    statements.markInviteUsed.run(new Date().toISOString(), usedBy, inviteId);
+  },
+  deleteTeamInvite(inviteId: string): void {
+    statements.deleteTeamInvite.run(inviteId);
+  },
+
+  // Create default team for new user
+  createDefaultTeam(userId: string, displayName: string): Team {
+    const teamId = `team_${crypto.randomUUID().replace(/-/g, '').substring(0, 20)}`;
+    const now = new Date().toISOString();
+
+    // Generate a unique handle from display name
+    let baseHandle = displayName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    if (!baseHandle) baseHandle = 'my-team';
+
+    let handle = baseHandle;
+    let counter = 1;
+    while (!this.isHandleAvailable(handle)) {
+      handle = `${baseHandle}-${counter}`;
+      counter++;
+    }
+
+    const team: Team = {
+      team_id: teamId,
+      name: 'My Team',
+      handle,
+      created_at: now,
+      updated_at: now,
+      created_by: userId,
+    };
+
+    this.insertTeam(team);
+
+    // Add user as admin
+    const memberId = `tmem_${crypto.randomUUID().replace(/-/g, '').substring(0, 20)}`;
+    const member: TeamMember = {
+      team_member_id: memberId,
+      team_id: teamId,
+      user_id: userId,
+      role: 'admin',
+      joined_at: now,
+    };
+
+    this.insertTeamMember(member);
+
+    return team;
   },
 
   // Close database

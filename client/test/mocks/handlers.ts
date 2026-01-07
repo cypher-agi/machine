@@ -14,6 +14,7 @@ const API_BASE = '/api';
 // Mock data factories
 export const mockMachine = (overrides: Partial<Machine> = {}): Machine => ({
   machine_id: 'machine-1',
+  team_id: 'team-1',
   name: 'Test Machine',
   provider: 'digitalocean',
   provider_account_id: 'account-1',
@@ -32,6 +33,7 @@ export const mockMachine = (overrides: Partial<Machine> = {}): Machine => ({
 
 export const mockDeployment = (overrides: Partial<Deployment> = {}): Deployment => ({
   deployment_id: 'deployment-1',
+  team_id: 'team-1',
   machine_id: 'machine-1',
   type: 'create',
   state: 'completed',
@@ -41,6 +43,7 @@ export const mockDeployment = (overrides: Partial<Deployment> = {}): Deployment 
 
 export const mockProviderAccount = (overrides: Partial<ProviderAccount> = {}): ProviderAccount => ({
   provider_account_id: 'account-1',
+  team_id: 'team-1',
   provider_type: 'digitalocean',
   label: 'Test Account',
   credential_status: 'valid',
@@ -52,6 +55,7 @@ export const mockBootstrapProfile = (
   overrides: Partial<BootstrapProfile> = {}
 ): BootstrapProfile => ({
   profile_id: 'profile-1',
+  team_id: 'team-1',
   name: 'Test Profile',
   description: 'Test bootstrap profile',
   method: 'cloud_init',
@@ -73,6 +77,7 @@ export const mockFirewallProfile = (overrides: Partial<FirewallProfile> = {}): F
 
 export const mockSSHKey = (overrides: Partial<SSHKey> = {}): SSHKey => ({
   ssh_key_id: 'key-1',
+  team_id: 'team-1',
   name: 'Test Key',
   fingerprint: 'SHA256:abc123',
   public_key: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAITest test@example.com',

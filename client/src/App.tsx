@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppLayout } from './app/layouts';
 import { PageLoader } from '@/shared/ui';
+import { LoginPage, AuthGuard } from '@/features/auth';
 
 // Lazy-loaded route components for code-splitting
 const MachinesApp = lazy(() =>
@@ -20,11 +21,23 @@ const BootstrapApp = lazy(() =>
 const SettingsApp = lazy(() =>
   import('./apps/settings/SettingsApp').then((m) => ({ default: m.SettingsApp }))
 );
+const TeamsApp = lazy(() => import('./apps/teams/TeamsApp').then((m) => ({ default: m.TeamsApp })));
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<AppLayout />}>
+      {/* Public route - Login */}
+      <Route path="/login" element={<LoginPage />} />
+
+      {/* Protected routes - require authentication */}
+      <Route
+        path="/"
+        element={
+          <AuthGuard>
+            <AppLayout />
+          </AuthGuard>
+        }
+      >
         <Route index element={<Navigate to="/machines" replace />} />
         <Route
           path="machines"
@@ -63,6 +76,14 @@ function App() {
           element={
             <Suspense fallback={<PageLoader />}>
               <BootstrapApp />
+            </Suspense>
+          }
+        />
+        <Route
+          path="teams"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <TeamsApp />
             </Suspense>
           }
         />

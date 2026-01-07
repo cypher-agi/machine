@@ -8,6 +8,11 @@ export const deploymentsRouter = Router();
 
 // GET /deployments - List deployments with filtering
 deploymentsRouter.get('/', (req: Request, res: Response) => {
+  const teamId = req.teamId;
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
+
   const filters = {
     ...(req.query.machine_id && { machine_id: req.query.machine_id as string }),
     ...(req.query.type && { type: req.query.type as DeploymentListFilter['type'] }),
@@ -16,7 +21,7 @@ deploymentsRouter.get('/', (req: Request, res: Response) => {
     ...(req.query.created_before && { created_before: req.query.created_before as string }),
   } as DeploymentListFilter;
 
-  let filtered = database.getDeployments();
+  let filtered = database.getDeploymentsByTeam(teamId);
 
   // Apply filters
   if (filters.machine_id) {
@@ -70,11 +75,15 @@ deploymentsRouter.get('/', (req: Request, res: Response) => {
 // GET /deployments/:id - Get single deployment
 deploymentsRouter.get('/:id', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing deployment ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const deployment = database.getDeployment(id);
+  const deployment = database.getDeploymentWithTeam(id, teamId);
 
   if (!deployment) {
     throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${id} not found`);
@@ -91,11 +100,15 @@ deploymentsRouter.get('/:id', (req: Request, res: Response) => {
 // GET /deployments/:id/logs - Get deployment logs (supports SSE for streaming)
 deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing deployment ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const deployment = database.getDeployment(id);
+  const deployment = database.getDeploymentWithTeam(id, teamId);
 
   if (!deployment) {
     throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${id} not found`);
@@ -170,11 +183,15 @@ deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
 // POST /deployments/:id/cancel - Cancel a running deployment
 deploymentsRouter.post('/:id/cancel', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing deployment ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const deployment = database.getDeployment(id);
+  const deployment = database.getDeploymentWithTeam(id, teamId);
 
   if (!deployment) {
     throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${id} not found`);
@@ -211,11 +228,15 @@ deploymentsRouter.post('/:id/cancel', (req: Request, res: Response) => {
 // POST /deployments/:id/approve - Approve a deployment awaiting approval
 deploymentsRouter.post('/:id/approve', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing deployment ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const deployment = database.getDeployment(id);
+  const deployment = database.getDeploymentWithTeam(id, teamId);
 
   if (!deployment) {
     throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${id} not found`);

@@ -1,0 +1,115 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.labelHint {
+  font-weight: 400;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+
+/* Handle input with prefix and status */
+.handleInputWrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.handlePrefix {
+  position: absolute;
+  left: 12px;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.handleInput {
+  padding-left: 32px !important;
+  padding-right: 36px !important;
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+}
+
+.handleStatus {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.statusChecking {
+  color: var(--text-tertiary);
+  animation: spin 1s linear infinite;
+}
+
+.statusAvailable {
+  color: var(--success);
+}
+
+.statusTaken {
+  color: var(--error);
+}
+
+.statusInvalid {
+  color: var(--warning);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.handleHint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.handleAvailable {
+  font-size: 12px;
+  color: var(--success);
+  margin-top: 4px;
+}
+
+.suggestionLink {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.suggestionLink:hover {
+  text-decoration: underline;
+}

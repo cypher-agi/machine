@@ -1,0 +1,1 @@
+export { TeamsApp } from './TeamsApp';

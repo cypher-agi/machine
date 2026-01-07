@@ -15,7 +15,10 @@ import { bootstrapRouter } from './routes/bootstrap';
 import { auditRouter } from './routes/audit';
 import { agentRouter } from './routes/agent';
 import { sshRouter } from './routes/ssh';
+import { authRouter } from './routes/auth';
+import { teamsRouter } from './routes/teams';
 import { errorHandler } from './middleware/errorHandler';
+import { requireAuth, requireTeamContext } from './middleware/auth';
 import { setupTerminalWebSocket } from './services/terminal';
 import { getTerraformModulesDir, isTerraformAvailable } from './services/terraform';
 
@@ -71,14 +74,23 @@ app.get('/health', (_, res) => {
   });
 });
 
-// API routes
-app.use('/api/machines', machinesRouter);
-app.use('/api/providers', providersRouter);
-app.use('/api/deployments', deploymentsRouter);
-app.use('/api/bootstrap', bootstrapRouter);
-app.use('/api/audit', auditRouter);
+// Auth routes (public - handles its own auth)
+app.use('/api/auth', authRouter);
+
+// Protected API routes - require authentication and team context
+// These routes filter data by team and enforce team membership
+app.use('/api/machines', requireAuth, requireTeamContext, machinesRouter);
+app.use('/api/providers', requireAuth, requireTeamContext, providersRouter);
+app.use('/api/deployments', requireAuth, requireTeamContext, deploymentsRouter);
+app.use('/api/bootstrap', requireAuth, requireTeamContext, bootstrapRouter);
+app.use('/api/ssh', requireAuth, requireTeamContext, sshRouter);
+
+// Protected routes without team context (global resources)
+app.use('/api/audit', requireAuth, auditRouter);
+app.use('/api/teams', teamsRouter); // Has own auth handling for avatar serving
+
+// Agent routes - uses machine token authentication, not user auth
 app.use('/api/agent', agentRouter);
-app.use('/api/ssh', sshRouter);
 
 // Apply rate limiting to dangerous endpoints
 app.use('/api/machines/:id/destroy', dangerousActionsLimiter);

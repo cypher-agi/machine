@@ -11,9 +11,10 @@ export interface SidekickRowProps {
   icon?: ReactNode;
   accent?: boolean;
   copyable?: boolean;
+  mono?: boolean;
 }
 
-export function SidekickRow({ label, value, icon, accent, copyable }: SidekickRowProps) {
+export function SidekickRow({ label, value, icon, accent, copyable, mono }: SidekickRowProps) {
   const { addToast } = useAppStore();
 
   const handleCopy = async () => {
@@ -31,7 +32,10 @@ export function SidekickRow({ label, value, icon, accent, copyable }: SidekickRo
       </span>
       {copyable && value ? (
         <div className={styles.valueCopyable}>
-          <span className={clsx(styles.value, accent && styles.valueAccent)} title={value}>
+          <span
+            className={clsx(styles.value, accent && styles.valueAccent, mono && styles.valueMono)}
+            title={value}
+          >
             {value}
           </span>
           <button onClick={handleCopy} className={styles.copyButton}>
@@ -40,7 +44,7 @@ export function SidekickRow({ label, value, icon, accent, copyable }: SidekickRo
         </div>
       ) : (
         <span
-          className={clsx(styles.value, accent && styles.valueAccent)}
+          className={clsx(styles.value, accent && styles.valueAccent, mono && styles.valueMono)}
           title={value || undefined}
         >
           {value || '—'}

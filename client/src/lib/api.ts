@@ -20,6 +20,15 @@ import type {
   SSHKeyCreateRequest,
   SSHKeyImportRequest,
   SSHKeyGenerateResponse,
+  Team,
+  TeamMember,
+  TeamInvite,
+  TeamWithMembership,
+  TeamDetailResponse,
+  TeamRole,
+  CreateTeamRequest,
+  UpdateTeamRequest,
+  HandleAvailabilityResponse,
 } from '@machina/shared';
 
 const API_BASE = '/api';
@@ -39,14 +48,69 @@ function buildQueryString<T extends object>(params?: T): string {
   return query ? `?${query}` : '';
 }
 
+// Store reference for accessing current team ID
+// This is set by the auth store to avoid circular imports
+let getTeamIdFn: (() => string | null) | null = null;
+
+export function setTeamIdGetter(fn: () => string | null): void {
+  getTeamIdFn = fn;
+}
+
+// Helper to get current team ID - prefers store, falls back to localStorage
+function getCurrentTeamId(): string | null {
+  // First try the store getter (most up-to-date)
+  if (getTeamIdFn) {
+    return getTeamIdFn();
+  }
+
+  // Fallback to localStorage
+  const authData = localStorage.getItem('auth-storage');
+  if (authData) {
+    try {
+      const parsed = JSON.parse(authData);
+      return parsed.state?.currentTeamId || null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  // Get token from localStorage (matches authStore persist key)
+  const authData = localStorage.getItem('auth-storage');
+  let sessionToken: string | null = null;
+
+  if (authData) {
+    try {
+      const parsed = JSON.parse(authData);
+      sessionToken = parsed.state?.sessionToken || null;
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  // Get current team ID for team context
+  const currentTeamId = getCurrentTeamId();
+
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(sessionToken && { Authorization: `Bearer ${sessionToken}` }),
+      ...(currentTeamId && { 'X-Team-Id': currentTeamId }),
       ...options?.headers,
     },
   });
+
+  // Handle 401 - session expired or invalid
+  if (response.status === 401) {
+    // Clear auth storage
+    localStorage.removeItem('auth-storage');
+    // Redirect to login
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
 
   const data: ApiResponse<T> = await response.json();
 
@@ -383,5 +447,129 @@ export async function updateSSHKey(id: string, data: { name: string }): Promise<
 export async function deleteSSHKey(id: string): Promise<{ deleted: boolean }> {
   return fetchApi<{ deleted: boolean }>(`/ssh/keys/${id}`, {
     method: 'DELETE',
+  });
+}
+
+// ============ Teams API ============
+
+export async function getTeams(): Promise<TeamWithMembership[]> {
+  return fetchApi<TeamWithMembership[]>('/teams');
+}
+
+export async function getTeam(id: string): Promise<TeamDetailResponse> {
+  return fetchApi<TeamDetailResponse>(`/teams/${id}`);
+}
+
+export async function checkHandleAvailability(
+  handle: string,
+  excludeTeamId?: string
+): Promise<HandleAvailabilityResponse> {
+  const params = excludeTeamId ? `?exclude=${excludeTeamId}` : '';
+  return fetchApi<HandleAvailabilityResponse>(
+    `/teams/check-handle/${encodeURIComponent(handle)}${params}`
+  );
+}
+
+export async function createTeam(data: CreateTeamRequest): Promise<Team> {
+  return fetchApi<Team>('/teams', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateTeam(id: string, data: UpdateTeamRequest): Promise<Team> {
+  return fetchApi<Team>(`/teams/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function uploadTeamAvatar(teamId: string, file: File): Promise<Team> {
+  const authData = localStorage.getItem('auth-storage');
+  let sessionToken: string | null = null;
+
+  if (authData) {
+    try {
+      const parsed = JSON.parse(authData);
+      sessionToken = parsed.state?.sessionToken || null;
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  const currentTeamId = getCurrentTeamId();
+
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const response = await fetch(`${API_BASE}/teams/${teamId}/avatar`, {
+    method: 'POST',
+    headers: {
+      ...(sessionToken && { Authorization: `Bearer ${sessionToken}` }),
+      ...(currentTeamId && { 'X-Team-Id': currentTeamId }),
+    },
+    body: formData,
+  });
+
+  const data: ApiResponse<Team> = await response.json();
+
+  if (!data.success) {
+    throw new Error(data.error?.message || 'Failed to upload avatar');
+  }
+
+  return data.data as Team;
+}
+
+export async function deleteTeamAvatar(teamId: string): Promise<Team> {
+  return fetchApi<Team>(`/teams/${teamId}/avatar`, {
+    method: 'DELETE',
+  });
+}
+
+export async function deleteTeam(id: string): Promise<{ deleted: boolean }> {
+  return fetchApi<{ deleted: boolean }>(`/teams/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function createTeamInvite(teamId: string): Promise<TeamInvite> {
+  return fetchApi<TeamInvite>(`/teams/${teamId}/invites`, {
+    method: 'POST',
+  });
+}
+
+export async function revokeTeamInvite(
+  teamId: string,
+  inviteId: string
+): Promise<{ deleted: boolean }> {
+  return fetchApi<{ deleted: boolean }>(`/teams/${teamId}/invites/${inviteId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function joinTeam(inviteCode: string): Promise<{ member: TeamMember; team: Team }> {
+  return fetchApi<{ member: TeamMember; team: Team }>('/teams/join', {
+    method: 'POST',
+    body: JSON.stringify({ invite_code: inviteCode }),
+  });
+}
+
+export async function removeTeamMember(
+  teamId: string,
+  memberId: string
+): Promise<{ deleted: boolean }> {
+  return fetchApi<{ deleted: boolean }>(`/teams/${teamId}/members/${memberId}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function updateTeamMemberRole(
+  teamId: string,
+  memberId: string,
+  role: TeamRole
+): Promise<TeamMember> {
+  return fetchApi<TeamMember>(`/teams/${teamId}/members/${memberId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ role }),
   });
 }

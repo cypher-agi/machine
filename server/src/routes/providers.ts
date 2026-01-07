@@ -464,8 +464,13 @@ providersRouter.get('/:type/options', (req: Request, res: Response) => {
 });
 
 // GET /providers/accounts - List all provider accounts
-providersRouter.get('/accounts', (_req: Request, res: Response) => {
-  const accounts = database.getProviderAccounts();
+providersRouter.get('/accounts', (req: Request, res: Response) => {
+  const teamId = req.teamId;
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
+
+  const accounts = database.getProviderAccountsByTeam(teamId);
 
   // Add credential status based on whether we have stored credentials
   const accountsWithStatus = accounts.map((account) => ({
@@ -484,11 +489,15 @@ providersRouter.get('/accounts', (_req: Request, res: Response) => {
 // GET /providers/accounts/:id - Get single provider account
 providersRouter.get('/accounts/:id', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing account ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const account = database.getProviderAccount(id);
+  const account = database.getProviderAccountWithTeam(id, teamId);
 
   if (!account) {
     throw new AppError(404, 'ACCOUNT_NOT_FOUND', `Provider account ${id} not found`);
@@ -507,6 +516,11 @@ providersRouter.get('/accounts/:id', (req: Request, res: Response) => {
 
 // POST /providers/:type/accounts - Create new provider account
 providersRouter.post('/:type/accounts', async (req: Request, res: Response) => {
+  const teamId = req.teamId;
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
+
   const providerType = req.params.type as ProviderType;
   const body: ProviderAccountCreateRequest = req.body;
 
@@ -572,6 +586,7 @@ providersRouter.post('/:type/accounts', async (req: Request, res: Response) => {
 
   const newAccount: ProviderAccount = {
     provider_account_id: accountId,
+    team_id: teamId,
     provider_type: providerType,
     label: body.label,
     credential_status: 'valid',
@@ -605,11 +620,15 @@ providersRouter.post('/:type/accounts', async (req: Request, res: Response) => {
 // PUT /providers/accounts/:id - Update provider account credentials
 providersRouter.put('/accounts/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing account ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const account = database.getProviderAccount(id);
+  const account = database.getProviderAccountWithTeam(id, teamId);
 
   if (!account) {
     throw new AppError(404, 'ACCOUNT_NOT_FOUND', `Provider account ${id} not found`);
@@ -672,11 +691,15 @@ providersRouter.put('/accounts/:id', async (req: Request, res: Response) => {
 // POST /providers/accounts/:id/verify - Verify provider account credentials
 providersRouter.post('/accounts/:id/verify', async (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing account ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const account = database.getProviderAccount(id);
+  const account = database.getProviderAccountWithTeam(id, teamId);
 
   if (!account) {
     throw new AppError(404, 'ACCOUNT_NOT_FOUND', `Provider account ${id} not found`);
@@ -740,18 +763,22 @@ providersRouter.post('/accounts/:id/verify', async (req: Request, res: Response)
 // DELETE /providers/accounts/:id - Delete provider account
 providersRouter.delete('/accounts/:id', (req: Request, res: Response) => {
   const { id } = req.params;
+  const teamId = req.teamId;
   if (!id) {
     throw new AppError(400, 'BAD_REQUEST', 'Missing account ID');
   }
+  if (!teamId) {
+    throw new AppError(400, 'MISSING_TEAM', 'Team context required');
+  }
 
-  const account = database.getProviderAccount(id);
+  const account = database.getProviderAccountWithTeam(id, teamId);
 
   if (!account) {
     throw new AppError(404, 'ACCOUNT_NOT_FOUND', `Provider account ${id} not found`);
   }
 
   // Check for linked machines
-  const machines = database.getMachines();
+  const machines = database.getMachinesByTeam(teamId);
   const linkedMachines = machines.filter((m) => m.provider_account_id === id);
 
   if (linkedMachines.length > 0) {

@@ -6,6 +6,7 @@ import type {
   CredentialStatus,
   DeploymentState,
   DeploymentType,
+  TeamRole,
 } from '@machina/shared';
 import {
   Cloud,
@@ -175,4 +176,18 @@ export const DEPLOYMENT_TYPE_FULL_LABELS: Record<DeploymentType, string> = {
   reboot: 'Reboot Machine',
   restart_service: 'Restart Service',
   refresh: 'Refresh State',
+};
+
+// Team role configuration
+export const TEAM_ROLE_LABELS: Record<TeamRole, string> = {
+  admin: 'Admin',
+  member: 'Member',
+};
+
+export const TEAM_ROLE_BADGE_CONFIG: Record<
+  TeamRole,
+  { variant: 'running' | 'pending'; label: string }
+> = {
+  admin: { variant: 'running', label: 'Admin' },
+  member: { variant: 'pending', label: 'Member' },
 };

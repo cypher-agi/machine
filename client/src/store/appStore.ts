@@ -3,7 +3,7 @@ import type { MachineListFilter, MachineListSort } from '@machina/shared';
 import type { Toast } from '@/shared/components';
 
 // Item types that can be selected and shown in the Sidekick
-export type SidekickItemType = 'machine' | 'provider' | 'key' | 'deployment' | 'bootstrap';
+export type SidekickItemType = 'machine' | 'provider' | 'key' | 'deployment' | 'bootstrap' | 'team';
 
 export interface SidekickSelection {
   type: SidekickItemType;
