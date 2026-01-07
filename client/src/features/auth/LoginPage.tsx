@@ -4,6 +4,7 @@ import { Eye, EyeOff, Zap, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { Input } from '@/shared/ui/Input';
 import { Button } from '@/shared/ui/Button';
+import { Toggle } from '@/shared/ui/Toggle';
 import styles from './LoginPage.module.css';
 
 type AuthMode = 'login' | 'register';
@@ -239,18 +240,13 @@ export function LoginPage() {
               )}
 
               {!isRegisterMode && (
-                <div className={styles.checkboxRow}>
-                  <input
-                    id="rememberMe"
-                    type="checkbox"
+                <div className={styles.rememberRow}>
+                  <Toggle
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className={styles.checkbox}
                     disabled={submitting}
+                    label="Remember me for 30 days"
                   />
-                  <label htmlFor="rememberMe" className={styles.checkboxLabel}>
-                    Remember me for 30 days
-                  </label>
                 </div>
               )}
 

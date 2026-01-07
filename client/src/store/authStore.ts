@@ -4,6 +4,7 @@ import type { User, TeamWithMembership } from '@machina/shared';
 import * as authApi from '@/lib/authApi';
 import * as api from '@/lib/api';
 import { setTeamIdGetter } from '@/lib/api';
+import { clearQueryCache } from '@/lib/queryClient';
 
 interface AuthState {
   // State
@@ -75,7 +76,8 @@ export const useAuthStore = create<AuthState>()(
               await loadTeams();
               set({ isLoading: false });
             } catch {
-              // Token is invalid, clear auth
+              // Token is invalid, clear auth and cache
+              clearQueryCache();
               set({
                 user: null,
                 sessionToken: null,
@@ -96,6 +98,9 @@ export const useAuthStore = create<AuthState>()(
 
       // Login with email/password
       login: async (email, password, rememberMe = false) => {
+        // Clear any previous session data first
+        clearQueryCache();
+
         const response = await authApi.login({
           email,
           password,
@@ -106,6 +111,9 @@ export const useAuthStore = create<AuthState>()(
           user: response.user,
           sessionToken: response.session_token,
           isAuthenticated: true,
+          // Reset team state - will be loaded fresh
+          currentTeamId: null,
+          teams: [],
         });
 
         // Load teams after login
@@ -114,12 +122,18 @@ export const useAuthStore = create<AuthState>()(
 
       // Dev login (quick access in development)
       devLogin: async () => {
+        // Clear any previous session data first
+        clearQueryCache();
+
         const response = await authApi.devLogin();
 
         set({
           user: response.user,
           sessionToken: response.session_token,
           isAuthenticated: true,
+          // Reset team state - will be loaded fresh
+          currentTeamId: null,
+          teams: [],
         });
 
         // Load teams after login
@@ -128,6 +142,9 @@ export const useAuthStore = create<AuthState>()(
 
       // Register new user
       register: async (email, password, displayName) => {
+        // Clear any previous session data first
+        clearQueryCache();
+
         const response = await authApi.register({
           email,
           password,
@@ -139,6 +156,9 @@ export const useAuthStore = create<AuthState>()(
           sessionToken: response.session_token,
           isAuthenticated: true,
           requiresSetup: false,
+          // Reset team state - will be loaded fresh
+          currentTeamId: null,
+          teams: [],
         });
 
         // Load teams after registration (default team is created)
@@ -152,6 +172,9 @@ export const useAuthStore = create<AuthState>()(
         } catch {
           // Ignore errors - we're logging out anyway
         }
+
+        // Clear all cached data
+        clearQueryCache();
 
         set({
           user: null,
@@ -169,6 +192,9 @@ export const useAuthStore = create<AuthState>()(
         } catch {
           // Ignore errors
         }
+
+        // Clear all cached data
+        clearQueryCache();
 
         set({
           user: null,
@@ -213,6 +239,7 @@ export const useAuthStore = create<AuthState>()(
 
       // Clear auth state (for when session expires)
       clearAuth: () => {
+        clearQueryCache();
         set({
           user: null,
           sessionToken: null,
@@ -252,6 +279,8 @@ export const useAuthStore = create<AuthState>()(
         const { teams } = get();
         const team = teams.find((t) => t.team_id === teamId);
         if (team) {
+          // Clear cache when switching teams to load fresh data
+          clearQueryCache();
           set({ currentTeamId: teamId });
         }
       },

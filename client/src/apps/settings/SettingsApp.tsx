@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAppStore } from '@/store/appStore';
-import { Button, Input, Select } from '@/shared/ui';
+import { Button, Input, Select, Toggle } from '@/shared/ui';
 import styles from './SettingsApp.module.css';
 
 type SettingsTab = 'general' | 'security' | 'notifications' | 'terraform';
@@ -158,10 +158,7 @@ export function SettingsApp() {
                 {['Started', 'Succeeded', 'Failed'].map((label) => (
                   <div key={label} className={styles.formRow}>
                     <span className={styles.toggleLabel}>{label}</span>
-                    <label className={styles.toggle}>
-                      <input type="checkbox" defaultChecked className={styles.toggleInput} />
-                      <span className={styles.toggleSlider} />
-                    </label>
+                    <Toggle defaultChecked />
                   </div>
                 ))}
               </div>
@@ -171,10 +168,7 @@ export function SettingsApp() {
                 {['Unreachable', 'Service failed', 'Drift detected'].map((label) => (
                   <div key={label} className={styles.formRow}>
                     <span className={styles.toggleLabel}>{label}</span>
-                    <label className={styles.toggle}>
-                      <input type="checkbox" defaultChecked className={styles.toggleInput} />
-                      <span className={styles.toggleSlider} />
-                    </label>
+                    <Toggle defaultChecked />
                   </div>
                 ))}
               </div>
@@ -216,17 +210,11 @@ export function SettingsApp() {
                 <h3 className={styles.cardTitle}>Execution</h3>
                 <div className={styles.formRow}>
                   <span className={styles.toggleLabel}>Auto-approve</span>
-                  <label className={styles.toggle}>
-                    <input type="checkbox" className={styles.toggleInput} />
-                    <span className={styles.toggleSlider} />
-                  </label>
+                  <Toggle />
                 </div>
                 <div className={styles.formRow}>
                   <span className={styles.toggleLabel}>Refresh before plan</span>
-                  <label className={styles.toggle}>
-                    <input type="checkbox" defaultChecked className={styles.toggleInput} />
-                    <span className={styles.toggleSlider} />
-                  </label>
+                  <Toggle defaultChecked />
                 </div>
               </div>
             </div>

@@ -22,3 +22,5 @@ export { Spinner } from './Spinner';
 export type { SpinnerProps } from './Spinner';
 export { PageLoader } from './PageLoader';
 export type { PageLoaderProps } from './PageLoader';
+export { Toggle } from './Toggle';
+export type { ToggleProps, ToggleSize, ToggleVariant } from './Toggle';
