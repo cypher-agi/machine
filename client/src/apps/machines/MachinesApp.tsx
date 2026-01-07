@@ -162,9 +162,7 @@ export function MachinesApp() {
             </PageList>
           ) : (
             <PageEmptyState
-              description={
-                searchQuery || activeFilterCount > 0 ? 'No machines found' : 'No machines yet'
-              }
+              title={searchQuery || activeFilterCount > 0 ? 'No machines found' : 'No machines yet'}
               actions={
                 !searchQuery && activeFilterCount === 0 ? (
                   <Button variant="primary" size="sm" onClick={() => setDeployWizardOpen(true)}>

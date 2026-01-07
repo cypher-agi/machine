@@ -1,14 +1,11 @@
-/* Empty state styles */
+/* Empty state styles - consistent across all apps */
 
 .emptyState {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 128px;
-}
-
-.emptyStateLarge {
-  height: 256px;
+  padding: var(--space-8) var(--space-4);
+  min-height: 160px;
 }
 
 .emptyContent {
@@ -17,42 +14,37 @@
   align-items: center;
   gap: var(--space-4);
   text-align: center;
+  max-width: 280px;
 }
 
 .emptyIcon {
-  width: 64px;
-  height: 64px;
-  border-radius: var(--radius-lg);
-  background-color: var(--color-elevated);
-  border: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.emptyIconSimple {
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
+  opacity: 0.5;
 }
 
 .emptyText {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
 }
 
 .emptyTitle {
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
   font-weight: var(--font-medium);
-  color: var(--color-text-primary);
-  margin-bottom: var(--space-1);
+  color: var(--color-text-secondary);
+  margin: 0;
 }
 
 .emptyDesc {
-  font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  margin-bottom: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0;
 }
 
 .emptyActions {
   display: flex;
   gap: var(--space-2);
   justify-content: center;
+  margin-top: var(--space-1);
 }

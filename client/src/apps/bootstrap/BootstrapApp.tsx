@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Package, Lock, Clock } from 'lucide-react';
+import { Plus, Lock, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { getBootstrapProfiles } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
@@ -105,10 +105,7 @@ export function BootstrapApp() {
         </PageList>
       ) : (
         <PageEmptyState
-          large
-          icon={<Package size={32} />}
           title="No bootstrap profiles"
-          description="Create a profile to define what gets installed on your machines at boot."
           actions={
             <Button variant="primary" size="sm">
               <Plus size={14} />

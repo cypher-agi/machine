@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { GitBranch } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { getDeployments, getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
@@ -147,8 +146,7 @@ export function DeploymentsApp() {
         </PageList>
       ) : (
         <PageEmptyState
-          icon={<GitBranch size={24} />}
-          description={filterState || filterType ? 'No matching deployments' : 'No deployments yet'}
+          title={filterState || filterType ? 'No matching deployments' : 'No deployments yet'}
         />
       )}
     </PageLayout>
