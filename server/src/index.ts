@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import * as fs from 'fs';
+import { fileURLToPath } from 'url';
 
 import { machinesRouter } from './routes/machines';
 import { providersRouter } from './routes/providers';
@@ -17,6 +18,10 @@ import { sshRouter } from './routes/ssh';
 import { errorHandler } from './middleware/errorHandler';
 import { setupTerminalWebSocket } from './services/terminal';
 import { getTerraformModulesDir, isTerraformAvailable } from './services/terraform';
+
+// ES module compatibility for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Read package.json version at startup
 const packageJsonPath = path.join(__dirname, '../package.json');
