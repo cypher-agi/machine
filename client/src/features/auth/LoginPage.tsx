@@ -26,6 +26,7 @@ export function LoginPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -107,14 +108,21 @@ export function LoginPage() {
 
   const isRegisterMode = mode === 'register';
 
-  // Show nothing while checking auth status
+  // Show loading state while checking auth
   if (isLoading) {
     return (
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.header}>
-            <img src="/machina_icon.png" alt="Machina" className={styles.logo} />
-            <p className={styles.subtitle}>Loading...</p>
+      <div className={styles.overlay}>
+        <div className={styles.modal}>
+          <div className={styles.formPanel}>
+            <div className={styles.loadingContainer}>
+              <img src="/machina_icon.png" alt="Machina" className={styles.logo} />
+              <p className={styles.loadingText}>Loading...</p>
+            </div>
+          </div>
+          <div className={styles.visualPanel}>
+            <div className={styles.logoContainer}>
+              <img src="/machina_icon.png" alt="Machina" className={styles.logo} />
+            </div>
           </div>
         </div>
       </div>
@@ -122,179 +130,209 @@ export function LoginPage() {
   }
 
   return (
-    <div className={styles.container}>
-      <div className={`${styles.card} ${isRegisterMode ? styles.setupMode : ''}`}>
-        <div className={styles.header}>
-          <img src="/machina_icon.png" alt="Machina" className={styles.logo} />
-          <h1 className={styles.title}>
-            {requiresSetup ? 'Welcome to Machina' : isRegisterMode ? 'Create Account' : 'Sign In'}
-          </h1>
-          <p className={styles.subtitle}>
-            {requiresSetup
-              ? 'Create your admin account to get started'
-              : isRegisterMode
-                ? 'Register a new account'
-                : 'Enter your credentials to continue'}
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          {isRegisterMode && (
-            <div className={styles.field}>
-              <label htmlFor="displayName" className={styles.label}>
-                Display Name
-              </label>
-              <input
-                id="displayName"
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Your name"
-                className={styles.input}
-                disabled={submitting}
-                autoComplete="name"
-              />
-            </div>
-          )}
-
-          <div className={styles.field}>
-            <label htmlFor="email" className={styles.label}>
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className={styles.input}
-              disabled={submitting}
-              autoComplete="email"
-              autoFocus
-            />
+    <div className={styles.overlay}>
+      <div className={`${styles.modal} ${isRegisterMode ? styles.setupMode : ''}`}>
+        {/* Left Panel - Form */}
+        <div className={styles.formPanel}>
+          <div className={styles.brand}>
+            <h2 className={styles.brandName}>Machina</h2>
           </div>
 
-          <div className={styles.field}>
-            <label htmlFor="password" className={styles.label}>
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className={styles.input}
-              disabled={submitting}
-              autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
-            />
-          </div>
-
-          {isRegisterMode && (
-            <div className={styles.field}>
-              <label htmlFor="confirmPassword" className={styles.label}>
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                className={styles.input}
-                disabled={submitting}
-                autoComplete="new-password"
-              />
-            </div>
-          )}
-
-          {!isRegisterMode && (
-            <div className={styles.checkboxRow}>
-              <input
-                id="rememberMe"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className={styles.checkbox}
-                disabled={submitting}
-              />
-              <label htmlFor="rememberMe" className={styles.checkboxLabel}>
-                Remember me for 30 days
-              </label>
-            </div>
-          )}
-
-          {error && (
-            <div className={styles.error}>
-              <span>⚠</span>
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            className={styles.submitButton}
-            disabled={submitting || !email || !password}
-          >
-            {submitting ? 'Please wait...' : isRegisterMode ? 'Create Account' : 'Sign In'}
-          </button>
-
-          {requiresSetup && (
-            <p className={styles.setupNote}>
-              This will be the admin account for your Machina instance.
+          <div className={styles.content}>
+            <h1 className={styles.title}>
+              {requiresSetup ? 'Welcome' : isRegisterMode ? 'Create Account' : 'Sign In'}
+            </h1>
+            <p className={styles.subtitle}>
+              {requiresSetup ? (
+                <>
+                  Create your admin account for <span className={styles.highlight}>Machina</span>
+                </>
+              ) : isRegisterMode ? (
+                <>
+                  Register a new <span className={styles.highlight}>Machina</span> account
+                </>
+              ) : (
+                <>
+                  Sign in to <span className={styles.highlight}>Machina</span> to continue
+                </>
+              )}
             </p>
-          )}
-        </form>
 
-        {/* Mode switch - always show unless in setup mode */}
-        {!requiresSetup && (
-          <div className={styles.modeSwitch}>
-            {isRegisterMode ? (
-              <p>
-                Already have an account?{' '}
+            <form onSubmit={handleSubmit} className={styles.form}>
+              {isRegisterMode && (
+                <div className={styles.field}>
+                  <label htmlFor="displayName" className={styles.label}>
+                    Display Name
+                  </label>
+                  <input
+                    id="displayName"
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Your name"
+                    className={styles.input}
+                    disabled={submitting}
+                    autoComplete="name"
+                  />
+                </div>
+              )}
+
+              <div className={styles.field}>
+                <label htmlFor="email" className={styles.label}>
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter Email"
+                  className={styles.input}
+                  disabled={submitting}
+                  autoComplete="email"
+                  autoFocus
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label htmlFor="password" className={styles.label}>
+                  Password
+                </label>
+                <div className={styles.passwordWrapper}>
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter Password"
+                    className={styles.input}
+                    disabled={submitting}
+                    autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
+                    style={{ width: '100%', paddingRight: '40px' }}
+                  />
+                  <button
+                    type="button"
+                    className={styles.passwordToggle}
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? '◉' : '○'}
+                  </button>
+                </div>
+              </div>
+
+              {isRegisterMode && (
+                <div className={styles.field}>
+                  <label htmlFor="confirmPassword" className={styles.label}>
+                    Confirm Password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm Password"
+                    className={styles.input}
+                    disabled={submitting}
+                    autoComplete="new-password"
+                  />
+                </div>
+              )}
+
+              {!isRegisterMode && (
+                <div className={styles.checkboxRow}>
+                  <input
+                    id="rememberMe"
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className={styles.checkbox}
+                    disabled={submitting}
+                  />
+                  <label htmlFor="rememberMe" className={styles.checkboxLabel}>
+                    Remember me for 30 days
+                  </label>
+                </div>
+              )}
+
+              {error && (
+                <div className={styles.error}>
+                  <span>⚠</span>
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className={styles.submitButton}
+                disabled={submitting || !email || !password}
+              >
+                {submitting
+                  ? 'Please wait...'
+                  : isRegisterMode
+                    ? 'Create Account'
+                    : 'Login with Machina'}
+              </button>
+
+              {requiresSetup && (
+                <p className={styles.setupNote}>
+                  This will be the admin account for your Machina instance.
+                </p>
+              )}
+            </form>
+
+            {/* Dev mode login */}
+            {devMode && !isRegisterMode && (
+              <div className={styles.devSection}>
                 <button
                   type="button"
-                  className={styles.modeSwitchLink}
-                  onClick={() => switchMode('login')}
+                  onClick={handleDevLogin}
+                  className={styles.devButton}
+                  disabled={submitting}
                 >
-                  Sign in
+                  <span>⚡</span>
+                  Quick Dev Login
                 </button>
-              </p>
-            ) : (
-              <p>
-                Don&apos;t have an account?{' '}
-                <button
-                  type="button"
-                  className={styles.modeSwitchLink}
-                  onClick={() => switchMode('register')}
-                >
-                  Register
-                </button>
-              </p>
+              </div>
             )}
           </div>
-        )}
 
-        {/* Dev login - only show in development mode and login mode */}
-        {devMode && !isRegisterMode && (
-          <>
-            <div className={styles.divider}>
-              <span className={styles.dividerLine} />
-              <span className={styles.dividerText}>Dev Mode</span>
-              <span className={styles.dividerLine} />
+          {/* Mode switch */}
+          {!requiresSetup && (
+            <div className={styles.modeSwitch}>
+              {isRegisterMode ? (
+                <p>
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    className={styles.modeSwitchLink}
+                    onClick={() => switchMode('login')}
+                  >
+                    Sign in
+                  </button>
+                </p>
+              ) : (
+                <p>
+                  Don&apos;t have an account?{' '}
+                  <button
+                    type="button"
+                    className={styles.modeSwitchLink}
+                    onClick={() => switchMode('register')}
+                  >
+                    Register
+                  </button>
+                </p>
+              )}
             </div>
+          )}
+        </div>
 
-            <button
-              type="button"
-              onClick={handleDevLogin}
-              className={styles.devButton}
-              disabled={submitting}
-            >
-              <span className={styles.devIcon}>⚡</span>
-              Quick Dev Login
-            </button>
-          </>
-        )}
+        {/* Right Panel - Visual */}
+        <div className={styles.visualPanel}>
+          <div className={styles.logoContainer}>
+            <img src="/machina_icon.png" alt="Machina" className={styles.logo} />
+          </div>
+        </div>
       </div>
     </div>
   );
