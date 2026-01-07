@@ -132,7 +132,7 @@ if (isProduction) {
 setupTerminalWebSocket(server);
 
 server.listen(PORT, () => {
-  console.log(`🚀 Machine API server running on http://localhost:${PORT}`);
+  console.log(`🚀 Machina API server running on http://localhost:${PORT}`);
   console.log(`📋 Health check: http://localhost:${PORT}/health`);
   console.log(`🖥️  Terminal WebSocket: ws://localhost:${PORT}/ws/terminal`);
 });
