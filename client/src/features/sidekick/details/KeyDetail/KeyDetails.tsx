@@ -1,11 +1,7 @@
 import { format } from 'date-fns';
 import { KEY_TYPE_LABELS, PROVIDER_FULL_LABELS } from '@/shared/constants';
 import type { SSHKey } from '@machina/shared';
-import {
-  SidekickPanel,
-  SidekickSection,
-  SidekickRow,
-} from '../../components';
+import { SidekickPanel, SidekickSection, SidekickRow } from '../../components';
 
 interface KeyDetailsProps {
   sshKey: SSHKey;
@@ -26,7 +22,12 @@ export function KeyDetails({ sshKey }: KeyDetailsProps) {
 
       <SidekickSection title="Provider Sync">
         {Object.entries(sshKey.provider_key_ids).map(([provider, id]) => (
-          <SidekickRow key={provider} label={PROVIDER_FULL_LABELS[provider] || provider} value={id as string} copyable />
+          <SidekickRow
+            key={provider}
+            label={PROVIDER_FULL_LABELS[provider] || provider}
+            value={id as string}
+            copyable
+          />
         ))}
         {Object.keys(sshKey.provider_key_ids).length === 0 && (
           <SidekickRow label="Status" value="Not synced to any provider" />
@@ -40,4 +41,3 @@ export function KeyDetails({ sshKey }: KeyDetailsProps) {
     </SidekickPanel>
   );
 }
-

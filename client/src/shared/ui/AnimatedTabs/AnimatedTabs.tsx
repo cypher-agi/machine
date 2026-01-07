@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useLayoutEffect, ReactNode } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect, useCallback, type ReactNode } from 'react';
 import clsx from 'clsx';
 import styles from './AnimatedTabs.module.css';
 
@@ -30,37 +30,37 @@ export function AnimatedTabs({
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const updateIndicator = () => {
+  const updateIndicator = useCallback(() => {
     const activeButton = tabRefs.current.get(activeTab);
     const container = containerRef.current;
-    
+
     if (activeButton && container) {
       const containerRect = container.getBoundingClientRect();
       const buttonRect = activeButton.getBoundingClientRect();
-      
+
       setIndicatorStyle({
         left: buttonRect.left - containerRect.left,
         width: buttonRect.width,
       });
-      
+
       // Enable transitions after first render
       if (!isInitialized) {
         requestAnimationFrame(() => setIsInitialized(true));
       }
     }
-  };
+  }, [activeTab, isInitialized]);
 
   // Use useLayoutEffect for initial measurement to prevent flash
   useLayoutEffect(() => {
     updateIndicator();
-  }, [activeTab]);
+  }, [updateIndicator]);
 
   // Also update on resize
   useEffect(() => {
     const handleResize = () => updateIndicator();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [activeTab]);
+  }, [updateIndicator]);
 
   return (
     <div className={clsx(styles.tabs, className)}>
@@ -88,10 +88,7 @@ export function AnimatedTabs({
           </button>
         ))}
         <div
-          className={clsx(
-            styles.indicator,
-            isInitialized && styles.indicatorAnimated
-          )}
+          className={clsx(styles.indicator, isInitialized && styles.indicatorAnimated)}
           style={{
             transform: `translateX(${indicatorStyle.left}px)`,
             width: indicatorStyle.width,
@@ -101,4 +98,3 @@ export function AnimatedTabs({
     </div>
   );
 }
-

@@ -4,14 +4,14 @@ import { formatDistanceToNow } from 'date-fns';
 import { getBootstrapProfiles } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Button, Badge, RefreshButton } from '@/shared/ui';
-import { 
-  PageLayout, 
-  PageEmptyState, 
-  PageList, 
-  ItemCard, 
-  ItemCardMeta, 
-  ItemCardBadge, 
-  ItemCardTypeBadge 
+import {
+  PageLayout,
+  PageEmptyState,
+  PageList,
+  ItemCard,
+  ItemCardMeta,
+  ItemCardBadge,
+  ItemCardTypeBadge,
 } from '@/shared/components';
 import { BOOTSTRAP_METHOD_ICONS, BOOTSTRAP_METHOD_LABELS } from '@/shared/constants';
 import styles from './BootstrapApp.module.css';
@@ -19,7 +19,12 @@ import styles from './BootstrapApp.module.css';
 export function BootstrapApp() {
   const { sidekickSelection, setSidekickSelection } = useAppStore();
 
-  const { data: profiles, isLoading, refetch, isRefetching } = useQuery({
+  const {
+    data: profiles,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ['bootstrap-profiles'],
     queryFn: getBootstrapProfiles,
   });
@@ -48,7 +53,9 @@ export function BootstrapApp() {
         <PageList>
           {profiles.map((profile) => {
             const MethodIcon = BOOTSTRAP_METHOD_ICONS[profile.method];
-            const isSelected = sidekickSelection?.type === 'bootstrap' && sidekickSelection?.id === profile.profile_id;
+            const isSelected =
+              sidekickSelection?.type === 'bootstrap' &&
+              sidekickSelection?.id === profile.profile_id;
 
             return (
               <ItemCard
@@ -71,9 +78,7 @@ export function BootstrapApp() {
                 }
                 meta={
                   <>
-                    <ItemCardMeta>
-                      {profile.description || 'No description'}
-                    </ItemCardMeta>
+                    <ItemCardMeta>{profile.description || 'No description'}</ItemCardMeta>
                     <ItemCardMeta>
                       <Clock size={12} />
                       {formatDistanceToNow(new Date(profile.updated_at), { addSuffix: true })}
@@ -83,11 +88,11 @@ export function BootstrapApp() {
                 badges={
                   profile.services_to_run.length > 0 ? (
                     <>
-                      {profile.services_to_run.slice(0, 3).map((svc: { service_name: string; display_name: string }) => (
-                        <ItemCardBadge key={svc.service_name}>
-                          {svc.display_name}
-                        </ItemCardBadge>
-                      ))}
+                      {profile.services_to_run
+                        .slice(0, 3)
+                        .map((svc: { service_name: string; display_name: string }) => (
+                          <ItemCardBadge key={svc.service_name}>{svc.display_name}</ItemCardBadge>
+                        ))}
                       {profile.services_to_run.length > 3 && (
                         <ItemCardBadge>+{profile.services_to_run.length - 3}</ItemCardBadge>
                       )}
@@ -115,5 +120,3 @@ export function BootstrapApp() {
     </PageLayout>
   );
 }
-
-

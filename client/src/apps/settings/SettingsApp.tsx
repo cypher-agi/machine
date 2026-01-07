@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { 
-  Settings, 
-  Shield, 
-  Bell, 
+import {
+  Settings,
+  Shield,
+  Bell,
   Database,
   Key,
   Moon,
   Sun,
   Save,
-  AlertTriangle
+  AlertTriangle,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAppStore } from '@/store/appStore';
@@ -198,9 +198,7 @@ export function SettingsApp() {
               <div className={styles.card}>
                 <h3 className={styles.cardTitle}>State Backend</h3>
                 <div className={styles.formField}>
-                  <label className={styles.formFieldLabel}>
-                    Backend Type
-                  </label>
+                  <label className={styles.formFieldLabel}>Backend Type</label>
                   <Select size="sm">
                     <option value="local">Local</option>
                     <option value="s3">AWS S3</option>
@@ -209,9 +207,7 @@ export function SettingsApp() {
                   </Select>
                 </div>
                 <div>
-                  <label className={styles.formFieldLabel}>
-                    State Bucket
-                  </label>
+                  <label className={styles.formFieldLabel}>State Bucket</label>
                   <Input type="text" placeholder="my-state-bucket" mono size="sm" />
                 </div>
               </div>
@@ -247,5 +243,3 @@ export function SettingsApp() {
     </div>
   );
 }
-
-

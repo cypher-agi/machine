@@ -1,4 +1,4 @@
-import { ProviderType } from './machine';
+import type { ProviderType } from './machine';
 
 // Provider Account - Stored credentials and config
 export type CredentialStatus = 'valid' | 'invalid' | 'expired' | 'unchecked';
@@ -10,12 +10,12 @@ export interface ProviderAccount {
   credential_status: CredentialStatus;
   scopes?: string[];
   permissions?: string[];
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
   last_verified_at?: string;
-  
+
   // Metadata (non-sensitive)
   metadata?: Record<string, string>;
 }
@@ -26,7 +26,7 @@ export interface ProviderAccountCreateRequest {
   credentials: ProviderCredentials;
 }
 
-export type ProviderCredentials = 
+export type ProviderCredentials =
   | DigitalOceanCredentials
   | AWSCredentials
   | GCPCredentials
@@ -90,7 +90,3 @@ export interface ProviderOptions {
   sizes: ProviderSize[];
   images: ProviderImage[];
 }
-
-
-
-

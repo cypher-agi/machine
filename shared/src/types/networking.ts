@@ -36,28 +36,24 @@ export interface OpenPort {
 
 export interface MachineNetworking {
   machine_id: string;
-  
+
   // Provider-level firewall
   provider_firewall_rules: FirewallRule[];
   provider_firewall_id?: string;
   provider_security_group_ids?: string[];
-  
+
   // Host-level firewall (requires agent)
   host_firewall_rules?: FirewallRule[];
   host_firewall_type?: 'ufw' | 'nftables' | 'iptables' | 'unknown';
   host_firewall_available: boolean;
-  
+
   // Open ports (requires agent)
   open_ports?: OpenPort[];
   open_ports_available: boolean;
-  
+
   // Effective inbound ports (computed)
   effective_inbound_ports: number[];
-  
+
   // Last updated
   last_updated: string;
 }
-
-
-
-

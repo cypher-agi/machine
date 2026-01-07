@@ -21,7 +21,7 @@ const keyTypes: { type: SSHKeyType; name: string; desc: string }[] = [
 export function GenerateKeyModal({ onClose }: GenerateKeyModalProps) {
   const { addToast } = useAppStore();
   const queryClient = useQueryClient();
-  
+
   const [name, setName] = useState('');
   const [keyType, setKeyType] = useState<SSHKeyType>('ed25519');
   const [keyBits, setKeyBits] = useState(4096);
@@ -47,8 +47,8 @@ export function GenerateKeyModal({ onClose }: GenerateKeyModalProps) {
     generateMutation.mutate({
       name: name.trim(),
       key_type: keyType,
-      key_bits: keyType === 'rsa' ? keyBits : undefined,
-      comment: comment.trim() || undefined,
+      ...(keyType === 'rsa' && { key_bits: keyBits }),
+      ...(comment.trim() && { comment: comment.trim() }),
     });
   };
 
@@ -184,9 +184,7 @@ export function GenerateKeyModal({ onClose }: GenerateKeyModalProps) {
 
           <div className={styles.warningBanner}>
             <AlertTriangle size={16} className={styles.warningIcon} />
-            <p className={styles.warningText}>
-              Download and save your private key securely.
-            </p>
+            <p className={styles.warningText}>Download and save your private key securely.</p>
           </div>
 
           <div className={styles.keySection}>
@@ -201,9 +199,7 @@ export function GenerateKeyModal({ onClose }: GenerateKeyModalProps) {
                 {copied === 'public' ? 'Copied' : 'Copy'}
               </Button>
             </div>
-            <div className={styles.keyDisplay}>
-              {generatedKey.public_key}
-            </div>
+            <div className={styles.keyDisplay}>{generatedKey.public_key}</div>
           </div>
 
           <div className={styles.keySection}>

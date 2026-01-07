@@ -27,11 +27,7 @@ export function Toasts({ toasts, onRemove }: ToastsProps) {
   return (
     <div className={styles.container}>
       {toasts.map((toast) => (
-        <ToastItem
-          key={toast.id}
-          toast={toast}
-          onClose={() => onRemove(toast.id)}
-        />
+        <ToastItem key={toast.id} toast={toast} onClose={() => onRemove(toast.id)} />
       ))}
     </div>
   );
@@ -51,6 +47,7 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
       const timer = setTimeout(onClose, duration);
       return () => clearTimeout(timer);
     }
+    return;
   }, [duration, onClose]);
 
   return (
@@ -58,9 +55,7 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
       <Icon className={styles.icon} />
       <div className={styles.content}>
         <p className={styles.title}>{toast.title}</p>
-        {toast.message && (
-          <p className={styles.message}>{toast.message}</p>
-        )}
+        {toast.message && <p className={styles.message}>{toast.message}</p>}
       </div>
       <button onClick={onClose} className={styles.closeButton}>
         <X size={14} />

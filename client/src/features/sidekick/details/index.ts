@@ -12,4 +12,3 @@ export type { DeploymentDetailProps } from './DeploymentDetail';
 
 export { BootstrapDetail } from './BootstrapDetail';
 export type { BootstrapDetailProps } from './BootstrapDetail';
-

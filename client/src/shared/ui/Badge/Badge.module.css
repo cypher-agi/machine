@@ -7,11 +7,21 @@
   font-weight: var(--font-medium);
 }
 
-.running { color: var(--color-success); }
-.stopped { color: var(--color-text-muted); }
-.error { color: var(--color-error); }
-.pending { color: var(--color-pending); }
-.provisioning { color: var(--color-provisioning); }
+.running {
+  color: var(--color-success);
+}
+.stopped {
+  color: var(--color-text-muted);
+}
+.error {
+  color: var(--color-error);
+}
+.pending {
+  color: var(--color-pending);
+}
+.provisioning {
+  color: var(--color-provisioning);
+}
 
 .pulse .dot {
   animation: status-pulse 2s ease-in-out infinite;

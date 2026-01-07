@@ -5,14 +5,14 @@ import { formatDistanceToNow } from 'date-fns';
 import { getSSHKeys } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Button, RefreshButton } from '@/shared/ui';
-import { 
-  PageLayout, 
-  PageEmptyState, 
-  PageList, 
-  ItemCard, 
-  ItemCardMeta, 
-  ItemCardBadge, 
-  ItemCardTypeBadge 
+import {
+  PageLayout,
+  PageEmptyState,
+  PageList,
+  ItemCard,
+  ItemCardMeta,
+  ItemCardBadge,
+  ItemCardTypeBadge,
 } from '@/shared/components';
 import { GenerateKeyModal } from './components/GenerateKeyModal';
 import { ImportKeyModal } from './components/ImportKeyModal';
@@ -23,7 +23,12 @@ export function KeysApp() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
 
-  const { data: keys, isLoading, refetch, isRefetching } = useQuery({
+  const {
+    data: keys,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ['ssh-keys'],
     queryFn: getSSHKeys,
   });
@@ -54,7 +59,8 @@ export function KeysApp() {
       {keys && keys.length > 0 ? (
         <PageList>
           {keys.map((key) => {
-            const isSelected = sidekickSelection?.type === 'key' && sidekickSelection?.id === key.ssh_key_id;
+            const isSelected =
+              sidekickSelection?.type === 'key' && sidekickSelection?.id === key.ssh_key_id;
             const syncedProviders = Object.keys(key.provider_key_ids);
 
             return (
@@ -81,7 +87,7 @@ export function KeysApp() {
                 badges={
                   syncedProviders.length > 0 ? (
                     <>
-                      {syncedProviders.map(provider => (
+                      {syncedProviders.map((provider) => (
                         <ItemCardBadge key={provider}>
                           {PROVIDER_LABELS[provider] || provider}
                         </ItemCardBadge>
@@ -112,14 +118,8 @@ export function KeysApp() {
       )}
 
       {/* Modals */}
-      {showGenerateModal && (
-        <GenerateKeyModal onClose={() => setShowGenerateModal(false)} />
-      )}
-      {showImportModal && (
-        <ImportKeyModal onClose={() => setShowImportModal(false)} />
-      )}
+      {showGenerateModal && <GenerateKeyModal onClose={() => setShowGenerateModal(false)} />}
+      {showImportModal && <ImportKeyModal onClose={() => setShowImportModal(false)} />}
     </PageLayout>
   );
 }
-
-

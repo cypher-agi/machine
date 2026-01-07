@@ -11,4 +11,3 @@ export function SidekickLoading({ message = 'Loading...' }: SidekickLoadingProps
     </div>
   );
 }
-

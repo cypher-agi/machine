@@ -10,7 +10,7 @@ import {
   Package,
   FileText,
   Loader2,
-  Key
+  Key,
 } from 'lucide-react';
 import clsx from 'clsx';
 import {
@@ -19,7 +19,7 @@ import {
   getBootstrapProfiles,
   getFirewallProfiles,
   getSSHKeys,
-  createMachine
+  createMachine,
 } from '@/lib/api';
 import type { MachineCreateRequest } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
@@ -64,7 +64,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
 
   const { data: providerOptions } = useQuery({
     queryKey: ['provider-options', selectedAccount?.provider_type],
-    queryFn: () => getProviderOptions(selectedAccount!.provider_type),
+    queryFn: () => getProviderOptions(selectedAccount?.provider_type ?? 'digitalocean'),
     enabled: !!selectedAccount,
   });
 
@@ -73,21 +73,36 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
       const updates: Partial<MachineCreateRequest> = {};
 
       if (!formData.region && providerOptions.regions.length > 0) {
-        const sfRegion = providerOptions.regions.find(r => r.slug === 'sfo3' || r.slug.startsWith('sfo'));
-        updates.region = sfRegion?.slug || providerOptions.regions[0].slug;
+        const sfRegion = providerOptions.regions.find(
+          (r) => r.slug === 'sfo3' || r.slug.startsWith('sfo')
+        );
+        const firstRegion = providerOptions.regions[0];
+        if (sfRegion) {
+          updates.region = sfRegion.slug;
+        } else if (firstRegion) {
+          updates.region = firstRegion.slug;
+        }
       }
 
       if (!formData.size && providerOptions.sizes.length > 0) {
-        updates.size = providerOptions.sizes[0].slug;
+        const firstSize = providerOptions.sizes[0];
+        if (firstSize) {
+          updates.size = firstSize.slug;
+        }
       }
 
-      if (!formData.image) {
-        const defaultImage = providerOptions.images.find(img => img.slug === 'ubuntu-22-04-x64');
-        updates.image = defaultImage?.slug || providerOptions.images[0]?.slug;
+      if (!formData.image && providerOptions.images.length > 0) {
+        const defaultImage = providerOptions.images.find((img) => img.slug === 'ubuntu-22-04-x64');
+        const firstImage = providerOptions.images[0];
+        if (defaultImage) {
+          updates.image = defaultImage.slug;
+        } else if (firstImage) {
+          updates.image = firstImage.slug;
+        }
       }
 
       if (Object.keys(updates).length > 0) {
-        setFormData(prev => ({ ...prev, ...updates }));
+        setFormData((prev) => ({ ...prev, ...updates }));
       }
     }
   }, [providerOptions, formData.region, formData.size, formData.image]);
@@ -114,7 +129,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
       addToast({
         type: 'success',
         title: 'Machine created',
-        message: `Deploying ${data.machine.name}`
+        message: `Deploying ${data.machine.name}`,
       });
       onClose();
     },
@@ -143,28 +158,52 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
 
   const goNext = () => {
     const nextIndex = currentStepIndex + 1;
-    if (nextIndex < steps.length) {
-      setCurrentStep(steps[nextIndex].id);
+    const nextStep = steps[nextIndex];
+    if (nextIndex < steps.length && nextStep) {
+      setCurrentStep(nextStep.id);
       setMaxVisitedStep(Math.max(maxVisitedStep, nextIndex));
     }
   };
 
   const goBack = () => {
     const prevIndex = currentStepIndex - 1;
-    if (prevIndex >= 0) {
-      setCurrentStep(steps[prevIndex].id);
+    const prevStep = steps[prevIndex];
+    if (prevIndex >= 0 && prevStep) {
+      setCurrentStep(prevStep.id);
     }
   };
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.provider_account_id || !formData.region || !formData.size || !formData.image) {
+    if (
+      !formData.name ||
+      !formData.provider_account_id ||
+      !formData.region ||
+      !formData.size ||
+      !formData.image
+    ) {
       return;
     }
     const submitData: MachineCreateRequest = {
-      ...formData as MachineCreateRequest,
-      firewall_profile_id: formData.firewall_profile_id === 'none' ? undefined : formData.firewall_profile_id,
-      bootstrap_profile_id: formData.bootstrap_profile_id === 'none' ? undefined : formData.bootstrap_profile_id,
-      ssh_key_ids: formData.ssh_key_ids && formData.ssh_key_ids.length > 0 ? formData.ssh_key_ids : undefined,
+      name: formData.name,
+      provider_account_id: formData.provider_account_id,
+      region: formData.region,
+      size: formData.size,
+      image: formData.image,
+      ...(formData.zone && { zone: formData.zone }),
+      ...(formData.vpc_id && { vpc_id: formData.vpc_id }),
+      ...(formData.subnet_id && { subnet_id: formData.subnet_id }),
+      ...(formData.firewall_profile_id &&
+        formData.firewall_profile_id !== 'none' && {
+          firewall_profile_id: formData.firewall_profile_id,
+        }),
+      ...(formData.bootstrap_profile_id &&
+        formData.bootstrap_profile_id !== 'none' && {
+          bootstrap_profile_id: formData.bootstrap_profile_id,
+        }),
+      ...(formData.ssh_key_ids &&
+        formData.ssh_key_ids.length > 0 && { ssh_key_ids: formData.ssh_key_ids }),
+      ...(formData.tags && Object.keys(formData.tags).length > 0 && { tags: formData.tags }),
+      ...(formData.run_plan_only && { run_plan_only: formData.run_plan_only }),
     };
     createMutation.mutate(submitData);
   };
@@ -177,7 +216,12 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
       </Button>
 
       {currentStep === 'review' ? (
-        <Button variant="primary" size="sm" onClick={handleSubmit} disabled={createMutation.isPending}>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={handleSubmit}
+          disabled={createMutation.isPending}
+        >
           {createMutation.isPending ? (
             <>
               <Loader2 size={14} className="animate-spin" />
@@ -204,7 +248,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
       isOpen={true}
       onClose={onClose}
       title="Deploy Machine"
-      className={styles.modal}
+      className={styles['modal'] ?? ''}
       footer={footer}
       animateHeight
     >
@@ -251,10 +295,13 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
               {providerAccounts?.map((account) => (
                 <button
                   key={account.provider_account_id}
-                  onClick={() => setFormData({ ...formData, provider_account_id: account.provider_account_id })}
+                  onClick={() =>
+                    setFormData({ ...formData, provider_account_id: account.provider_account_id })
+                  }
                   className={clsx(
                     styles.providerButton,
-                    formData.provider_account_id === account.provider_account_id && styles.providerButtonSelected
+                    formData.provider_account_id === account.provider_account_id &&
+                      styles.providerButtonSelected
                   )}
                 >
                   <div className={styles.providerIcon}>
@@ -264,10 +311,14 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                     <p className={styles.providerLabel}>{account.label}</p>
                     <p className={styles.providerType}>{account.provider_type}</p>
                   </div>
-                  <span className={clsx(
-                    styles.credentialBadge,
-                    account.credential_status === 'valid' ? styles.credentialValid : styles.credentialWarning
-                  )}>
+                  <span
+                    className={clsx(
+                      styles.credentialBadge,
+                      account.credential_status === 'valid'
+                        ? styles.credentialValid
+                        : styles.credentialWarning
+                    )}
+                  >
                     {account.credential_status}
                   </span>
                 </button>
@@ -322,9 +373,7 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                     <p className={styles.sizeDetails}>
                       {s.vcpus}vCPU · {s.memory_mb / 1024}GB · {s.disk_gb}GB
                     </p>
-                    {s.price_monthly && (
-                      <p className={styles.sizePrice}>${s.price_monthly}/mo</p>
-                    )}
+                    {s.price_monthly && <p className={styles.sizePrice}>${s.price_monthly}/mo</p>}
                   </button>
                 ))}
               </div>
@@ -353,7 +402,10 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
             <p className={styles.sectionTitle}>Select firewall profile</p>
             <button
               onClick={() => setFormData({ ...formData, firewall_profile_id: 'none' })}
-              className={clsx(styles.profileButton, formData.firewall_profile_id === 'none' && styles.profileButtonSelected)}
+              className={clsx(
+                styles.profileButton,
+                formData.firewall_profile_id === 'none' && styles.profileButtonSelected
+              )}
             >
               <p className={styles.profileName}>None</p>
               <p className={styles.profileDesc}>Use provider defaults</p>
@@ -361,8 +413,14 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
             {firewallProfiles?.map((profile) => (
               <button
                 key={profile.profile_id}
-                onClick={() => setFormData({ ...formData, firewall_profile_id: profile.profile_id })}
-                className={clsx(styles.profileButton, formData.firewall_profile_id === profile.profile_id && styles.profileButtonSelected)}
+                onClick={() =>
+                  setFormData({ ...formData, firewall_profile_id: profile.profile_id })
+                }
+                className={clsx(
+                  styles.profileButton,
+                  formData.firewall_profile_id === profile.profile_id &&
+                    styles.profileButtonSelected
+                )}
               >
                 <p className={styles.profileName}>{profile.name}</p>
                 <p className={styles.profileDesc}>{profile.description}</p>
@@ -377,7 +435,10 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
             <p className={styles.sectionTitle}>Select bootstrap profile</p>
             <button
               onClick={() => setFormData({ ...formData, bootstrap_profile_id: 'none' })}
-              className={clsx(styles.profileButton, formData.bootstrap_profile_id === 'none' && styles.profileButtonSelected)}
+              className={clsx(
+                styles.profileButton,
+                formData.bootstrap_profile_id === 'none' && styles.profileButtonSelected
+              )}
             >
               <p className={styles.profileName}>None</p>
               <p className={styles.profileDesc}>Vanilla OS installation</p>
@@ -385,8 +446,14 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
             {bootstrapProfiles?.map((profile) => (
               <button
                 key={profile.profile_id}
-                onClick={() => setFormData({ ...formData, bootstrap_profile_id: profile.profile_id })}
-                className={clsx(styles.profileButton, formData.bootstrap_profile_id === profile.profile_id && styles.profileButtonSelected)}
+                onClick={() =>
+                  setFormData({ ...formData, bootstrap_profile_id: profile.profile_id })
+                }
+                className={clsx(
+                  styles.profileButton,
+                  formData.bootstrap_profile_id === profile.profile_id &&
+                    styles.profileButtonSelected
+                )}
               >
                 <p className={styles.profileName}>{profile.name}</p>
                 <p className={styles.profileDesc}>{profile.description}</p>
@@ -417,15 +484,23 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                     onClick={() => {
                       const currentKeys = formData.ssh_key_ids || [];
                       if (isSelected) {
-                        setFormData({ ...formData, ssh_key_ids: currentKeys.filter(id => id !== key.ssh_key_id) });
+                        setFormData({
+                          ...formData,
+                          ssh_key_ids: currentKeys.filter((id) => id !== key.ssh_key_id),
+                        });
                       } else {
                         setFormData({ ...formData, ssh_key_ids: [...currentKeys, key.ssh_key_id] });
                       }
                     }}
-                    className={clsx(styles.profileButton, isSelected && styles.profileButtonSelected)}
+                    className={clsx(
+                      styles.profileButton,
+                      isSelected && styles.profileButtonSelected
+                    )}
                   >
                     <p className={styles.profileName}>{key.name}</p>
-                    <p className={styles.profileDesc}>{key.key_type.toUpperCase()} · {key.fingerprint.slice(0, 16)}...</p>
+                    <p className={styles.profileDesc}>
+                      {key.key_type.toUpperCase()} · {key.fingerprint.slice(0, 16)}...
+                    </p>
                   </button>
                 );
               })
@@ -467,7 +542,8 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                 <span className={styles.reviewValueNormal}>
                   {formData.firewall_profile_id === 'none'
                     ? 'None'
-                    : firewallProfiles?.find(f => f.profile_id === formData.firewall_profile_id)?.name || '—'}
+                    : firewallProfiles?.find((f) => f.profile_id === formData.firewall_profile_id)
+                        ?.name || '—'}
                 </span>
               </div>
               <div className={styles.reviewRow}>
@@ -475,7 +551,8 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                 <span className={styles.reviewValueNormal}>
                   {formData.bootstrap_profile_id === 'none'
                     ? 'None'
-                    : bootstrapProfiles?.find(b => b.profile_id === formData.bootstrap_profile_id)?.name || '—'}
+                    : bootstrapProfiles?.find((b) => b.profile_id === formData.bootstrap_profile_id)
+                        ?.name || '—'}
                 </span>
               </div>
               <div className={styles.reviewRow}>
@@ -483,9 +560,10 @@ export function DeployWizard({ onClose }: DeployWizardProps) {
                 <span className={styles.reviewValueNormal}>
                   {!formData.ssh_key_ids || formData.ssh_key_ids.length === 0
                     ? 'None'
-                    : formData.ssh_key_ids.map(id =>
-                      sshKeys?.find(k => k.ssh_key_id === id)?.name
-                    ).filter(Boolean).join(', ') || '—'}
+                    : formData.ssh_key_ids
+                        .map((id) => sshKeys?.find((k) => k.ssh_key_id === id)?.name)
+                        .filter(Boolean)
+                        .join(', ') || '—'}
                 </span>
               </div>
             </div>

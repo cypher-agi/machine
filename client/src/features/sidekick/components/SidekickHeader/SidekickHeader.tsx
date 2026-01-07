@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { X, Copy, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
 import { copyToClipboard } from '@/shared/lib';
@@ -60,11 +60,7 @@ export function SidekickHeader({
         </div>
         <div className={styles.headerButtons}>
           {onMinimize && (
-            <button 
-              onClick={onMinimize} 
-              className={styles.headerButton}
-              title="Minimize"
-            >
+            <button onClick={onMinimize} className={styles.headerButton} title="Minimize">
               <ChevronRight size={16} />
             </button>
           )}

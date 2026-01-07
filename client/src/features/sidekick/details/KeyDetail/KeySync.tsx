@@ -20,7 +20,7 @@ export function KeySync({ sshKey, providerAccounts }: KeySyncProps) {
   const [syncingProvider, setSyncingProvider] = useState<string | null>(null);
 
   const syncMutation = useMutation({
-    mutationFn: ({ keyId, providerAccountId }: { keyId: string; providerAccountId: string }) => 
+    mutationFn: ({ keyId, providerAccountId }: { keyId: string; providerAccountId: string }) =>
       syncSSHKeyToProvider(keyId, providerAccountId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssh-keys'] });
@@ -34,7 +34,7 @@ export function KeySync({ sshKey, providerAccounts }: KeySyncProps) {
   });
 
   const unsyncMutation = useMutation({
-    mutationFn: ({ keyId, providerType }: { keyId: string; providerType: string }) => 
+    mutationFn: ({ keyId, providerType }: { keyId: string; providerType: string }) =>
       unsyncSSHKeyFromProvider(keyId, providerType),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ssh-keys'] });
@@ -46,16 +46,15 @@ export function KeySync({ sshKey, providerAccounts }: KeySyncProps) {
   });
 
   const syncedTypes = Object.keys(sshKey.provider_key_ids);
-  const syncableProviders = providerAccounts.filter(a => 
-    !syncedTypes.includes(a.provider_type) && 
-    a.credential_status === 'valid'
+  const syncableProviders = providerAccounts.filter(
+    (a) => !syncedTypes.includes(a.provider_type) && a.credential_status === 'valid'
   );
 
   return (
     <SidekickPanel>
       {syncedTypes.length > 0 && (
         <SidekickSection title="Synced Providers">
-          {syncedTypes.map(providerType => (
+          {syncedTypes.map((providerType) => (
             <div key={providerType} className={styles.row}>
               <span className={styles.label}>
                 <Cloud size={12} />
@@ -76,7 +75,7 @@ export function KeySync({ sshKey, providerAccounts }: KeySyncProps) {
 
       {syncableProviders.length > 0 && (
         <SidekickSection title="Available Providers">
-          {syncableProviders.map(account => (
+          {syncableProviders.map((account) => (
             <div key={account.provider_account_id} className={styles.row}>
               <span className={styles.label}>
                 <Cloud size={12} />
@@ -87,9 +86,9 @@ export function KeySync({ sshKey, providerAccounts }: KeySyncProps) {
                 size="sm"
                 onClick={() => {
                   setSyncingProvider(account.provider_account_id);
-                  syncMutation.mutate({ 
-                    keyId: sshKey.ssh_key_id, 
-                    providerAccountId: account.provider_account_id 
+                  syncMutation.mutate({
+                    keyId: sshKey.ssh_key_id,
+                    providerAccountId: account.provider_account_id,
                   });
                 }}
                 disabled={syncingProvider === account.provider_account_id}
@@ -118,4 +117,3 @@ export function KeySync({ sshKey, providerAccounts }: KeySyncProps) {
     </SidekickPanel>
   );
 }
-

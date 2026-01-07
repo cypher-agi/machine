@@ -71,7 +71,9 @@
   background-color: var(--color-text-secondary);
   border-radius: 1px;
   opacity: 0;
-  transition: opacity 150ms ease, background-color 150ms ease;
+  transition:
+    opacity 150ms ease,
+    background-color 150ms ease;
 }
 
 /* Inner wrapper for content fade */

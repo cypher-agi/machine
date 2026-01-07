@@ -23,12 +23,14 @@ export function useMachineGroups(
 
     if (!groupByStatus) {
       // Just sort by time when not grouped
-      return [{
-        status: null,
-        machines: [...machines].sort((a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )
-      }];
+      return [
+        {
+          status: null,
+          machines: [...machines].sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          ),
+        },
+      ];
     }
 
     // Group by status
@@ -39,13 +41,13 @@ export function useMachineGroups(
       if (!groups.has(status)) {
         groups.set(status, []);
       }
-      groups.get(status)!.push(machine);
+      groups.get(status)?.push(machine);
     }
 
     // Sort each group by time (newest first)
     for (const [, groupMachines] of groups) {
-      groupMachines.sort((a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      groupMachines.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
     }
 
@@ -55,10 +57,9 @@ export function useMachineGroups(
       .map(([status, groupMachines]) => ({
         status,
         label: MACHINE_STATUS_LABELS[status],
-        machines: groupMachines
+        machines: groupMachines,
       }));
 
     return sortedGroups;
   }, [machines, groupByStatus]);
 }
-

@@ -19,7 +19,7 @@ export function MachinesApp() {
     setDeployWizardOpen,
     terminalMachineId,
     setTerminalMachineId,
-    addToast
+    addToast,
   } = useAppStore();
 
   const queryClient = useQueryClient();
@@ -31,20 +31,20 @@ export function MachinesApp() {
     mutationFn: syncMachines,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['machines'] });
-      const changedCount = data.results.filter(r => 
-        r.action !== 'no_change' && !r.action.startsWith('skipped')
+      const changedCount = data.results.filter(
+        (r) => r.action !== 'no_change' && !r.action.startsWith('skipped')
       ).length;
       if (changedCount > 0) {
-        addToast({ 
-          type: 'success', 
-          title: 'Synced', 
-          message: `${changedCount} machine${changedCount !== 1 ? 's' : ''} updated` 
+        addToast({
+          type: 'success',
+          title: 'Synced',
+          message: `${changedCount} machine${changedCount !== 1 ? 's' : ''} updated`,
         });
       }
     },
     onError: (error: Error) => {
       addToast({ type: 'error', title: 'Sync failed', message: error.message });
-    }
+    },
   });
 
   const handleRefresh = () => {
@@ -55,12 +55,13 @@ export function MachinesApp() {
 
   const { data: machines, isLoading } = useQuery({
     queryKey: ['machines', machineFilters, machineSort, searchQuery],
-    queryFn: () => getMachines({
-      ...machineFilters,
-      search: searchQuery || undefined,
-      sort_by: machineSort.field,
-      sort_dir: machineSort.direction,
-    }),
+    queryFn: () =>
+      getMachines({
+        ...machineFilters,
+        ...(searchQuery && { search: searchQuery }),
+        sort_by: machineSort.field,
+        sort_dir: machineSort.direction,
+      }),
     refetchInterval: 10000,
   });
 
@@ -114,7 +115,9 @@ export function MachinesApp() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-                className={clsx((showFilters || activeFilterCount > 0) && styles.headerButtonActive)}
+                className={clsx(
+                  (showFilters || activeFilterCount > 0) && styles.headerButtonActive
+                )}
               >
                 <Filter size={14} />
                 {activeFilterCount > 0 && (
@@ -123,8 +126,8 @@ export function MachinesApp() {
               </Button>
 
               {/* Refresh & Sync */}
-              <RefreshButton 
-                onRefresh={handleRefresh} 
+              <RefreshButton
+                onRefresh={handleRefresh}
                 isRefreshing={isSyncing}
                 title="Sync with provider & refresh"
               />
@@ -141,7 +144,7 @@ export function MachinesApp() {
           {showFilters && <MachineFilters onClose={() => setShowFilters(false)} />}
 
           {/* Content */}
-          {groupedMachines && groupedMachines.some(g => g.machines.length > 0) ? (
+          {groupedMachines && groupedMachines.some((g) => g.machines.length > 0) ? (
             <PageList>
               {groupedMachines.map((group) => (
                 <div key={group.status || 'all'} className={styles.group}>
@@ -159,7 +162,9 @@ export function MachinesApp() {
             </PageList>
           ) : (
             <PageEmptyState
-              description={searchQuery || activeFilterCount > 0 ? 'No machines found' : 'No machines yet'}
+              description={
+                searchQuery || activeFilterCount > 0 ? 'No machines found' : 'No machines yet'
+              }
               actions={
                 !searchQuery && activeFilterCount === 0 ? (
                   <Button variant="primary" size="sm" onClick={() => setDeployWizardOpen(true)}>
@@ -175,10 +180,7 @@ export function MachinesApp() {
 
       {/* Terminal Panel */}
       {terminalMachineId && (
-        <TerminalPanel
-          machineId={terminalMachineId}
-          onClose={() => setTerminalMachineId(null)}
-        />
+        <TerminalPanel machineId={terminalMachineId} onClose={() => setTerminalMachineId(null)} />
       )}
 
       {/* Deploy Wizard Modal */}
@@ -186,5 +188,3 @@ export function MachinesApp() {
     </div>
   );
 }
-
-

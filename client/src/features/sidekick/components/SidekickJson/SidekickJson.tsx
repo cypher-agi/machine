@@ -7,4 +7,3 @@ export interface SidekickJsonProps {
 export function SidekickJson({ data }: SidekickJsonProps) {
   return <pre className={styles.jsonPreview}>{JSON.stringify(data, null, 2)}</pre>;
 }
-

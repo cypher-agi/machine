@@ -14,7 +14,7 @@ export function SidekickTabs({ tabs, activeTab, onTabChange }: SidekickTabsProps
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={onTabChange}
-      className={styles.tabs}
+      className={styles['tabs'] ?? ''}
     />
   );
 }

@@ -1,4 +1,3 @@
-
 import type {
   ApiResponse,
   Machine,
@@ -40,10 +39,7 @@ function buildQueryString<T extends object>(params?: T): string {
   return query ? `?${query}` : '';
 }
 
-async function fetchApi<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
+async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {
@@ -185,7 +181,7 @@ export async function verifyProviderAccount(id: string): Promise<ProviderAccount
 }
 
 export async function updateProviderAccount(
-  id: string, 
+  id: string,
   data: { label?: string; credentials?: Record<string, string> }
 ): Promise<ProviderAccount> {
   return fetchApi<ProviderAccount>(`/providers/accounts/${id}`, {
@@ -228,8 +224,12 @@ export async function approveDeployment(id: string): Promise<Deployment> {
 }
 
 // Fetch deployment logs (non-streaming, for completed deployments)
-export async function getDeploymentLogs(deploymentId: string): Promise<{ timestamp: string; level: string; message: string; source: string }[]> {
-  return fetchApi<{ timestamp: string; level: string; message: string; source: string }[]>(`/deployments/${deploymentId}/logs`);
+export async function getDeploymentLogs(
+  deploymentId: string
+): Promise<{ timestamp: string; level: string; message: string; source: string }[]> {
+  return fetchApi<{ timestamp: string; level: string; message: string; source: string }[]>(
+    `/deployments/${deploymentId}/logs`
+  );
 }
 
 // SSE for deployment logs
@@ -241,16 +241,14 @@ export function streamDeploymentLogs(
 ): () => void {
   // First fetch existing logs via regular API
   getDeploymentLogs(deploymentId)
-    .then(logs => {
-      logs.forEach(log => onLog(log));
+    .then((logs) => {
+      logs.forEach((log) => onLog(log));
     })
-    .catch(err => {
+    .catch((err) => {
       console.warn('Failed to fetch existing logs:', err);
     });
 
-  const eventSource = new EventSource(
-    `${API_BASE}/deployments/${deploymentId}/logs?stream=true`
-  );
+  const eventSource = new EventSource(`${API_BASE}/deployments/${deploymentId}/logs?stream=true`);
 
   eventSource.addEventListener('log', (event) => {
     try {
@@ -357,13 +355,19 @@ export async function getSSHKeyPrivate(id: string): Promise<{ private_key: strin
   return fetchApi<{ private_key: string }>(`/ssh/keys/${id}/private`);
 }
 
-export async function syncSSHKeyToProvider(keyId: string, providerAccountId: string): Promise<SSHKey> {
+export async function syncSSHKeyToProvider(
+  keyId: string,
+  providerAccountId: string
+): Promise<SSHKey> {
   return fetchApi<SSHKey>(`/ssh/keys/${keyId}/sync/${providerAccountId}`, {
     method: 'POST',
   });
 }
 
-export async function unsyncSSHKeyFromProvider(keyId: string, providerType: string): Promise<SSHKey> {
+export async function unsyncSSHKeyFromProvider(
+  keyId: string,
+  providerType: string
+): Promise<SSHKey> {
   return fetchApi<SSHKey>(`/ssh/keys/${keyId}/sync/${providerType}`, {
     method: 'DELETE',
   });
@@ -381,6 +385,3 @@ export async function deleteSSHKey(id: string): Promise<{ deleted: boolean }> {
     method: 'DELETE',
   });
 }
-
-
-

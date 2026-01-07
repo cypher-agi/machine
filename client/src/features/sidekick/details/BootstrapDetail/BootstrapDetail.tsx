@@ -21,7 +21,7 @@ import styles from './BootstrapDetail.module.css';
 export interface BootstrapDetailProps {
   profileId: string;
   onClose: () => void;
-  onMinimize?: () => void;
+  onMinimize: () => void;
 }
 
 type TabId = 'overview' | 'template' | 'machines' | 'details';
@@ -106,20 +106,11 @@ export function BootstrapDetail({ profileId, onClose, onMinimize }: BootstrapDet
 
       <SidekickContent>
         {activeTab === 'overview' && (
-          <BootstrapOverview 
-            profile={profile} 
-            machineCount={profileMachines.length}
-          />
+          <BootstrapOverview profile={profile} machineCount={profileMachines.length} />
         )}
-        {activeTab === 'template' && (
-          <BootstrapTemplate profile={profile} />
-        )}
-        {activeTab === 'machines' && (
-          <BootstrapMachines machines={profileMachines} />
-        )}
-        {activeTab === 'details' && (
-          <BootstrapDetails profile={profile} />
-        )}
+        {activeTab === 'template' && <BootstrapTemplate profile={profile} />}
+        {activeTab === 'machines' && <BootstrapMachines machines={profileMachines} />}
+        {activeTab === 'details' && <BootstrapDetails profile={profile} />}
       </SidekickContent>
 
       {!profile.is_system_profile && (

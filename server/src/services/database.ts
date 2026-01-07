@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
-import {
+import type {
   Machine,
   Deployment,
   ProviderAccount,
@@ -10,7 +10,7 @@ import {
   FirewallProfile,
   AuditEvent,
   SSHKey,
-  DeploymentLog
+  DeploymentLog,
 } from '@machina/shared';
 
 // Raw database row types (before JSON parsing)
@@ -25,7 +25,10 @@ interface DeploymentRow extends Omit<Deployment, 'plan_summary' | 'outputs' | 'l
   logs: string | null;
 }
 
-interface BootstrapProfileRow extends Omit<BootstrapProfile, 'services_to_run' | 'config_schema' | 'tags' | 'is_system_profile'> {
+interface BootstrapProfileRow extends Omit<
+  BootstrapProfile,
+  'services_to_run' | 'config_schema' | 'tags' | 'is_system_profile'
+> {
   services_to_run: string;
   config_schema: string | null;
   tags: string | null;
@@ -109,7 +112,13 @@ function encrypt(text: string): string {
 }
 
 function decrypt(encryptedData: string): string {
-  const [ivHex, authTagHex, encrypted] = encryptedData.split(':');
+  const parts = encryptedData.split(':');
+  const ivHex = parts[0];
+  const authTagHex = parts[1];
+  const encrypted = parts[2];
+  if (!ivHex || !authTagHex || !encrypted) {
+    throw new Error('Invalid encrypted data format');
+  }
   const iv = Buffer.from(ivHex, 'hex');
   const authTag = Buffer.from(authTagHex, 'hex');
   const key = Buffer.from(ENCRYPTION_KEY.slice(0, 32).padEnd(32, '0'));
@@ -281,14 +290,14 @@ db.exec(`
 // Add last_health_check column if it doesn't exist
 try {
   db.exec('ALTER TABLE machines ADD COLUMN last_health_check TEXT');
-} catch (e) {
+} catch {
   // Column already exists, ignore
 }
 
 // Add firewall_profile_id column if it doesn't exist
 try {
   db.exec('ALTER TABLE machines ADD COLUMN firewall_profile_id TEXT');
-} catch (e) {
+} catch {
   // Column already exists, ignore
 }
 
@@ -314,7 +323,7 @@ try {
     );
     CREATE INDEX IF NOT EXISTS idx_ssh_keys_fingerprint ON ssh_keys(fingerprint);
   `);
-} catch (e) {
+} catch {
   // Tables already exist, ignore
 }
 
@@ -358,7 +367,9 @@ const statements = {
 
   // Deployments
   getDeployments: db.prepare('SELECT * FROM deployments ORDER BY created_at DESC'),
-  getDeploymentsByMachine: db.prepare('SELECT * FROM deployments WHERE machine_id = ? ORDER BY created_at DESC'),
+  getDeploymentsByMachine: db.prepare(
+    'SELECT * FROM deployments WHERE machine_id = ? ORDER BY created_at DESC'
+  ),
   getDeployment: db.prepare('SELECT * FROM deployments WHERE deployment_id = ?'),
   insertDeployment: db.prepare(`
     INSERT INTO deployments (deployment_id, machine_id, type, state, terraform_workspace, created_at,
@@ -388,12 +399,18 @@ const statements = {
   deleteProviderAccount: db.prepare('DELETE FROM provider_accounts WHERE provider_account_id = ?'),
 
   // Credentials
-  getCredentials: db.prepare('SELECT encrypted_data FROM credentials WHERE provider_account_id = ?'),
-  insertCredentials: db.prepare('INSERT OR REPLACE INTO credentials (provider_account_id, encrypted_data) VALUES (?, ?)'),
+  getCredentials: db.prepare(
+    'SELECT encrypted_data FROM credentials WHERE provider_account_id = ?'
+  ),
+  insertCredentials: db.prepare(
+    'INSERT OR REPLACE INTO credentials (provider_account_id, encrypted_data) VALUES (?, ?)'
+  ),
   deleteCredentials: db.prepare('DELETE FROM credentials WHERE provider_account_id = ?'),
 
   // Bootstrap profiles
-  getBootstrapProfiles: db.prepare('SELECT * FROM bootstrap_profiles ORDER BY is_system_profile DESC, created_at ASC'),
+  getBootstrapProfiles: db.prepare(
+    'SELECT * FROM bootstrap_profiles ORDER BY is_system_profile DESC, created_at ASC'
+  ),
   getBootstrapProfile: db.prepare('SELECT * FROM bootstrap_profiles WHERE profile_id = ?'),
   insertBootstrapProfile: db.prepare(`
     INSERT INTO bootstrap_profiles (profile_id, name, description, method, cloud_init_template,
@@ -445,8 +462,12 @@ const statements = {
   deleteSSHKey: db.prepare('DELETE FROM ssh_keys WHERE ssh_key_id = ?'),
 
   // SSH Key Secrets (encrypted private keys)
-  getSSHKeySecret: db.prepare('SELECT encrypted_private_key FROM ssh_key_secrets WHERE ssh_key_id = ?'),
-  insertSSHKeySecret: db.prepare('INSERT OR REPLACE INTO ssh_key_secrets (ssh_key_id, encrypted_private_key) VALUES (?, ?)'),
+  getSSHKeySecret: db.prepare(
+    'SELECT encrypted_private_key FROM ssh_key_secrets WHERE ssh_key_id = ?'
+  ),
+  insertSSHKeySecret: db.prepare(
+    'INSERT OR REPLACE INTO ssh_key_secrets (ssh_key_id, encrypted_private_key) VALUES (?, ?)'
+  ),
   deleteSSHKeySecret: db.prepare('DELETE FROM ssh_key_secrets WHERE ssh_key_id = ?'),
 };
 
@@ -456,27 +477,29 @@ function parseMachine(row: MachineRow): Machine {
   return {
     ...rest,
     tags: JSON.parse(tags || '{}'),
-    ...(last_health_check ? { last_health_check } : {})
+    ...(last_health_check ? { last_health_check } : {}),
   };
 }
 
 function parseDeployment(row: DeploymentRow): Deployment {
-  let logs: DeploymentLog[] | undefined = row.logs ? JSON.parse(row.logs) : undefined;
+  let parsedLogs: DeploymentLog[] | undefined = row.logs ? JSON.parse(row.logs) : undefined;
   // Historical bug: logs were sometimes double-JSON-encoded, so JSON.parse(row.logs)
   // produced a string that itself contains JSON. Try to unwrap once more.
-  if (typeof logs === 'string') {
+  if (typeof parsedLogs === 'string') {
     try {
-      logs = JSON.parse(logs);
+      parsedLogs = JSON.parse(parsedLogs);
     } catch {
       // ignore
     }
   }
+  // Omit raw string fields that need parsing
+  const { logs: _rawLogs, plan_summary: _rawPlan, outputs: _rawOutputs, ...rest } = row;
   return {
-    ...row,
-    plan_summary: row.plan_summary ? JSON.parse(row.plan_summary) : undefined,
-    outputs: row.outputs ? JSON.parse(row.outputs) : undefined,
-    logs,
-  };
+    ...rest,
+    ...(row.plan_summary && { plan_summary: JSON.parse(row.plan_summary) }),
+    ...(row.outputs && { outputs: JSON.parse(row.outputs) }),
+    ...(parsedLogs && { logs: parsedLogs }),
+  } as Deployment;
 }
 
 function serializeJsonField(value: unknown): string | null {
@@ -539,7 +562,9 @@ export const database = {
       tags: JSON.stringify(machine.tags || {}),
     });
   },
-  updateMachine(machine: Partial<Machine> & { machine_id: string; last_health_check?: string }): void {
+  updateMachine(
+    machine: Partial<Machine> & { machine_id: string; last_health_check?: string }
+  ): void {
     const existing = this.getMachine(machine.machine_id);
     if (!existing) return;
     const existingRow = statements.getMachine.get(machine.machine_id) as MachineRow | undefined;
@@ -563,17 +588,20 @@ export const database = {
       load_average: row.load_average ? JSON.parse(row.load_average) : null,
     };
   },
-  updateAgentMetrics(machineId: string, metrics: {
-    agent_version: string;
-    hostname: string;
-    uptime_seconds: number;
-    load_average: [number, number, number];
-    memory_total_mb: number;
-    memory_used_mb: number;
-    disk_total_gb: number;
-    disk_used_gb: number;
-    last_heartbeat: string;
-  }): void {
+  updateAgentMetrics(
+    machineId: string,
+    metrics: {
+      agent_version: string;
+      hostname: string;
+      uptime_seconds: number;
+      load_average: [number, number, number];
+      memory_total_mb: number;
+      memory_used_mb: number;
+      disk_total_gb: number;
+      disk_used_gb: number;
+      last_heartbeat: string;
+    }
+  ): void {
     statements.upsertAgentMetrics.run({
       machine_id: machineId,
       ...metrics,
@@ -586,7 +614,9 @@ export const database = {
     return (statements.getDeployments.all() as DeploymentRow[]).map(parseDeployment);
   },
   getDeploymentsByMachine(machineId: string): Deployment[] {
-    return (statements.getDeploymentsByMachine.all(machineId) as DeploymentRow[]).map(parseDeployment);
+    return (statements.getDeploymentsByMachine.all(machineId) as DeploymentRow[]).map(
+      parseDeployment
+    );
   },
   getDeployment(id: string): Deployment | undefined {
     const row = statements.getDeployment.get(id) as DeploymentRow | undefined;
@@ -604,20 +634,31 @@ export const database = {
       logs: null,
     });
   },
-  updateDeployment(deployment: Partial<Deployment> & { deployment_id: string; logs?: DeploymentLog[] }): void {
+  updateDeployment(
+    deployment: Partial<Deployment> & { deployment_id: string; logs?: DeploymentLog[] }
+  ): void {
     const existing = this.getDeployment(deployment.deployment_id);
     if (!existing) return;
     statements.updateDeployment.run({
       deployment_id: deployment.deployment_id,
       state: deployment.state || existing.state,
       finished_at: deployment.finished_at || existing.finished_at || null,
-      plan_summary: deployment.plan_summary ? JSON.stringify(deployment.plan_summary) : (existing.plan_summary ? JSON.stringify(existing.plan_summary) : null),
-      outputs: deployment.outputs ? JSON.stringify(deployment.outputs) : (existing.outputs ? JSON.stringify(existing.outputs) : null),
+      plan_summary: deployment.plan_summary
+        ? JSON.stringify(deployment.plan_summary)
+        : existing.plan_summary
+          ? JSON.stringify(existing.plan_summary)
+          : null,
+      outputs: deployment.outputs
+        ? JSON.stringify(deployment.outputs)
+        : existing.outputs
+          ? JSON.stringify(existing.outputs)
+          : null,
       error_message: deployment.error_message || existing.error_message || null,
       // Preserve existing logs unless explicitly provided.
-      logs: deployment.logs !== undefined
-        ? serializeJsonField(deployment.logs)
-        : serializeJsonField(existing.logs),
+      logs:
+        deployment.logs !== undefined
+          ? serializeJsonField(deployment.logs)
+          : serializeJsonField(existing.logs),
     });
   },
 
@@ -667,7 +708,9 @@ export const database = {
 
   // Bootstrap profiles
   getBootstrapProfiles(): BootstrapProfile[] {
-    return (statements.getBootstrapProfiles.all() as BootstrapProfileRow[]).map(parseBootstrapProfile);
+    return (statements.getBootstrapProfiles.all() as BootstrapProfileRow[]).map(
+      parseBootstrapProfile
+    );
   },
   getBootstrapProfile(id: string): BootstrapProfile | undefined {
     const row = statements.getBootstrapProfile.get(id) as BootstrapProfileRow | undefined;
@@ -698,8 +741,16 @@ export const database = {
       ...existing,
       ...profile,
       services_to_run: JSON.stringify(profile.services_to_run || existing.services_to_run || []),
-      config_schema: profile.config_schema ? JSON.stringify(profile.config_schema) : (existing.config_schema ? JSON.stringify(existing.config_schema) : null),
-      tags: profile.tags ? JSON.stringify(profile.tags) : (existing.tags ? JSON.stringify(existing.tags) : null),
+      config_schema: profile.config_schema
+        ? JSON.stringify(profile.config_schema)
+        : existing.config_schema
+          ? JSON.stringify(existing.config_schema)
+          : null,
+      tags: profile.tags
+        ? JSON.stringify(profile.tags)
+        : existing.tags
+          ? JSON.stringify(existing.tags)
+          : null,
     });
   },
   deleteBootstrapProfile(id: string): void {
@@ -768,7 +819,9 @@ export const database = {
 
   // SSH Key Secrets (encrypted private keys)
   getSSHKeyPrivateKey(keyId: string): string | undefined {
-    const row = statements.getSSHKeySecret.get(keyId) as { encrypted_private_key: string } | undefined;
+    const row = statements.getSSHKeySecret.get(keyId) as
+      | { encrypted_private_key: string }
+      | undefined;
     if (!row) return undefined;
     try {
       return decrypt(row.encrypted_private_key);
@@ -803,11 +856,11 @@ function seedDefaults() {
     console.log('📦 Seeding default bootstrap profile: The Grid');
   }
   database.insertBootstrapProfile({
-      profile_id: 'bp_the_grid',
-      name: 'The Grid',
-      description: 'Cypher AGI Grid node - installs Rust via rustup and builds the-grid from GitHub',
-      method: 'cloud_init',
-      cloud_init_template: `#cloud-config
+    profile_id: 'bp_the_grid',
+    name: 'The Grid',
+    description: 'Cypher AGI Grid node - installs Rust via rustup and builds the-grid from GitHub',
+    method: 'cloud_init',
+    cloud_init_template: `#cloud-config
 package_update: true
 package_upgrade: true
 
@@ -1011,24 +1064,29 @@ power_state:
   message: "Rebooting to apply kernel updates"
   timeout: 30
   condition: true`,
-      services_to_run: [
-        {
-          service_name: 'the-grid',
-          display_name: 'The Grid',
-          systemd_unit: 'the-grid.service',
-          restart_command: 'systemctl restart the-grid',
-          ports: [36900]
-        }
-      ],
-      config_schema: [
-        { name: 'GRID_NODE_ID', type: 'string', description: 'Unique node identifier', required: false }
-      ],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      created_by: 'system',
-      tags: ['production', 'grid', 'rust'],
-      is_system_profile: true
-    });
+    services_to_run: [
+      {
+        service_name: 'the-grid',
+        display_name: 'The Grid',
+        systemd_unit: 'the-grid.service',
+        restart_command: 'systemctl restart the-grid',
+        ports: [36900],
+      },
+    ],
+    config_schema: [
+      {
+        name: 'GRID_NODE_ID',
+        type: 'string',
+        description: 'Unique node identifier',
+        required: false,
+      },
+    ],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    created_by: 'system',
+    tags: ['production', 'grid', 'rust'],
+    is_system_profile: true,
+  });
 
   // Check if Grid firewall profile exists
   const gridFirewall = database.getFirewallProfile('fw_grid_node');
@@ -1039,11 +1097,29 @@ power_state:
       name: 'Grid Node',
       description: 'Grid node firewall with SSH and Grid port access',
       rules: [
-        { rule_id: 'r1', direction: 'inbound', protocol: 'tcp', port_range_start: 22, port_range_end: 22, source_addresses: ['0.0.0.0/0'], description: 'SSH', source: 'provider' },
-        { rule_id: 'r2', direction: 'inbound', protocol: 'tcp', port_range_start: 36900, port_range_end: 36900, source_addresses: ['0.0.0.0/0'], description: 'The Grid', source: 'provider' }
+        {
+          rule_id: 'r1',
+          direction: 'inbound',
+          protocol: 'tcp',
+          port_range_start: 22,
+          port_range_end: 22,
+          source_addresses: ['0.0.0.0/0'],
+          description: 'SSH',
+          source: 'provider',
+        },
+        {
+          rule_id: 'r2',
+          direction: 'inbound',
+          protocol: 'tcp',
+          port_range_start: 36900,
+          port_range_end: 36900,
+          source_addresses: ['0.0.0.0/0'],
+          description: 'The Grid',
+          source: 'provider',
+        },
       ],
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     });
   }
 
@@ -1058,7 +1134,8 @@ power_state:
   database.insertBootstrapProfile({
     profile_id: 'bp_machine_dashboard',
     name: 'Machine Dashboard',
-    description: 'Deploys the Machine infrastructure management dashboard with Node.js and Terraform',
+    description:
+      'Deploys the Machine infrastructure management dashboard with Node.js and Terraform',
     method: 'cloud_init',
     cloud_init_template: `#cloud-config
 package_update: true
@@ -1295,22 +1372,22 @@ runcmd:
         display_name: 'Machine Dashboard',
         systemd_unit: 'machine-dashboard.service',
         restart_command: 'systemctl restart machine-dashboard',
-        ports: [3001]
+        ports: [3001],
       },
       {
         service_name: 'nginx',
         display_name: 'Nginx',
         systemd_unit: 'nginx.service',
         restart_command: 'systemctl restart nginx',
-        ports: [80]
-      }
+        ports: [80],
+      },
     ],
     config_schema: [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     created_by: 'system',
     tags: ['production', 'dashboard', 'node'],
-    is_system_profile: true
+    is_system_profile: true,
   });
 
   // Machine Dashboard firewall profile
@@ -1322,13 +1399,49 @@ runcmd:
       name: 'Machine Dashboard',
       description: 'Machine dashboard with HTTP, HTTPS, and API access',
       rules: [
-        { rule_id: 'r1', direction: 'inbound', protocol: 'tcp', port_range_start: 22, port_range_end: 22, source_addresses: ['0.0.0.0/0'], description: 'SSH', source: 'provider' },
-        { rule_id: 'r2', direction: 'inbound', protocol: 'tcp', port_range_start: 80, port_range_end: 80, source_addresses: ['0.0.0.0/0'], description: 'HTTP', source: 'provider' },
-        { rule_id: 'r3', direction: 'inbound', protocol: 'tcp', port_range_start: 443, port_range_end: 443, source_addresses: ['0.0.0.0/0'], description: 'HTTPS', source: 'provider' },
-        { rule_id: 'r4', direction: 'inbound', protocol: 'tcp', port_range_start: 3001, port_range_end: 3001, source_addresses: ['0.0.0.0/0'], description: 'API Direct', source: 'provider' }
+        {
+          rule_id: 'r1',
+          direction: 'inbound',
+          protocol: 'tcp',
+          port_range_start: 22,
+          port_range_end: 22,
+          source_addresses: ['0.0.0.0/0'],
+          description: 'SSH',
+          source: 'provider',
+        },
+        {
+          rule_id: 'r2',
+          direction: 'inbound',
+          protocol: 'tcp',
+          port_range_start: 80,
+          port_range_end: 80,
+          source_addresses: ['0.0.0.0/0'],
+          description: 'HTTP',
+          source: 'provider',
+        },
+        {
+          rule_id: 'r3',
+          direction: 'inbound',
+          protocol: 'tcp',
+          port_range_start: 443,
+          port_range_end: 443,
+          source_addresses: ['0.0.0.0/0'],
+          description: 'HTTPS',
+          source: 'provider',
+        },
+        {
+          rule_id: 'r4',
+          direction: 'inbound',
+          protocol: 'tcp',
+          port_range_start: 3001,
+          port_range_end: 3001,
+          source_addresses: ['0.0.0.0/0'],
+          description: 'API Direct',
+          source: 'provider',
+        },
       ],
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     });
   }
 }
@@ -1339,4 +1452,3 @@ seedDefaults();
 console.log('✓ SQLite database initialized at', DB_PATH);
 
 export default database;
-

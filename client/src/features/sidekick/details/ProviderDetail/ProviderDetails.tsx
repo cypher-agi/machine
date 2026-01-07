@@ -1,10 +1,6 @@
 import { format } from 'date-fns';
 import type { ProviderAccount } from '@machina/shared';
-import {
-  SidekickPanel,
-  SidekickSection,
-  SidekickRow,
-} from '../../components';
+import { SidekickPanel, SidekickSection, SidekickRow } from '../../components';
 
 export interface ProviderDetailsProps {
   account: ProviderAccount;
@@ -27,10 +23,12 @@ export function ProviderDetails({ account }: ProviderDetailsProps) {
         <SidekickRow label="Created At" value={format(new Date(account.created_at), 'PPpp')} />
         <SidekickRow label="Updated At" value={format(new Date(account.updated_at), 'PPpp')} />
         {account.last_verified_at && (
-          <SidekickRow label="Last Verified" value={format(new Date(account.last_verified_at), 'PPpp')} />
+          <SidekickRow
+            label="Last Verified"
+            value={format(new Date(account.last_verified_at), 'PPpp')}
+          />
         )}
       </SidekickSection>
     </SidekickPanel>
   );
 }
-

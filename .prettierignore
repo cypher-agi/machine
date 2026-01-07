@@ -1,0 +1,28 @@
+# Build outputs
+dist/
+build/
+node_modules/
+
+# Generated files
+*.min.js
+*.min.css
+coverage/
+
+# Terraform
+**/*.tf
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE
+.idea/
+.vscode/
+
+# Other
+*.md
+
+
+
+

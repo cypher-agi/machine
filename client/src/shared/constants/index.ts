@@ -1,22 +1,22 @@
 // Import all types and icons at the top
-import type { 
-  SSHKeyType, 
-  BootstrapMethod, 
-  MachineStatus, 
-  CredentialStatus, 
-  DeploymentState, 
-  DeploymentType 
+import type {
+  SSHKeyType,
+  BootstrapMethod,
+  MachineStatus,
+  CredentialStatus,
+  DeploymentState,
+  DeploymentType,
 } from '@machina/shared';
-import { 
-  Cloud, 
-  Terminal, 
-  Play, 
-  Check, 
-  X, 
-  AlertCircle, 
-  Clock, 
-  Loader2, 
-  StopCircle 
+import {
+  Cloud,
+  Terminal,
+  Play,
+  Check,
+  X,
+  AlertCircle,
+  Clock,
+  Loader2,
+  StopCircle,
 } from 'lucide-react';
 
 // Provider constants
@@ -81,7 +81,14 @@ export const MACHINE_STATUS_LABELS: Record<MachineStatus, string> = {
   error: 'Error',
 };
 
-export const MACHINE_STATUS_CONFIG: Record<MachineStatus, { label: string; variant: 'running' | 'stopped' | 'provisioning' | 'pending' | 'error'; pulse?: boolean }> = {
+export const MACHINE_STATUS_CONFIG: Record<
+  MachineStatus,
+  {
+    label: string;
+    variant: 'running' | 'stopped' | 'provisioning' | 'pending' | 'error';
+    pulse?: boolean;
+  }
+> = {
   running: { label: 'Running', variant: 'running', pulse: true },
   stopped: { label: 'Stopped', variant: 'stopped' },
   provisioning: { label: 'Provisioning', variant: 'provisioning', pulse: true },
@@ -94,7 +101,10 @@ export const MACHINE_STATUS_CONFIG: Record<MachineStatus, { label: string; varia
 };
 
 // Credential status configuration
-export const CREDENTIAL_STATUS_CONFIG: Record<CredentialStatus, { icon: typeof Check; variant: 'valid' | 'invalid' | 'warning' | 'muted'; label: string }> = {
+export const CREDENTIAL_STATUS_CONFIG: Record<
+  CredentialStatus,
+  { icon: typeof Check; variant: 'valid' | 'invalid' | 'warning' | 'muted'; label: string }
+> = {
   valid: { icon: Check, variant: 'valid', label: 'Valid' },
   invalid: { icon: X, variant: 'invalid', label: 'Invalid' },
   expired: { icon: AlertCircle, variant: 'warning', label: 'Expired' },
@@ -102,7 +112,10 @@ export const CREDENTIAL_STATUS_CONFIG: Record<CredentialStatus, { icon: typeof C
 };
 
 // Variant mapping for sidekick badge (different variant types)
-export const CREDENTIAL_STATUS_BADGE_CONFIG: Record<CredentialStatus, { label: string; variant: 'running' | 'stopped' | 'error' | 'pending' }> = {
+export const CREDENTIAL_STATUS_BADGE_CONFIG: Record<
+  CredentialStatus,
+  { label: string; variant: 'running' | 'stopped' | 'error' | 'pending' }
+> = {
   valid: { label: 'Valid', variant: 'running' },
   invalid: { label: 'Invalid', variant: 'error' },
   expired: { label: 'Expired', variant: 'stopped' },
@@ -110,7 +123,14 @@ export const CREDENTIAL_STATUS_BADGE_CONFIG: Record<CredentialStatus, { label: s
 };
 
 // Deployment state configuration
-export const DEPLOYMENT_STATE_CONFIG: Record<DeploymentState, { icon: typeof Check; variant: 'valid' | 'invalid' | 'warning' | 'muted' | 'pending' | 'provisioning'; label: string }> = {
+export const DEPLOYMENT_STATE_CONFIG: Record<
+  DeploymentState,
+  {
+    icon: typeof Check;
+    variant: 'valid' | 'invalid' | 'warning' | 'muted' | 'pending' | 'provisioning';
+    label: string;
+  }
+> = {
   queued: { icon: Clock, variant: 'pending', label: 'Queued' },
   planning: { icon: Loader2, variant: 'provisioning', label: 'Planning' },
   awaiting_approval: { icon: AlertCircle, variant: 'warning', label: 'Awaiting' },
@@ -121,7 +141,14 @@ export const DEPLOYMENT_STATE_CONFIG: Record<DeploymentState, { icon: typeof Che
 };
 
 // Variant mapping for sidekick badge (different variant types)
-export const DEPLOYMENT_STATE_BADGE_CONFIG: Record<DeploymentState, { icon: typeof Check; variant: 'running' | 'stopped' | 'provisioning' | 'pending' | 'error'; label: string }> = {
+export const DEPLOYMENT_STATE_BADGE_CONFIG: Record<
+  DeploymentState,
+  {
+    icon: typeof Check;
+    variant: 'running' | 'stopped' | 'provisioning' | 'pending' | 'error';
+    label: string;
+  }
+> = {
   queued: { icon: Clock, variant: 'pending', label: 'Queued' },
   planning: { icon: Loader2, variant: 'provisioning', label: 'Planning' },
   awaiting_approval: { icon: AlertCircle, variant: 'pending', label: 'Awaiting Approval' },

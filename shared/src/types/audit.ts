@@ -30,24 +30,24 @@ export interface AuditEvent {
   event_id: string;
   action: AuditAction;
   outcome: AuditOutcome;
-  
+
   // Actor
   actor_id: string;
   actor_type: 'user' | 'system' | 'api_key';
   actor_name?: string;
-  
+
   // Target
   target_type: 'machine' | 'provider' | 'deployment' | 'bootstrap' | 'service' | 'user';
   target_id: string;
   target_name?: string;
-  
+
   // Context
   ip_address?: string;
   user_agent?: string;
-  
+
   // Details (non-sensitive)
   details?: Record<string, unknown>;
-  
+
   // Timestamp
   timestamp: string;
 }
@@ -61,7 +61,3 @@ export interface AuditEventListFilter {
   after?: string;
   before?: string;
 }
-
-
-
-

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import styles from './PageLayout.module.css';
 
@@ -50,4 +50,3 @@ export function PageLayout({
     </div>
   );
 }
-

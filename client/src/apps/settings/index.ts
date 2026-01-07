@@ -1,2 +1,1 @@
 export { SettingsApp } from './SettingsApp';
-

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Copy } from 'lucide-react';
 import clsx from 'clsx';
 import { copyToClipboard } from '@/shared/lib';
@@ -39,7 +39,10 @@ export function SidekickRow({ label, value, icon, accent, copyable }: SidekickRo
           </button>
         </div>
       ) : (
-        <span className={clsx(styles.value, accent && styles.valueAccent)} title={value || undefined}>
+        <span
+          className={clsx(styles.value, accent && styles.valueAccent)}
+          title={value || undefined}
+        >
           {value || '—'}
         </span>
       )}

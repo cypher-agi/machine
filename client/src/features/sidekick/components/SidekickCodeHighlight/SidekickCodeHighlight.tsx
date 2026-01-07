@@ -57,4 +57,3 @@ export function SidekickCodeHighlight({ children, language = 'hcl' }: SidekickCo
     </div>
   );
 }
-

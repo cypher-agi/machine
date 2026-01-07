@@ -24,7 +24,7 @@ import styles from './DeploymentDetail.module.css';
 export interface DeploymentDetailProps {
   deploymentId: string;
   onClose: () => void;
-  onMinimize?: () => void;
+  onMinimize: () => void;
 }
 
 type TabId = 'overview' | 'plan' | 'logs' | 'details';
@@ -86,9 +86,9 @@ export function DeploymentDetail({ deploymentId, onClose, onMinimize }: Deployme
 
       <SidekickContent>
         {activeTab === 'overview' && (
-          <DeploymentOverview 
-            deployment={deployment} 
-            machine={machine}
+          <DeploymentOverview
+            deployment={deployment}
+            machine={machine ?? null}
             onMachineClick={() => {
               if (deployment.machine_id) {
                 setSidekickSelection({ type: 'machine', id: deployment.machine_id });
@@ -96,27 +96,21 @@ export function DeploymentDetail({ deploymentId, onClose, onMinimize }: Deployme
             }}
           />
         )}
-        {activeTab === 'plan' && (
-          <DeploymentPlan deployment={deployment} />
-        )}
-        {activeTab === 'logs' && (
-          <DeploymentLogs deployment={deployment} />
-        )}
-        {activeTab === 'details' && (
-          <DeploymentDetails deployment={deployment} />
-        )}
+        {activeTab === 'plan' && <DeploymentPlan deployment={deployment} />}
+        {activeTab === 'logs' && <DeploymentLogs deployment={deployment} />}
+        {activeTab === 'details' && <DeploymentDetails deployment={deployment} />}
       </SidekickContent>
     </>
   );
 }
 
-function DeploymentOverview({ 
-  deployment, 
+function DeploymentOverview({
+  deployment,
   machine,
-  onMachineClick 
-}: { 
-  deployment: Deployment; 
-  machine?: Machine;
+  onMachineClick,
+}: {
+  deployment: Deployment;
+  machine: Machine | null;
   onMachineClick: () => void;
 }) {
   const state = DEPLOYMENT_STATE_BADGE_CONFIG[deployment.state];
@@ -124,21 +118,15 @@ function DeploymentOverview({
   return (
     <SidekickPanel>
       <SidekickSection title="Status">
-        <SidekickRow 
-          label="State" 
-          value={state.label}
-        />
-        <SidekickRow 
-          label="Type" 
-          value={DEPLOYMENT_TYPE_FULL_LABELS[deployment.type]}
-        />
-        <SidekickRow 
-          label="Started" 
+        <SidekickRow label="State" value={state.label} />
+        <SidekickRow label="Type" value={DEPLOYMENT_TYPE_FULL_LABELS[deployment.type]} />
+        <SidekickRow
+          label="Started"
           value={formatDistanceToNow(new Date(deployment.created_at), { addSuffix: true })}
         />
         {deployment.completed_at && (
-          <SidekickRow 
-            label="Completed" 
+          <SidekickRow
+            label="Completed"
             value={formatDistanceToNow(new Date(deployment.completed_at), { addSuffix: true })}
           />
         )}
@@ -146,16 +134,11 @@ function DeploymentOverview({
 
       {machine && (
         <SidekickSection title="Machine">
-          <div 
-            className={styles.cardClickable} 
-            onClick={onMachineClick}
-          >
+          <div className={styles.cardClickable} onClick={onMachineClick}>
             <div className={styles.cardHeader}>
               <Server size={16} className={styles.cardIconSecondary} />
               <div className={styles.cardInfo}>
-                <span className={styles.cardNameMono}>
-                  {machine.name}
-                </span>
+                <span className={styles.cardNameMono}>{machine.name}</span>
                 <span className={styles.cardMeta}>
                   {machine.region} · {machine.size}
                 </span>
@@ -167,16 +150,13 @@ function DeploymentOverview({
 
       {deployment.plan_summary && (
         <SidekickSection title="Plan Summary">
-          <SidekickRow 
-            label="To Add" 
-            value={deployment.plan_summary.resources_to_add.toString()}
-          />
-          <SidekickRow 
-            label="To Change" 
+          <SidekickRow label="To Add" value={deployment.plan_summary.resources_to_add.toString()} />
+          <SidekickRow
+            label="To Change"
             value={deployment.plan_summary.resources_to_change.toString()}
           />
-          <SidekickRow 
-            label="To Destroy" 
+          <SidekickRow
+            label="To Destroy"
             value={deployment.plan_summary.resources_to_destroy.toString()}
           />
         </SidekickSection>
@@ -184,19 +164,13 @@ function DeploymentOverview({
 
       {deployment.initiated_by && (
         <SidekickSection title="Initiated By">
-          <SidekickRow 
-            label="User" 
-            value={deployment.initiated_by}
-            icon={<User size={12} />}
-          />
+          <SidekickRow label="User" value={deployment.initiated_by} icon={<User size={12} />} />
         </SidekickSection>
       )}
 
       {deployment.error_message && (
         <SidekickSection title="Error">
-          <div className={styles.errorBox}>
-            {deployment.error_message}
-          </div>
+          <div className={styles.errorBox}>{deployment.error_message}</div>
         </SidekickSection>
       )}
     </SidekickPanel>
@@ -243,9 +217,7 @@ function DeploymentLogs({ deployment }: { deployment: Deployment }) {
               <span className={`${styles.logLevel} ${styles[`logLevel${log.level}`]}`}>
                 {log.level}
               </span>
-              <span className={styles.logMessage}>
-                {log.message}
-              </span>
+              <span className={styles.logMessage}>{log.message}</span>
             </div>
           ))}
         </div>
@@ -259,9 +231,13 @@ function DeploymentDetails({ deployment }: { deployment: Deployment }) {
     <SidekickPanel>
       <SidekickSection title="Identifiers">
         <SidekickRow label="Deployment ID" value={deployment.deployment_id} copyable />
-        <SidekickRow label="Machine ID" value={deployment.machine_id} copyable />
+        <SidekickRow label="Machine ID" value={deployment.machine_id ?? null} copyable />
         {deployment.terraform_workspace && (
-          <SidekickRow label="Terraform Workspace" value={deployment.terraform_workspace} copyable />
+          <SidekickRow
+            label="Terraform Workspace"
+            value={deployment.terraform_workspace}
+            copyable
+          />
         )}
       </SidekickSection>
 
@@ -279,7 +255,10 @@ function DeploymentDetails({ deployment }: { deployment: Deployment }) {
           <SidekickRow label="Started At" value={format(new Date(deployment.started_at), 'PPpp')} />
         )}
         {deployment.completed_at && (
-          <SidekickRow label="Completed At" value={format(new Date(deployment.completed_at), 'PPpp')} />
+          <SidekickRow
+            label="Completed At"
+            value={format(new Date(deployment.completed_at), 'PPpp')}
+          />
         )}
       </SidekickSection>
 

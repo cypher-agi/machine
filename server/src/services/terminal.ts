@@ -1,6 +1,6 @@
 import { WebSocket, WebSocketServer } from 'ws';
-import { Client, ClientChannel } from 'ssh2';
-import { Server } from 'http';
+import { Client, type ClientChannel, type ConnectConfig } from 'ssh2';
+import type { Server } from 'http';
 import { parse } from 'url';
 import { database } from './database';
 
@@ -14,9 +14,9 @@ interface TerminalSession {
 const activeSessions: Map<string, TerminalSession> = new Map();
 
 export function setupTerminalWebSocket(server: Server) {
-  const wss = new WebSocketServer({ 
+  const wss = new WebSocketServer({
     server,
-    path: '/ws/terminal'
+    path: '/ws/terminal',
   });
 
   console.log('🖥️  Terminal WebSocket server initialized');
@@ -59,7 +59,9 @@ export function setupTerminalWebSocket(server: Server) {
     if (sshKeyId) {
       privateKey = database.getSSHKeyPrivateKey(sshKeyId);
       if (!privateKey) {
-        ws.send(JSON.stringify({ type: 'error', message: 'SSH key not found or no private key stored' }));
+        ws.send(
+          JSON.stringify({ type: 'error', message: 'SSH key not found or no private key stored' })
+        );
         ws.close();
         return;
       }
@@ -72,7 +74,7 @@ export function setupTerminalWebSocket(server: Server) {
     const session: TerminalSession = {
       ws,
       sshClient,
-      machineId
+      machineId,
     };
     activeSessions.set(sessionId, session);
 
@@ -127,7 +129,7 @@ export function setupTerminalWebSocket(server: Server) {
     ws.on('message', (message) => {
       try {
         const msg = JSON.parse(message.toString());
-        
+
         switch (msg.type) {
           case 'data':
             // Forward terminal input to SSH
@@ -135,7 +137,7 @@ export function setupTerminalWebSocket(server: Server) {
               session.stream.write(msg.data);
             }
             break;
-          
+
           case 'resize':
             // Handle terminal resize
             if (session.stream && msg.cols && msg.rows) {
@@ -161,27 +163,29 @@ export function setupTerminalWebSocket(server: Server) {
     });
 
     // Initiate SSH connection
-    const sshConfig: any = {
+    if (!privateKey) {
+      // Fallback: try without key (will fail if no password auth)
+      ws.send(
+        JSON.stringify({ type: 'error', message: 'No SSH key provided. Please select an SSH key.' })
+      );
+      ws.close();
+      return;
+    }
+
+    const sshConfig: ConnectConfig = {
       host: machine.public_ip,
       port: 22,
       username: 'root',
       readyTimeout: 30000,
       keepaliveInterval: 10000,
+      privateKey,
     };
-
-    if (privateKey) {
-      sshConfig.privateKey = privateKey;
-    } else {
-      // Fallback: try without key (will fail if no password auth)
-      ws.send(JSON.stringify({ type: 'error', message: 'No SSH key provided. Please select an SSH key.' }));
-      ws.close();
-      return;
-    }
 
     try {
       sshClient.connect(sshConfig);
-    } catch (err: any) {
-      ws.send(JSON.stringify({ type: 'error', message: `Connection failed: ${err.message}` }));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      ws.send(JSON.stringify({ type: 'error', message: `Connection failed: ${message}` }));
       ws.close();
     }
   });
@@ -192,5 +196,3 @@ export function setupTerminalWebSocket(server: Server) {
 export function getActiveSessionCount(): number {
   return activeSessions.size;
 }
-
-

@@ -1,4 +1,4 @@
-import { ReactNode, useState, useRef, useEffect } from 'react';
+import { type ReactNode, useState, useRef, useEffect } from 'react';
 import { MoreVertical } from 'lucide-react';
 import clsx from 'clsx';
 import { Button } from '../Button';
@@ -45,9 +45,7 @@ export function DropdownMenu({ items, trigger, align = 'right', className }: Dro
   return (
     <div className={clsx(styles.container, className)} ref={menuRef}>
       {trigger ? (
-        <div onClick={() => setIsOpen(!isOpen)}>
-          {trigger}
-        </div>
+        <div onClick={() => setIsOpen(!isOpen)}>{trigger}</div>
       ) : (
         <Button
           variant="ghost"
@@ -65,7 +63,7 @@ export function DropdownMenu({ items, trigger, align = 'right', className }: Dro
 
       {isOpen && (
         <div className={clsx(styles.dropdown, align === 'left' && styles.dropdownLeft)}>
-          {items.map((item, index) => (
+          {items.map((item, index) =>
             item.divider ? (
               <hr key={`divider-${index}`} className={styles.divider} />
             ) : (
@@ -82,10 +80,9 @@ export function DropdownMenu({ items, trigger, align = 'right', className }: Dro
                 {item.label}
               </button>
             )
-          ))}
+          )}
         </div>
       )}
     </div>
   );
 }
-

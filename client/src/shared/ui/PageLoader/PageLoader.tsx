@@ -14,4 +14,3 @@ export function PageLoader({ message }: PageLoaderProps) {
     </div>
   );
 }
-

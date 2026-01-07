@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import styles from './PageEmptyState.module.css';
 
@@ -25,11 +25,7 @@ export function PageEmptyState({
   return (
     <div className={clsx(styles.emptyState, large && styles.emptyStateLarge)}>
       <div className={styles.emptyContent}>
-        {icon && (
-          <div className={large ? styles.emptyIcon : styles.emptyIconSimple}>
-            {icon}
-          </div>
-        )}
+        {icon && <div className={large ? styles.emptyIcon : styles.emptyIconSimple}>{icon}</div>}
         <div className={styles.emptyText}>
           {title && <h3 className={styles.emptyTitle}>{title}</h3>}
           {description && <p className={styles.emptyDesc}>{description}</p>}
@@ -39,4 +35,3 @@ export function PageEmptyState({
     </div>
   );
 }
-

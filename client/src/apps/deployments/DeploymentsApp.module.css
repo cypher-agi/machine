@@ -13,7 +13,12 @@
   font-family: var(--font-mono);
 }
 
-.planAdd { color: var(--color-success); }
-.planChange { color: var(--color-warning); }
-.planDestroy { color: var(--color-error); }
-
+.planAdd {
+  color: var(--color-success);
+}
+.planChange {
+  color: var(--color-warning);
+}
+.planDestroy {
+  color: var(--color-error);
+}

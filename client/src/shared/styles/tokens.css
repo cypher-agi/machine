@@ -1,28 +1,28 @@
 /* Design Tokens - CSS Custom Properties */
 :root {
   /* Colors - ultra dark theme */
-  --color-bg: #09090B;
-  --color-surface: #0E0E10;
+  --color-bg: #09090b;
+  --color-surface: #0e0e10;
   --color-elevated: #131316;
-  --color-border: #17171A;
-  --color-border-light: #1F1F23;
-  
-  --color-text-primary: #E6E8EB;
-  --color-text-secondary: #8B8B8D;
-  --color-text-muted: #6B7280;
-  
-  --color-accent: #5E9EFF;
-  --color-success: #4ADE80;
-  --color-warning: #FACC15;
-  --color-error: #F87171;
-  --color-pending: #A78BFA;
-  --color-provisioning: #5E9EFF;
-  
+  --color-border: #17171a;
+  --color-border-light: #1f1f23;
+
+  --color-text-primary: #e6e8eb;
+  --color-text-secondary: #8b8b8d;
+  --color-text-muted: #6b7280;
+
+  --color-accent: #5e9eff;
+  --color-success: #4ade80;
+  --color-warning: #facc15;
+  --color-error: #f87171;
+  --color-pending: #a78bfa;
+  --color-provisioning: #5e9eff;
+
   /* Neon accent colors */
-  --color-neon-cyan: #22D3EE;
-  --color-neon-green: #4ADE80;
-  --color-neon-purple: #A78BFA;
-  
+  --color-neon-cyan: #22d3ee;
+  --color-neon-green: #4ade80;
+  --color-neon-purple: #a78bfa;
+
   /* Spacing scale */
   --space-1: 4px;
   --space-1-5: 6px;
@@ -32,38 +32,38 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
-  
+
   /* Border radius */
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 12px;
   --radius-full: 9999px;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
-  
+
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  
+
   --text-2xs: 10px;
   --text-xs: 12px;
   --text-sm: 13px;
   --text-base: 14px;
   --text-lg: 16px;
   --text-xl: 18px;
-  
+
   --font-normal: 400;
   --font-medium: 500;
   --font-semibold: 600;
-  
+
   --leading-tight: 1.25;
   --leading-normal: 1.5;
   --leading-relaxed: 1.625;
-  
+
   /* Transitions */
   --transition-fast: 75ms ease-out;
   --transition-normal: 150ms ease-out;

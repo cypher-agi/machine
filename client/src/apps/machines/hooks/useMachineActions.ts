@@ -26,7 +26,11 @@ export function useMachineActions({ machineId, machineName }: UseMachineActionsO
     mutationFn: () => destroyMachine(machineId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['machines'] });
-      addToast({ type: 'success', title: 'Destroy initiated', message: `Destroying ${machineName}` });
+      addToast({
+        type: 'success',
+        title: 'Destroy initiated',
+        message: `Destroying ${machineName}`,
+      });
     },
     onError: (error: Error) => {
       addToast({ type: 'error', title: 'Destroy failed', message: error.message });
@@ -37,7 +41,11 @@ export function useMachineActions({ machineId, machineName }: UseMachineActionsO
     mutationFn: (serviceName: string) => restartMachineService(machineId, serviceName),
     onSuccess: (_, serviceName) => {
       queryClient.invalidateQueries({ queryKey: ['machines'] });
-      addToast({ type: 'success', title: 'Service restart initiated', message: `Restarting ${serviceName}` });
+      addToast({
+        type: 'success',
+        title: 'Service restart initiated',
+        message: `Restarting ${serviceName}`,
+      });
     },
     onError: (error: Error) => {
       addToast({ type: 'error', title: 'Service restart failed', message: error.message });
@@ -53,4 +61,3 @@ export function useMachineActions({ machineId, machineName }: UseMachineActionsO
     isRestartingService: restartServiceMutation.isPending,
   };
 }
-

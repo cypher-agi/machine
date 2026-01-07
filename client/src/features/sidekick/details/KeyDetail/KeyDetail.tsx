@@ -1,12 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Key, Copy, Download, Trash2 } from 'lucide-react';
-import { 
-  getSSHKeys, 
-  deleteSSHKey, 
-  getSSHKeyPrivate,
-  getProviderAccounts,
-} from '@/lib/api';
+import { getSSHKeys, deleteSSHKey, getSSHKeyPrivate, getProviderAccounts } from '@/lib/api';
 import { copyToClipboard, downloadTextFile } from '@/shared/lib';
 import { useAppStore } from '@/store/appStore';
 import { Badge, Button, ConfirmModal } from '@/shared/ui';
@@ -26,7 +21,7 @@ import styles from './KeyDetail.module.css';
 export interface KeyDetailProps {
   keyId: string;
   onClose: () => void;
-  onMinimize?: () => void;
+  onMinimize: () => void;
 }
 
 type TabId = 'overview' | 'sync' | 'details';
@@ -131,14 +126,9 @@ export function KeyDetail({ keyId, onClose, onMinimize }: KeyDetailProps) {
       <SidekickContent>
         {activeTab === 'overview' && <KeyOverview sshKey={sshKey} />}
         {activeTab === 'sync' && (
-          <KeySync 
-            sshKey={sshKey} 
-            providerAccounts={providerAccounts || []}
-          />
+          <KeySync sshKey={sshKey} providerAccounts={providerAccounts || []} />
         )}
-        {activeTab === 'details' && (
-          <KeyDetails sshKey={sshKey} />
-        )}
+        {activeTab === 'details' && <KeyDetails sshKey={sshKey} />}
       </SidekickContent>
 
       <SidekickActionBar spread>
@@ -151,11 +141,7 @@ export function KeyDetail({ keyId, onClose, onMinimize }: KeyDetailProps) {
             <Copy size={14} />
             Copy
           </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={downloadPrivateKey}
-          >
+          <Button variant="secondary" size="sm" onClick={downloadPrivateKey}>
             <Download size={14} />
             Download
           </Button>

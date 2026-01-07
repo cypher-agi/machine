@@ -1,11 +1,11 @@
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { database } from '../services/database';
-import { 
-  BootstrapProfile, 
+import type {
+  BootstrapProfile,
   BootstrapProfileCreateRequest,
   FirewallProfile,
-  ApiResponse
+  ApiResponse,
 } from '@machina/shared';
 import { AppError } from '../middleware/errorHandler';
 
@@ -15,7 +15,7 @@ export const bootstrapRouter = Router();
 bootstrapRouter.get('/profiles', (_req: Request, res: Response) => {
   const response: ApiResponse<BootstrapProfile[]> = {
     success: true,
-    data: database.getBootstrapProfiles()
+    data: database.getBootstrapProfiles(),
   };
 
   res.json(response);
@@ -23,15 +23,20 @@ bootstrapRouter.get('/profiles', (_req: Request, res: Response) => {
 
 // GET /bootstrap/profiles/:id - Get single bootstrap profile
 bootstrapRouter.get('/profiles/:id', (req: Request, res: Response) => {
-  const profile = database.getBootstrapProfile(req.params.id);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing profile ID');
+  }
+
+  const profile = database.getBootstrapProfile(id);
 
   if (!profile) {
-    throw new AppError(404, 'PROFILE_NOT_FOUND', `Bootstrap profile ${req.params.id} not found`);
+    throw new AppError(404, 'PROFILE_NOT_FOUND', `Bootstrap profile ${id} not found`);
   }
 
   const response: ApiResponse<BootstrapProfile> = {
     success: true,
-    data: profile
+    data: profile,
   };
 
   res.json(response);
@@ -47,37 +52,49 @@ bootstrapRouter.post('/profiles', (req: Request, res: Response) => {
 
   // Validate that the correct template is provided based on method
   if (body.method === 'cloud_init' && !body.cloud_init_template) {
-    throw new AppError(400, 'VALIDATION_ERROR', 'cloud_init_template is required for cloud_init method');
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'cloud_init_template is required for cloud_init method'
+    );
   }
   if (body.method === 'ssh_script' && !body.ssh_bootstrap_script) {
-    throw new AppError(400, 'VALIDATION_ERROR', 'ssh_bootstrap_script is required for ssh_script method');
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'ssh_bootstrap_script is required for ssh_script method'
+    );
   }
   if (body.method === 'ansible' && !body.ansible_playbook_ref) {
-    throw new AppError(400, 'VALIDATION_ERROR', 'ansible_playbook_ref is required for ansible method');
+    throw new AppError(
+      400,
+      'VALIDATION_ERROR',
+      'ansible_playbook_ref is required for ansible method'
+    );
   }
 
   const newProfile: BootstrapProfile = {
     profile_id: `bp_${uuidv4().substring(0, 12)}`,
     name: body.name,
-    description: body.description,
+    ...(body.description && { description: body.description }),
     method: body.method,
-    cloud_init_template: body.cloud_init_template,
-    ssh_bootstrap_script: body.ssh_bootstrap_script,
-    ansible_playbook_ref: body.ansible_playbook_ref,
+    ...(body.cloud_init_template && { cloud_init_template: body.cloud_init_template }),
+    ...(body.ssh_bootstrap_script && { ssh_bootstrap_script: body.ssh_bootstrap_script }),
+    ...(body.ansible_playbook_ref && { ansible_playbook_ref: body.ansible_playbook_ref }),
     services_to_run: body.services_to_run || [],
-    config_schema: body.config_schema,
+    ...(body.config_schema && { config_schema: body.config_schema }),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     created_by: 'user_current',
-    tags: body.tags,
-    is_system_profile: false
+    ...(body.tags && { tags: body.tags }),
+    is_system_profile: false,
   };
 
   database.insertBootstrapProfile(newProfile);
 
   const response: ApiResponse<BootstrapProfile> = {
     success: true,
-    data: newProfile
+    data: newProfile,
   };
 
   res.status(201).json(response);
@@ -85,10 +102,15 @@ bootstrapRouter.post('/profiles', (req: Request, res: Response) => {
 
 // PUT /bootstrap/profiles/:id - Update bootstrap profile
 bootstrapRouter.put('/profiles/:id', (req: Request, res: Response) => {
-  const profile = database.getBootstrapProfile(req.params.id);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing profile ID');
+  }
+
+  const profile = database.getBootstrapProfile(id);
 
   if (!profile) {
-    throw new AppError(404, 'PROFILE_NOT_FOUND', `Bootstrap profile ${req.params.id} not found`);
+    throw new AppError(404, 'PROFILE_NOT_FOUND', `Bootstrap profile ${id} not found`);
   }
 
   if (profile.is_system_profile) {
@@ -98,23 +120,55 @@ bootstrapRouter.put('/profiles/:id', (req: Request, res: Response) => {
   const body: Partial<BootstrapProfileCreateRequest> = req.body;
 
   database.updateBootstrapProfile({
-    profile_id: req.params.id,
+    profile_id: id,
     name: body.name || profile.name,
-    description: body.description !== undefined ? body.description : profile.description,
-    cloud_init_template: body.cloud_init_template !== undefined ? body.cloud_init_template : profile.cloud_init_template,
-    ssh_bootstrap_script: body.ssh_bootstrap_script !== undefined ? body.ssh_bootstrap_script : profile.ssh_bootstrap_script,
-    ansible_playbook_ref: body.ansible_playbook_ref !== undefined ? body.ansible_playbook_ref : profile.ansible_playbook_ref,
+    ...(body.description !== undefined
+      ? body.description
+        ? { description: body.description }
+        : {}
+      : profile.description
+        ? { description: profile.description }
+        : {}),
+    ...(body.cloud_init_template !== undefined
+      ? body.cloud_init_template
+        ? { cloud_init_template: body.cloud_init_template }
+        : {}
+      : profile.cloud_init_template
+        ? { cloud_init_template: profile.cloud_init_template }
+        : {}),
+    ...(body.ssh_bootstrap_script !== undefined
+      ? body.ssh_bootstrap_script
+        ? { ssh_bootstrap_script: body.ssh_bootstrap_script }
+        : {}
+      : profile.ssh_bootstrap_script
+        ? { ssh_bootstrap_script: profile.ssh_bootstrap_script }
+        : {}),
+    ...(body.ansible_playbook_ref !== undefined
+      ? body.ansible_playbook_ref
+        ? { ansible_playbook_ref: body.ansible_playbook_ref }
+        : {}
+      : profile.ansible_playbook_ref
+        ? { ansible_playbook_ref: profile.ansible_playbook_ref }
+        : {}),
     services_to_run: body.services_to_run || profile.services_to_run,
-    config_schema: body.config_schema || profile.config_schema,
-    tags: body.tags || profile.tags,
-    updated_at: new Date().toISOString()
+    ...(body.config_schema
+      ? { config_schema: body.config_schema }
+      : profile.config_schema
+        ? { config_schema: profile.config_schema }
+        : {}),
+    ...(body.tags ? { tags: body.tags } : profile.tags ? { tags: profile.tags } : {}),
+    updated_at: new Date().toISOString(),
   });
 
-  const updatedProfile = database.getBootstrapProfile(req.params.id);
+  const updatedProfile = database.getBootstrapProfile(id);
+
+  if (!updatedProfile) {
+    throw new AppError(500, 'UPDATE_FAILED', 'Failed to retrieve updated profile');
+  }
 
   const response: ApiResponse<BootstrapProfile> = {
     success: true,
-    data: updatedProfile!
+    data: updatedProfile,
   };
 
   res.json(response);
@@ -122,21 +176,26 @@ bootstrapRouter.put('/profiles/:id', (req: Request, res: Response) => {
 
 // DELETE /bootstrap/profiles/:id - Delete bootstrap profile
 bootstrapRouter.delete('/profiles/:id', (req: Request, res: Response) => {
-  const profile = database.getBootstrapProfile(req.params.id);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing profile ID');
+  }
+
+  const profile = database.getBootstrapProfile(id);
 
   if (!profile) {
-    throw new AppError(404, 'PROFILE_NOT_FOUND', `Bootstrap profile ${req.params.id} not found`);
+    throw new AppError(404, 'PROFILE_NOT_FOUND', `Bootstrap profile ${id} not found`);
   }
 
   if (profile.is_system_profile) {
     throw new AppError(403, 'FORBIDDEN', 'Cannot delete system profiles');
   }
 
-  database.deleteBootstrapProfile(req.params.id);
+  database.deleteBootstrapProfile(id);
 
   const response: ApiResponse<{ deleted: boolean }> = {
     success: true,
-    data: { deleted: true }
+    data: { deleted: true },
   };
 
   res.json(response);
@@ -146,7 +205,7 @@ bootstrapRouter.delete('/profiles/:id', (req: Request, res: Response) => {
 bootstrapRouter.get('/firewall-profiles', (_req: Request, res: Response) => {
   const response: ApiResponse<FirewallProfile[]> = {
     success: true,
-    data: database.getFirewallProfiles()
+    data: database.getFirewallProfiles(),
   };
 
   res.json(response);
@@ -154,15 +213,20 @@ bootstrapRouter.get('/firewall-profiles', (_req: Request, res: Response) => {
 
 // GET /bootstrap/firewall-profiles/:id - Get single firewall profile
 bootstrapRouter.get('/firewall-profiles/:id', (req: Request, res: Response) => {
-  const profile = database.getFirewallProfile(req.params.id);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing profile ID');
+  }
+
+  const profile = database.getFirewallProfile(id);
 
   if (!profile) {
-    throw new AppError(404, 'PROFILE_NOT_FOUND', `Firewall profile ${req.params.id} not found`);
+    throw new AppError(404, 'PROFILE_NOT_FOUND', `Firewall profile ${id} not found`);
   }
 
   const response: ApiResponse<FirewallProfile> = {
     success: true,
-    data: profile
+    data: profile,
   };
 
   res.json(response);

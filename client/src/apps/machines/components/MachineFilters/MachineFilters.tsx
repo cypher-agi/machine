@@ -27,7 +27,8 @@ const providerOptions: { value: ProviderType; label: string }[] = [
 ];
 
 export function MachineFilters({ onClose }: MachineFiltersProps) {
-  const { machineFilters, setMachineFilters, clearMachineFilters, machineSort, setMachineSort } = useAppStore();
+  const { machineFilters, setMachineFilters, clearMachineFilters, machineSort, setMachineSort } =
+    useAppStore();
 
   return (
     <div className={styles.container}>
@@ -38,7 +39,9 @@ export function MachineFilters({ onClose }: MachineFiltersProps) {
             <label className={styles.filterLabel}>Status</label>
             <Select
               value={machineFilters.status || ''}
-              onChange={(e) => setMachineFilters({ status: e.target.value as MachineStatus || undefined })}
+              onChange={(e) =>
+                setMachineFilters({ status: (e.target.value as MachineStatus) || undefined })
+              }
               className={styles.filterInput}
               size="sm"
             >
@@ -56,7 +59,9 @@ export function MachineFilters({ onClose }: MachineFiltersProps) {
             <label className={styles.filterLabel}>Provider</label>
             <Select
               value={machineFilters.provider || ''}
-              onChange={(e) => setMachineFilters({ provider: e.target.value as ProviderType || undefined })}
+              onChange={(e) =>
+                setMachineFilters({ provider: (e.target.value as ProviderType) || undefined })
+              }
               className={styles.filterInput}
               size="sm"
             >
@@ -76,7 +81,9 @@ export function MachineFilters({ onClose }: MachineFiltersProps) {
               type="text"
               placeholder="e.g., nyc3"
               value={machineFilters.region || ''}
-              onChange={(e) => setMachineFilters({ region: e.target.value || undefined })}
+              onChange={(e) =>
+                setMachineFilters(e.target.value ? { region: e.target.value } : { region: '' })
+              }
               className={clsx(styles.filterInput, styles.filterInputSm)}
               size="sm"
             />
@@ -88,7 +95,10 @@ export function MachineFilters({ onClose }: MachineFiltersProps) {
             <Select
               value={`${machineSort.field}-${machineSort.direction}`}
               onChange={(e) => {
-                const [field, direction] = e.target.value.split('-') as [typeof machineSort.field, 'asc' | 'desc'];
+                const [field, direction] = e.target.value.split('-') as [
+                  typeof machineSort.field,
+                  'asc' | 'desc',
+                ];
                 setMachineSort({ field, direction });
               }}
               className={styles.filterInput}
@@ -102,7 +112,12 @@ export function MachineFilters({ onClose }: MachineFiltersProps) {
           </div>
 
           {/* Clear */}
-          <Button variant="ghost" size="sm" onClick={clearMachineFilters} className={styles.clearButton}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearMachineFilters}
+            className={styles.clearButton}
+          >
             Clear
           </Button>
         </div>

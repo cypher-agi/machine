@@ -1,6 +1,6 @@
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { database } from '../services/database';
-import { ApiResponse } from '@machina/shared';
+import type { ApiResponse } from '@machina/shared';
 
 export const agentRouter = Router();
 
@@ -24,33 +24,33 @@ agentRouter.post('/heartbeat', (req: Request, res: Response) => {
   if (!payload.machine_id) {
     res.status(400).json({
       success: false,
-      error: { code: 'VALIDATION_ERROR', message: 'machine_id is required' }
+      error: { code: 'VALIDATION_ERROR', message: 'machine_id is required' },
     });
     return;
   }
 
   // Find machine by ID
   const machine = database.getMachine(payload.machine_id);
-  
+
   if (!machine) {
     // Try to find by public IP (for initial registration)
     const allMachines = database.getMachines();
-    const machineByIp = allMachines.find(m => m.public_ip === payload.public_ip);
-    
+    const machineByIp = allMachines.find((m) => m.public_ip === payload.public_ip);
+
     if (!machineByIp) {
       res.status(404).json({
         success: false,
-        error: { code: 'MACHINE_NOT_FOUND', message: 'Machine not found' }
+        error: { code: 'MACHINE_NOT_FOUND', message: 'Machine not found' },
       });
       return;
     }
-    
+
     // Update using found machine
     database.updateMachine({
       machine_id: machineByIp.machine_id,
       agent_status: 'connected',
       last_health_check: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     });
 
     // Store agent metrics
@@ -63,12 +63,12 @@ agentRouter.post('/heartbeat', (req: Request, res: Response) => {
       memory_used_mb: payload.memory_used_mb,
       disk_total_gb: payload.disk_total_gb,
       disk_used_gb: payload.disk_used_gb,
-      last_heartbeat: new Date().toISOString()
+      last_heartbeat: new Date().toISOString(),
     });
 
     const response: ApiResponse<{ status: string }> = {
       success: true,
-      data: { status: 'registered' }
+      data: { status: 'registered' },
     };
     res.json(response);
     return;
@@ -79,7 +79,7 @@ agentRouter.post('/heartbeat', (req: Request, res: Response) => {
     machine_id: machine.machine_id,
     agent_status: 'connected',
     last_health_check: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   });
 
   // Store agent metrics
@@ -92,27 +92,31 @@ agentRouter.post('/heartbeat', (req: Request, res: Response) => {
     memory_used_mb: payload.memory_used_mb,
     disk_total_gb: payload.disk_total_gb,
     disk_used_gb: payload.disk_used_gb,
-    last_heartbeat: new Date().toISOString()
+    last_heartbeat: new Date().toISOString(),
   });
 
   console.log(`💓 Heartbeat from ${machine.name} (${machine.public_ip})`);
 
   const response: ApiResponse<{ status: string }> = {
     success: true,
-    data: { status: 'ok' }
+    data: { status: 'ok' },
   };
   res.json(response);
 });
 
 // GET /agent/metrics/:machineId - Get agent metrics for a machine
 agentRouter.get('/metrics/:machineId', (req: Request, res: Response) => {
-  const metrics = database.getAgentMetrics(req.params.machineId);
-  
+  const { machineId } = req.params;
+  if (!machineId) {
+    const response: ApiResponse<null> = { success: true, data: null };
+    res.json(response);
+    return;
+  }
+  const metrics = database.getAgentMetrics(machineId);
+
   const response: ApiResponse<typeof metrics> = {
     success: true,
-    data: metrics
+    data: metrics,
   };
   res.json(response);
 });
-
-

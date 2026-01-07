@@ -1,11 +1,6 @@
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { database } from '../services/database';
-import { 
-  Deployment, 
-  DeploymentLog,
-  DeploymentListFilter,
-  ApiResponse
-} from '@machina/shared';
+import type { Deployment, DeploymentLog, DeploymentListFilter, ApiResponse } from '@machina/shared';
 import { AppError } from '../middleware/errorHandler';
 import { addDeploymentLogListener, removeDeploymentLogListener } from './machines';
 
@@ -13,31 +8,33 @@ export const deploymentsRouter = Router();
 
 // GET /deployments - List deployments with filtering
 deploymentsRouter.get('/', (req: Request, res: Response) => {
-  const filters: DeploymentListFilter = {
-    machine_id: req.query.machine_id as string,
-    type: req.query.type as DeploymentListFilter['type'],
-    state: req.query.state as DeploymentListFilter['state'],
-    created_after: req.query.created_after as string,
-    created_before: req.query.created_before as string
-  };
+  const filters = {
+    ...(req.query.machine_id && { machine_id: req.query.machine_id as string }),
+    ...(req.query.type && { type: req.query.type as DeploymentListFilter['type'] }),
+    ...(req.query.state && { state: req.query.state as DeploymentListFilter['state'] }),
+    ...(req.query.created_after && { created_after: req.query.created_after as string }),
+    ...(req.query.created_before && { created_before: req.query.created_before as string }),
+  } as DeploymentListFilter;
 
   let filtered = database.getDeployments();
 
   // Apply filters
   if (filters.machine_id) {
-    filtered = filtered.filter(d => d.machine_id === filters.machine_id);
+    filtered = filtered.filter((d) => d.machine_id === filters.machine_id);
   }
   if (filters.type) {
-    filtered = filtered.filter(d => d.type === filters.type);
+    filtered = filtered.filter((d) => d.type === filters.type);
   }
   if (filters.state) {
-    filtered = filtered.filter(d => d.state === filters.state);
+    filtered = filtered.filter((d) => d.state === filters.state);
   }
   if (filters.created_after) {
-    filtered = filtered.filter(d => new Date(d.created_at) >= new Date(filters.created_after!));
+    const afterDate = new Date(filters.created_after);
+    filtered = filtered.filter((d) => new Date(d.created_at) >= afterDate);
   }
   if (filters.created_before) {
-    filtered = filtered.filter(d => new Date(d.created_at) <= new Date(filters.created_before!));
+    const beforeDate = new Date(filters.created_before);
+    filtered = filtered.filter((d) => new Date(d.created_at) <= beforeDate);
   }
 
   // Sort by created_at descending (most recent first)
@@ -61,10 +58,10 @@ deploymentsRouter.get('/', (req: Request, res: Response) => {
         total_items: totalItems,
         total_pages: totalPages,
         has_next: page < totalPages,
-        has_prev: page > 1
+        has_prev: page > 1,
       },
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    },
   };
 
   res.json(response);
@@ -72,15 +69,20 @@ deploymentsRouter.get('/', (req: Request, res: Response) => {
 
 // GET /deployments/:id - Get single deployment
 deploymentsRouter.get('/:id', (req: Request, res: Response) => {
-  const deployment = database.getDeployment(req.params.id);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing deployment ID');
+  }
+
+  const deployment = database.getDeployment(id);
 
   if (!deployment) {
-    throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${req.params.id} not found`);
+    throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${id} not found`);
   }
 
   const response: ApiResponse<Deployment> = {
     success: true,
-    data: deployment
+    data: deployment,
   };
 
   res.json(response);
@@ -88,10 +90,15 @@ deploymentsRouter.get('/:id', (req: Request, res: Response) => {
 
 // GET /deployments/:id/logs - Get deployment logs (supports SSE for streaming)
 deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
-  const deployment = database.getDeployment(req.params.id);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing deployment ID');
+  }
+
+  const deployment = database.getDeployment(id);
 
   if (!deployment) {
-    throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${req.params.id} not found`);
+    throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${id} not found`);
   }
 
   const stream = req.query.stream === 'true';
@@ -127,23 +134,23 @@ deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
         res.write(`data: ${JSON.stringify(log)}\n\n`);
       };
 
-      addDeploymentLogListener(req.params.id, logListener);
+      addDeploymentLogListener(id, logListener);
 
       // Poll for completion state
       const pollInterval = setInterval(() => {
-        const updated = database.getDeployment(req.params.id);
+        const updated = database.getDeployment(id);
         if (updated && !['queued', 'planning', 'applying'].includes(updated.state)) {
           res.write(`event: complete\n`);
           res.write(`data: ${JSON.stringify({ state: updated.state })}\n\n`);
           clearInterval(pollInterval);
-          removeDeploymentLogListener(req.params.id, logListener);
+          removeDeploymentLogListener(id, logListener);
           res.end();
         }
       }, 1000);
 
       req.on('close', () => {
         clearInterval(pollInterval);
-        removeDeploymentLogListener(req.params.id, logListener);
+        removeDeploymentLogListener(id, logListener);
       });
     }
   } else {
@@ -153,7 +160,7 @@ deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
       data: logsArray.map((log) => ({
         ...log,
         deployment_id: deployment.deployment_id,
-      }))
+      })),
     };
 
     res.json(response);
@@ -162,27 +169,40 @@ deploymentsRouter.get('/:id/logs', (req: Request, res: Response) => {
 
 // POST /deployments/:id/cancel - Cancel a running deployment
 deploymentsRouter.post('/:id/cancel', (req: Request, res: Response) => {
-  const deployment = database.getDeployment(req.params.id);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing deployment ID');
+  }
+
+  const deployment = database.getDeployment(id);
 
   if (!deployment) {
-    throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${req.params.id} not found`);
+    throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${id} not found`);
   }
 
   if (!['queued', 'planning', 'applying'].includes(deployment.state)) {
-    throw new AppError(400, 'INVALID_STATE', `Cannot cancel deployment in state: ${deployment.state}`);
+    throw new AppError(
+      400,
+      'INVALID_STATE',
+      `Cannot cancel deployment in state: ${deployment.state}`
+    );
   }
 
   database.updateDeployment({
     deployment_id: deployment.deployment_id,
     state: 'cancelled',
-    finished_at: new Date().toISOString()
+    finished_at: new Date().toISOString(),
   });
 
   const updated = database.getDeployment(deployment.deployment_id);
 
+  if (!updated) {
+    throw new AppError(500, 'UPDATE_FAILED', 'Failed to retrieve updated deployment');
+  }
+
   const response: ApiResponse<Deployment> = {
     success: true,
-    data: updated!
+    data: updated,
   };
 
   res.json(response);
@@ -190,10 +210,15 @@ deploymentsRouter.post('/:id/cancel', (req: Request, res: Response) => {
 
 // POST /deployments/:id/approve - Approve a deployment awaiting approval
 deploymentsRouter.post('/:id/approve', (req: Request, res: Response) => {
-  const deployment = database.getDeployment(req.params.id);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing deployment ID');
+  }
+
+  const deployment = database.getDeployment(id);
 
   if (!deployment) {
-    throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${req.params.id} not found`);
+    throw new AppError(404, 'DEPLOYMENT_NOT_FOUND', `Deployment ${id} not found`);
   }
 
   if (deployment.state !== 'awaiting_approval') {
@@ -203,14 +228,18 @@ deploymentsRouter.post('/:id/approve', (req: Request, res: Response) => {
   database.updateDeployment({
     deployment_id: deployment.deployment_id,
     state: 'applying',
-    started_at: new Date().toISOString()
+    started_at: new Date().toISOString(),
   });
 
   const updated = database.getDeployment(deployment.deployment_id);
 
+  if (!updated) {
+    throw new AppError(500, 'UPDATE_FAILED', 'Failed to retrieve updated deployment');
+  }
+
   const response: ApiResponse<Deployment> = {
     success: true,
-    data: updated!
+    data: updated,
   };
 
   res.json(response);

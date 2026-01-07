@@ -1,8 +1,5 @@
 import type { MachineServicesResponse } from '@machina/shared';
-import {
-  SidekickPanel,
-  SidekickEmpty,
-} from '../../components';
+import { SidekickPanel, SidekickEmpty } from '../../components';
 import styles from './MachineDetail.module.css';
 
 interface MachineServicesTabProps {
@@ -23,9 +20,7 @@ export function MachineServicesTab({ services }: MachineServicesTabProps) {
               <div className={styles.cardTitle}>
                 <span className={styles.cardName}>{service.display_name}</span>
                 {service.version && (
-                  <span className={styles.serviceVersion}>
-                    {service.version}
-                  </span>
+                  <span className={styles.serviceVersion}>{service.version}</span>
                 )}
               </div>
               <span className={styles.cardMeta}>{service.systemd_unit}</span>

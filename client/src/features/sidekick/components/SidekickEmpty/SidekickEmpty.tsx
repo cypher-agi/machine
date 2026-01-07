@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import styles from './SidekickEmpty.module.css';
 
 export interface SidekickEmptyProps {
@@ -14,4 +14,3 @@ export function SidekickEmpty({ icon, message }: SidekickEmptyProps) {
     </div>
   );
 }
-

@@ -16,12 +16,12 @@ interface SSHTerminalProps {
 
 type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
-export function SSHTerminal({ 
-  machineId, 
-  sshKeyId, 
+export function SSHTerminal({
+  machineId,
+  sshKeyId,
   machineName,
   machineIp,
-  onDisconnect 
+  onDisconnect,
 }: SSHTerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
   const terminalInstance = useRef<Terminal | null>(null);
@@ -44,7 +44,8 @@ export function SSHTerminal({
       cursorBlink: true,
       cursorStyle: 'block',
       fontSize: 14,
-      fontFamily: '"JetBrains Mono", "Fira Code", "Cascadia Code", Menlo, Monaco, "Courier New", monospace',
+      fontFamily:
+        '"JetBrains Mono", "Fira Code", "Cascadia Code", Menlo, Monaco, "Courier New", monospace',
       theme: {
         background: '#0a0a0a',
         foreground: '#e4e4e7',
@@ -88,11 +89,13 @@ export function SSHTerminal({
     const handleResize = () => {
       fit.fit();
       if (wsRef.current?.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({
-          type: 'resize',
-          cols: terminal.cols,
-          rows: terminal.rows
-        }));
+        wsRef.current.send(
+          JSON.stringify({
+            type: 'resize',
+            cols: terminal.cols,
+            rows: terminal.rows,
+          })
+        );
       }
     };
 
@@ -121,34 +124,36 @@ export function SSHTerminal({
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data);
-        
+
         switch (msg.type) {
           case 'status':
             setStatusMessage(msg.message);
             terminal.writeln(`\x1b[33m${msg.message}\x1b[0m`);
             break;
-          
+
           case 'connected':
             setStatus('connected');
             setStatusMessage('Connected');
             // Send initial resize
-            ws.send(JSON.stringify({
-              type: 'resize',
-              cols: terminal.cols,
-              rows: terminal.rows
-            }));
+            ws.send(
+              JSON.stringify({
+                type: 'resize',
+                cols: terminal.cols,
+                rows: terminal.rows,
+              })
+            );
             break;
-          
+
           case 'data':
             terminal.write(msg.data);
             break;
-          
+
           case 'error':
             setStatus('error');
             setStatusMessage(msg.message);
             terminal.writeln(`\x1b[31mError: ${msg.message}\x1b[0m`);
             break;
-          
+
           case 'disconnected':
             setStatus('disconnected');
             setStatusMessage(msg.message || 'Disconnected');
@@ -217,17 +222,11 @@ export function SSHTerminal({
             {machineName} ({machineIp})
           </span>
         </div>
-        <span className={styles.statusMessage}>
-          {statusMessage}
-        </span>
+        <span className={styles.statusMessage}>{statusMessage}</span>
       </div>
-      
+
       {/* Terminal container */}
-      <div 
-        ref={terminalRef} 
-        className={styles.terminalContainer}
-      />
+      <div ref={terminalRef} className={styles.terminalContainer} />
     </div>
   );
 }
-

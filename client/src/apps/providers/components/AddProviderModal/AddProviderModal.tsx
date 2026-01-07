@@ -29,8 +29,15 @@ export function AddProviderModal({ onClose }: AddProviderModalProps) {
   const [doToken, setDoToken] = useState('');
 
   const createMutation = useMutation({
-    mutationFn: ({ type, label, credentials }: { type: ProviderType; label: string; credentials: ProviderCredentials }) =>
-      createProviderAccount(type, { provider_type: type, label, credentials }),
+    mutationFn: ({
+      type,
+      label,
+      credentials,
+    }: {
+      type: ProviderType;
+      label: string;
+      credentials: ProviderCredentials;
+    }) => createProviderAccount(type, { provider_type: type, label, credentials }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['provider-accounts'] });
       addToast({ type: 'success', title: 'Provider added' });
@@ -79,7 +86,12 @@ export function AddProviderModal({ onClose }: AddProviderModalProps) {
           <Button variant="secondary" size="sm" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" size="sm" onClick={handleSubmit} disabled={!canSubmit() || createMutation.isPending}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSubmit}
+            disabled={!canSubmit() || createMutation.isPending}
+          >
             {createMutation.isPending ? (
               <>
                 <Loader2 size={14} className="animate-spin" />

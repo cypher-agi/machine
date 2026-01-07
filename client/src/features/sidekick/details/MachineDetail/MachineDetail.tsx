@@ -5,12 +5,7 @@ import { getMachine, getMachineServices, getMachineNetworking, getDeployments } 
 import { Badge, Button } from '@/shared/ui';
 import { TerminalModal } from '@/features/terminal';
 import { PROVIDER_LABELS, MACHINE_STATUS_CONFIG } from '@/shared/constants';
-import {
-  SidekickHeader,
-  SidekickTabs,
-  SidekickContent,
-  SidekickLoading,
-} from '../../components';
+import { SidekickHeader, SidekickTabs, SidekickContent, SidekickLoading } from '../../components';
 import { MachineOverviewTab } from './MachineOverviewTab';
 import { MachineDeploymentsTab } from './MachineDeploymentsTab';
 import { MachineNetworkingTab } from './MachineNetworkingTab';
@@ -20,7 +15,7 @@ import { MachineDetailsTab } from './MachineDetailsTab';
 export interface MachineDetailProps {
   machineId: string;
   onClose: () => void;
-  onMinimize?: () => void;
+  onMinimize: () => void;
 }
 
 type TabId = 'overview' | 'deployments' | 'networking' | 'services' | 'details';
@@ -80,8 +75,9 @@ export function MachineDetail({ machineId, onClose, onMinimize }: MachineDetailP
         statusBadge={<Badge variant={status.variant}>{status.label}</Badge>}
         onClose={onClose}
         onMinimize={onMinimize}
-        quickCode={machine.public_ip || undefined}
-        quickCodeLabel="IP Address"
+        {...(machine.public_ip
+          ? { quickCode: machine.public_ip, quickCodeLabel: 'IP Address' }
+          : {})}
         quickActions={
           machine.public_ip && machine.actual_status === 'running' ? (
             <Button variant="primary" size="sm" onClick={() => setShowTerminal(true)}>
@@ -106,9 +102,7 @@ export function MachineDetail({ machineId, onClose, onMinimize }: MachineDetailP
         {activeTab === 'details' && <MachineDetailsTab machine={machine} />}
       </SidekickContent>
 
-      {showTerminal && (
-        <TerminalModal machine={machine} onClose={() => setShowTerminal(false)} />
-      )}
+      {showTerminal && <TerminalModal machine={machine} onClose={() => setShowTerminal(false)} />}
     </>
   );
 }

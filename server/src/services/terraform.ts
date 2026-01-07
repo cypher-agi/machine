@@ -2,18 +2,28 @@ import { spawn, execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
+export type TerraformVarValue =
+  | string
+  | number
+  | boolean
+  | string[]
+  | Record<string, unknown>
+  | Record<string, unknown>[];
+
 export interface TerraformVars {
-  [key: string]: string | number | boolean | string[];
+  [key: string]: TerraformVarValue;
 }
 
 export interface TerraformResult {
   success: boolean;
-  outputs?: Record<string, any>;
+  outputs?: Record<string, unknown>;
   error?: string;
   logs: string[];
 }
 
-export type LogCallback = (log: { level: string; message: string; source: string }) => void;
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogSource = 'terraform' | 'system' | 'provider';
+export type LogCallback = (log: { level: LogLevel; message: string; source: LogSource }) => void;
 
 // Base directory for terraform workspaces
 const WORKSPACES_DIR = path.join(process.cwd(), '.terraform-workspaces');
@@ -101,7 +111,9 @@ function tryResolveTerraform(): TerraformResolution {
         if (fs.existsSync(wingetPackagesDir)) {
           const entries = fs.readdirSync(wingetPackagesDir, { withFileTypes: true });
           const terraformDirs = entries
-            .filter((e) => e.isDirectory() && e.name.toLowerCase().startsWith('hashicorp.terraform_'))
+            .filter(
+              (e) => e.isDirectory() && e.name.toLowerCase().startsWith('hashicorp.terraform_')
+            )
             .map((e) => path.join(wingetPackagesDir, e.name));
 
           // Prefer the newest-looking directory by mtime (good enough heuristic)
@@ -120,7 +132,7 @@ function tryResolveTerraform(): TerraformResolution {
                 available: true,
                 command: exe,
                 source: 'winget',
-                note: 'Using WinGet-installed terraform.exe (not found on PATH).'
+                note: 'Using WinGet-installed terraform.exe (not found on PATH).',
               };
             }
           }
@@ -131,7 +143,10 @@ function tryResolveTerraform(): TerraformResolution {
     }
   }
 
-  return { available: false, note: 'Terraform not found (not on PATH and no auto-discovery match).' };
+  return {
+    available: false,
+    note: 'Terraform not found (not on PATH and no auto-discovery match).',
+  };
 }
 
 function ensureTerraform(): TerraformResolution {
@@ -165,19 +180,19 @@ if (!fs.existsSync(WORKSPACES_DIR)) {
 export class TerraformService {
   private workspaceDir: string;
   private logs: string[] = [];
-  private onLog?: LogCallback;
+  private onLog?: LogCallback | undefined;
 
   constructor(workspaceName: string, onLog?: LogCallback) {
     this.workspaceDir = path.join(WORKSPACES_DIR, workspaceName);
     this.onLog = onLog;
-    
+
     // Create workspace directory if it doesn't exist
     if (!fs.existsSync(this.workspaceDir)) {
       fs.mkdirSync(this.workspaceDir, { recursive: true });
     }
   }
 
-  private log(level: string, message: string, source: string = 'terraform') {
+  private log(level: LogLevel, message: string, source: LogSource = 'terraform') {
     const logEntry = { level, message, source };
     this.logs.push(`[${level.toUpperCase()}] ${message}`);
     if (this.onLog) {
@@ -185,12 +200,16 @@ export class TerraformService {
     }
   }
 
-  private async runCommand(command: string, args: string[], env?: Record<string, string>): Promise<{ code: number; stdout: string; stderr: string }> {
+  private async runCommand(
+    command: string,
+    args: string[],
+    env?: Record<string, string>
+  ): Promise<{ code: number; stdout: string; stderr: string }> {
     return new Promise((resolve) => {
       const proc = spawn(command, args, {
         cwd: this.workspaceDir,
-        env: { 
-          ...process.env, 
+        env: {
+          ...process.env,
           ...env,
           // Disable output buffering for terraform
           TF_LOG_CORE: '',
@@ -218,24 +237,30 @@ export class TerraformService {
         stdout += text;
         lastLogTime = Date.now();
         // Parse terraform output for logging
-        text.split('\n').filter(Boolean).forEach((line: string) => {
-          if (line.includes('Error')) {
-            this.log('error', line, 'terraform');
-          } else if (line.includes('Warning')) {
-            this.log('warn', line, 'terraform');
-          } else {
-            this.log('info', line, 'terraform');
-          }
-        });
+        text
+          .split('\n')
+          .filter(Boolean)
+          .forEach((line: string) => {
+            if (line.includes('Error')) {
+              this.log('error', line, 'terraform');
+            } else if (line.includes('Warning')) {
+              this.log('warn', line, 'terraform');
+            } else {
+              this.log('info', line, 'terraform');
+            }
+          });
       });
 
       proc.stderr.on('data', (data) => {
         const text = data.toString();
         stderr += text;
         lastLogTime = Date.now();
-        text.split('\n').filter(Boolean).forEach((line: string) => {
-          this.log('error', line, 'terraform');
-        });
+        text
+          .split('\n')
+          .filter(Boolean)
+          .forEach((line: string) => {
+            this.log('error', line, 'terraform');
+          });
       });
 
       proc.on('close', (code) => {
@@ -259,11 +284,15 @@ export class TerraformService {
     }
 
     this.log('info', 'Initializing Terraform workspace...', 'system');
-    
+
     // Copy module files to workspace
     const modulesDir = resolveTerraformModulesDir();
     if (!modulesDir) {
-      this.log('error', 'Terraform modules directory not found. Set TERRAFORM_MODULES_DIR or ensure server/src/terraform/modules exists in the deployment.', 'system');
+      this.log(
+        'error',
+        'Terraform modules directory not found. Set TERRAFORM_MODULES_DIR or ensure server/src/terraform/modules exists in the deployment.',
+        'system'
+      );
       return false;
     }
 
@@ -278,10 +307,7 @@ export class TerraformService {
     const files = fs.readdirSync(moduleDir);
     for (const file of files) {
       if (file.endsWith('.tf')) {
-        fs.copyFileSync(
-          path.join(moduleDir, file),
-          path.join(this.workspaceDir, file)
-        );
+        fs.copyFileSync(path.join(moduleDir, file), path.join(this.workspaceDir, file));
       }
     }
 
@@ -297,7 +323,7 @@ export class TerraformService {
     }
 
     this.log('info', 'Creating Terraform plan...', 'system');
-    
+
     // Write variables to file
     const varsFile = path.join(this.workspaceDir, 'terraform.tfvars.json');
     fs.writeFileSync(varsFile, JSON.stringify(vars, null, 2));
@@ -308,7 +334,7 @@ export class TerraformService {
       '-no-color',
       '-input=false',
       `-var-file=${varsFile}`,
-      `-out=${planFile}`
+      `-out=${planFile}`,
     ]);
 
     if (result.code === 0) {
@@ -321,12 +347,20 @@ export class TerraformService {
     const resolution = ensureTerraform();
     if (!resolution.available) {
       this.log('error', resolution.note || 'Terraform is not installed', 'system');
-      return { success: false, error: resolution.note || 'Terraform is not installed', logs: this.logs };
+      return {
+        success: false,
+        error: resolution.note || 'Terraform is not installed',
+        logs: this.logs,
+      };
     }
 
     this.log('info', 'Applying Terraform changes...', 'system');
-    this.log('info', '⏳ This may take 30-90 seconds for cloud resources to provision...', 'system');
-    
+    this.log(
+      'info',
+      '⏳ This may take 30-90 seconds for cloud resources to provision...',
+      'system'
+    );
+
     const args = ['apply', '-no-color', '-auto-approve'];
     if (planFile) {
       args.push(planFile);
@@ -353,11 +387,15 @@ export class TerraformService {
     const resolution = ensureTerraform();
     if (!resolution.available) {
       this.log('error', resolution.note || 'Terraform is not installed', 'system');
-      return { success: false, error: resolution.note || 'Terraform is not installed', logs: this.logs };
+      return {
+        success: false,
+        error: resolution.note || 'Terraform is not installed',
+        logs: this.logs,
+      };
     }
 
     this.log('info', 'Destroying Terraform resources...', 'system');
-    
+
     const varsFile = path.join(this.workspaceDir, 'terraform.tfvars.json');
     const args = ['destroy', '-no-color', '-auto-approve'];
     if (fs.existsSync(varsFile)) {
@@ -373,20 +411,20 @@ export class TerraformService {
     return { success: false, error: result.stderr || 'Destroy failed', logs: this.logs };
   }
 
-  async getOutputs(): Promise<Record<string, any>> {
+  async getOutputs(): Promise<Record<string, unknown>> {
     const resolution = ensureTerraform();
     if (!resolution.available) {
       return {};
     }
     const result = await this.runCommand(resolution.command, ['output', '-json', '-no-color']);
-    
+
     if (result.code === 0 && result.stdout) {
       try {
-        const outputs = JSON.parse(result.stdout);
+        const outputs = JSON.parse(result.stdout) as Record<string, { value: unknown }>;
         // Extract values from terraform output format
-        const simplified: Record<string, any> = {};
+        const simplified: Record<string, unknown> = {};
         for (const [key, val] of Object.entries(outputs)) {
-          simplified[key] = (val as any).value;
+          simplified[key] = val.value;
         }
         return simplified;
       } catch {
@@ -401,7 +439,7 @@ export class TerraformService {
     if (!resolution.available) return false;
 
     this.log('info', 'Refreshing Terraform state...', 'system');
-    
+
     const varsFile = path.join(this.workspaceDir, 'terraform.tfvars.json');
     const args = ['refresh', '-no-color'];
     if (fs.existsSync(varsFile)) {

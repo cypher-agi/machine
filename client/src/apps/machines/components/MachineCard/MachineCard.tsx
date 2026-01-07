@@ -1,14 +1,5 @@
 import { useState } from 'react';
-import {
-  Server,
-  Globe,
-  Clock,
-  Info,
-  RotateCcw,
-  RefreshCw,
-  Trash2,
-  Copy
-} from 'lucide-react';
+import { Server, Globe, Clock, Info, RotateCcw, RefreshCw, Trash2, Copy } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import type { Machine } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
@@ -33,7 +24,8 @@ export function MachineCard({ machine }: MachineCardProps) {
     machineName: machine.name,
   });
 
-  const isSelected = sidekickSelection?.type === 'machine' && sidekickSelection?.id === machine.machine_id;
+  const isSelected =
+    sidekickSelection?.type === 'machine' && sidekickSelection?.id === machine.machine_id;
   const status = MACHINE_STATUS_CONFIG[machine.actual_status] || MACHINE_STATUS_CONFIG.error;
 
   const copyIp = async () => {
@@ -91,7 +83,7 @@ export function MachineCard({ machine }: MachineCardProps) {
         iconBadge={PROVIDER_LABELS[machine.provider] || '??'}
         title={machine.name}
         statusBadge={
-          <Badge variant={status.variant} pulse={status.pulse}>
+          <Badge variant={status.variant} {...(status.pulse && { pulse: status.pulse })}>
             {status.label}
           </Badge>
         }

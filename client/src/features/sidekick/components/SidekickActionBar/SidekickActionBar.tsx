@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import styles from './SidekickActionBar.module.css';
 
@@ -8,9 +8,5 @@ export interface SidekickActionBarProps {
 }
 
 export function SidekickActionBar({ children, spread }: SidekickActionBarProps) {
-  return (
-    <div className={clsx(styles.actionBar, spread && styles.actionBarSpread)}>
-      {children}
-    </div>
-  );
+  return <div className={clsx(styles.actionBar, spread && styles.actionBarSpread)}>{children}</div>;
 }

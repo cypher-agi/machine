@@ -14,12 +14,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <input
         ref={ref}
-        className={clsx(
-          styles.input,
-          size === 'sm' && styles.sm,
-          mono && styles.mono,
-          className
-        )}
+        className={clsx(styles.input, size === 'sm' && styles.sm, mono && styles.mono, className)}
         {...props}
       />
     );

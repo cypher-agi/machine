@@ -1,26 +1,26 @@
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { database } from '../services/database';
-import { 
-  Machine, 
-  MachineCreateRequest, 
+import type {
+  Machine,
+  MachineCreateRequest,
   MachineListFilter,
   ApiResponse,
   Deployment,
   MachineServicesResponse,
   MachineNetworking,
   FirewallRule,
-  SSHKey
+  SSHKey,
 } from '@machina/shared';
 import { AppError } from '../middleware/errorHandler';
 import { getCredentials } from '../services/terraform';
-import { 
-  runTerraformCreate, 
-  runTerraformDestroy, 
-  runReboot, 
+import {
+  runTerraformCreate,
+  runTerraformDestroy,
+  runReboot,
   syncMachinesWithProvider,
   addDeploymentLogListener,
-  removeDeploymentLogListener
+  removeDeploymentLogListener,
 } from '../services/machineOperations';
 
 export const machinesRouter = Router();
@@ -30,43 +30,45 @@ export { addDeploymentLogListener, removeDeploymentLogListener };
 
 // GET /machines - List machines with filtering
 machinesRouter.get('/', (req: Request, res: Response) => {
-  const filters: MachineListFilter = {
-    status: req.query.status as MachineListFilter['status'],
-    provider: req.query.provider as MachineListFilter['provider'],
-    region: req.query.region as string,
-    tag_key: req.query.tag_key as string,
-    tag_value: req.query.tag_value as string,
-    search: req.query.search as string
-  };
+  const filters = {
+    ...(req.query.status && { status: req.query.status as MachineListFilter['status'] }),
+    ...(req.query.provider && { provider: req.query.provider as MachineListFilter['provider'] }),
+    ...(req.query.region && { region: req.query.region as string }),
+    ...(req.query.tag_key && { tag_key: req.query.tag_key as string }),
+    ...(req.query.tag_value && { tag_value: req.query.tag_value as string }),
+    ...(req.query.search && { search: req.query.search as string }),
+  } as MachineListFilter;
 
   let filtered = database.getMachines();
 
   // Apply filters
   if (filters.status) {
-    filtered = filtered.filter(m => m.actual_status === filters.status);
+    filtered = filtered.filter((m) => m.actual_status === filters.status);
   }
   if (filters.provider) {
-    filtered = filtered.filter(m => m.provider === filters.provider);
+    filtered = filtered.filter((m) => m.provider === filters.provider);
   }
   if (filters.region) {
-    filtered = filtered.filter(m => m.region === filters.region);
+    filtered = filtered.filter((m) => m.region === filters.region);
   }
   if (filters.tag_key && filters.tag_value) {
-    filtered = filtered.filter(m => m.tags[filters.tag_key!] === filters.tag_value);
+    const tagKey = filters.tag_key;
+    filtered = filtered.filter((m) => m.tags[tagKey] === filters.tag_value);
   }
   if (filters.search) {
     const search = filters.search.toLowerCase();
-    filtered = filtered.filter(m => 
-      m.name.toLowerCase().includes(search) ||
-      m.public_ip?.includes(search) ||
-      m.provider_resource_id?.includes(search)
+    filtered = filtered.filter(
+      (m) =>
+        m.name.toLowerCase().includes(search) ||
+        m.public_ip?.includes(search) ||
+        m.provider_resource_id?.includes(search)
     );
   }
 
   // Sorting
   const sortField = (req.query.sort_by as string) || 'created_at';
   const sortDir = (req.query.sort_dir as string) || 'desc';
-  
+
   filtered.sort((a, b) => {
     let comparison = 0;
     switch (sortField) {
@@ -107,10 +109,10 @@ machinesRouter.get('/', (req: Request, res: Response) => {
         total_items: totalItems,
         total_pages: totalPages,
         has_next: page < totalPages,
-        has_prev: page > 1
+        has_prev: page > 1,
       },
-      timestamp: new Date().toISOString()
-    }
+      timestamp: new Date().toISOString(),
+    },
   };
 
   res.json(response);
@@ -118,15 +120,20 @@ machinesRouter.get('/', (req: Request, res: Response) => {
 
 // GET /machines/:id - Get single machine
 machinesRouter.get('/:id', (req: Request, res: Response) => {
-  const machine = database.getMachine(req.params.id);
-  
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
+  }
+
+  const machine = database.getMachine(id);
+
   if (!machine) {
-    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${req.params.id} not found`);
+    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
   }
 
   const response: ApiResponse<Machine> = {
     success: true,
-    data: machine
+    data: machine,
   };
 
   res.json(response);
@@ -150,35 +157,39 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
   // Get credentials
   const credentials = getCredentials(body.provider_account_id);
   if (!credentials) {
-    throw new AppError(400, 'CREDENTIALS_NOT_FOUND', 'No credentials found for this provider account. Please add your API token in Provider settings.');
+    throw new AppError(
+      400,
+      'CREDENTIALS_NOT_FOUND',
+      'No credentials found for this provider account. Please add your API token in Provider settings.'
+    );
   }
 
   // Create new machine record
   const machineId = `mach_${uuidv4().replace(/-/g, '').substring(0, 20)}`;
   const workspaceName = `machine-${machineId}`;
-  
+
   const newMachine: Machine = {
     machine_id: machineId,
     name: body.name,
     provider: providerAccount.provider_type,
     provider_account_id: body.provider_account_id,
     region: body.region,
-    zone: body.zone,
+    ...(body.zone && { zone: body.zone }),
     size: body.size,
     image: body.image,
     desired_status: 'running',
     actual_status: 'provisioning',
-    vpc_id: body.vpc_id,
-    subnet_id: body.subnet_id,
+    ...(body.vpc_id && { vpc_id: body.vpc_id }),
+    ...(body.subnet_id && { subnet_id: body.subnet_id }),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     tags: body.tags || {},
     terraform_workspace: workspaceName,
     terraform_state_status: 'pending',
     provisioning_method: 'provider_api',
-    bootstrap_profile_id: body.bootstrap_profile_id,
-    firewall_profile_id: body.firewall_profile_id,
-    agent_status: 'not_installed'
+    ...(body.bootstrap_profile_id && { bootstrap_profile_id: body.bootstrap_profile_id }),
+    ...(body.firewall_profile_id && { firewall_profile_id: body.firewall_profile_id }),
+    agent_status: 'not_installed',
   };
 
   // Create deployment record
@@ -191,7 +202,7 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
     terraform_workspace: workspaceName,
     created_at: new Date().toISOString(),
     started_at: new Date().toISOString(),
-    initiated_by: 'user_current'
+    initiated_by: 'user_current',
   };
 
   // Save to database
@@ -199,12 +210,12 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
   database.insertDeployment(deployment);
 
   // Get bootstrap profile if specified
-  const bootstrapProfile = body.bootstrap_profile_id 
+  const bootstrapProfile = body.bootstrap_profile_id
     ? database.getBootstrapProfile(body.bootstrap_profile_id)
     : undefined;
 
   // Get firewall profile if specified
-  const firewallProfile = body.firewall_profile_id 
+  const firewallProfile = body.firewall_profile_id
     ? database.getFirewallProfile(body.firewall_profile_id)
     : undefined;
 
@@ -237,14 +248,14 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
     providerType: providerAccount.provider_type,
     cloudInitTemplate,
     firewallProfile,
-    sshKeys
-  }).catch(err => {
+    sshKeys,
+  }).catch((err) => {
     console.error('Terraform execution failed:', err);
   });
 
   const response: ApiResponse<{ machine: Machine; deployment: Deployment }> = {
     success: true,
-    data: { machine: newMachine, deployment }
+    data: { machine: newMachine, deployment },
   };
 
   res.status(201).json(response);
@@ -252,10 +263,15 @@ machinesRouter.post('/', async (req: Request, res: Response) => {
 
 // POST /machines/:id/reboot - Reboot machine via DigitalOcean API
 machinesRouter.post('/:id/reboot', async (req: Request, res: Response) => {
-  const machine = database.getMachine(req.params.id);
-  
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
+  }
+
+  const machine = database.getMachine(id);
+
   if (!machine) {
-    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${req.params.id} not found`);
+    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
   }
 
   if (machine.actual_status !== 'running') {
@@ -268,14 +284,18 @@ machinesRouter.post('/:id/reboot', async (req: Request, res: Response) => {
 
   const credentials = getCredentials(machine.provider_account_id);
   if (!credentials) {
-    throw new AppError(400, 'CREDENTIALS_NOT_FOUND', 'No credentials found for this provider account');
+    throw new AppError(
+      400,
+      'CREDENTIALS_NOT_FOUND',
+      'No credentials found for this provider account'
+    );
   }
 
   // Update machine status
   database.updateMachine({
     machine_id: machine.machine_id,
     actual_status: 'rebooting',
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   });
 
   // Create deployment for tracking
@@ -287,24 +307,24 @@ machinesRouter.post('/:id/reboot', async (req: Request, res: Response) => {
     terraform_workspace: machine.terraform_workspace,
     created_at: new Date().toISOString(),
     started_at: new Date().toISOString(),
-    initiated_by: 'user_current'
+    initiated_by: 'user_current',
   };
 
   database.insertDeployment(deployment);
 
   // Call DigitalOcean API to reboot
   runReboot(
-    machine.machine_id, 
-    machine.provider_resource_id, 
-    deployment.deployment_id, 
+    machine.machine_id,
+    machine.provider_resource_id,
+    deployment.deployment_id,
     credentials
-  ).catch(err => {
+  ).catch((err) => {
     console.error('Reboot failed:', err);
   });
 
   const response: ApiResponse<{ deployment: Deployment }> = {
     success: true,
-    data: { deployment }
+    data: { deployment },
   };
 
   res.json(response);
@@ -312,24 +332,33 @@ machinesRouter.post('/:id/reboot', async (req: Request, res: Response) => {
 
 // POST /machines/:id/destroy - Destroy machine (with real Terraform!)
 machinesRouter.post('/:id/destroy', async (req: Request, res: Response) => {
-  const machine = database.getMachine(req.params.id);
-  
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
+  }
+
+  const machine = database.getMachine(id);
+
   if (!machine) {
-    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${req.params.id} not found`);
+    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
   }
 
   // Get credentials
   const credentials = getCredentials(machine.provider_account_id);
   if (!credentials) {
-    throw new AppError(400, 'CREDENTIALS_NOT_FOUND', 'No credentials found for this provider account');
+    throw new AppError(
+      400,
+      'CREDENTIALS_NOT_FOUND',
+      'No credentials found for this provider account'
+    );
   }
-  
+
   // Update machine status
   database.updateMachine({
     machine_id: machine.machine_id,
     desired_status: 'terminated',
     actual_status: 'terminating',
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   });
 
   // Create deployment for tracking
@@ -341,23 +370,23 @@ machinesRouter.post('/:id/destroy', async (req: Request, res: Response) => {
     terraform_workspace: machine.terraform_workspace,
     created_at: new Date().toISOString(),
     started_at: new Date().toISOString(),
-    initiated_by: 'user_current'
+    initiated_by: 'user_current',
   };
 
   database.insertDeployment(deployment);
 
   // Run Terraform destroy in background
   runTerraformDestroy(
-    machine.machine_id, 
-    machine.terraform_workspace, 
+    machine.machine_id,
+    machine.terraform_workspace,
     deployment.deployment_id
-  ).catch(err => {
+  ).catch((err) => {
     console.error('Terraform destroy failed:', err);
   });
 
   const response: ApiResponse<{ deployment: Deployment }> = {
     success: true,
-    data: { deployment }
+    data: { deployment },
   };
 
   res.json(response);
@@ -365,10 +394,15 @@ machinesRouter.post('/:id/destroy', async (req: Request, res: Response) => {
 
 // GET /machines/:id/services - Get machine services
 machinesRouter.get('/:id/services', (req: Request, res: Response) => {
-  const machine = database.getMachine(req.params.id);
-  
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
+  }
+
+  const machine = database.getMachine(id);
+
   if (!machine) {
-    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${req.params.id} not found`);
+    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
   }
 
   // Services require agent connection - return empty if not connected
@@ -378,41 +412,59 @@ machinesRouter.get('/:id/services', (req: Request, res: Response) => {
       machine_id: machine.machine_id,
       services: [],
       agent_connected: machine.agent_status === 'connected',
-      last_updated: new Date().toISOString()
-    }
+      last_updated: new Date().toISOString(),
+    },
   };
 
   res.json(response);
 });
 
 // POST /machines/:id/services/:serviceName/restart - Restart service
-machinesRouter.post('/:id/services/:serviceName/restart', (req: Request, res: Response) => {
-  const machine = database.getMachine(req.params.id);
-  
+machinesRouter.post('/:id/services/:serviceName/restart', (req: Request, _res: Response) => {
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
+  }
+
+  const machine = database.getMachine(id);
+
   if (!machine) {
-    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${req.params.id} not found`);
+    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
   }
 
   if (machine.agent_status !== 'connected') {
-    throw new AppError(400, 'AGENT_NOT_CONNECTED', 'Machine agent is not connected. Service management requires the machine agent to be installed and running.');
+    throw new AppError(
+      400,
+      'AGENT_NOT_CONNECTED',
+      'Machine agent is not connected. Service management requires the machine agent to be installed and running.'
+    );
   }
 
   // TODO: Implement actual service restart via machine agent API
-  throw new AppError(501, 'NOT_IMPLEMENTED', 'Service restart requires machine agent which is not yet implemented');
+  throw new AppError(
+    501,
+    'NOT_IMPLEMENTED',
+    'Service restart requires machine agent which is not yet implemented'
+  );
 });
 
 // GET /machines/:id/networking - Get machine networking info
 machinesRouter.get('/:id/networking', (req: Request, res: Response) => {
-  const machine = database.getMachine(req.params.id);
-  
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing machine ID');
+  }
+
+  const machine = database.getMachine(id);
+
   if (!machine) {
-    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${req.params.id} not found`);
+    throw new AppError(404, 'MACHINE_NOT_FOUND', `Machine ${id} not found`);
   }
 
   // Get firewall profile rules if one was selected
   let providerRules: FirewallRule[] = [];
   let effectivePorts: number[] = [];
-  
+
   if (machine.firewall_profile_id) {
     const firewallProfile = database.getFirewallProfile(machine.firewall_profile_id);
     if (firewallProfile?.rules) {
@@ -423,14 +475,14 @@ machinesRouter.get('/:id/networking', (req: Request, res: Response) => {
         port_range_start: rule.port_range_start,
         port_range_end: rule.port_range_end,
         source_addresses: rule.source_addresses || ['0.0.0.0/0'],
-        description: rule.description,
-        source: 'provider' as const
+        ...(rule.description && { description: rule.description }),
+        source: 'provider' as const,
       }));
-      
+
       // Calculate effective inbound ports
       effectivePorts = firewallProfile.rules
-        .filter(rule => rule.direction === 'inbound')
-        .flatMap(rule => {
+        .filter((rule) => rule.direction === 'inbound')
+        .flatMap((rule) => {
           if (rule.port_range_start === rule.port_range_end) {
             return [rule.port_range_start];
           }
@@ -443,7 +495,16 @@ machinesRouter.get('/:id/networking', (req: Request, res: Response) => {
   } else {
     // Default SSH-only if no firewall profile
     providerRules = [
-      { rule_id: 'pfr1', direction: 'inbound', protocol: 'tcp', port_range_start: 22, port_range_end: 22, source_addresses: ['0.0.0.0/0'], description: 'SSH (default)', source: 'provider' }
+      {
+        rule_id: 'pfr1',
+        direction: 'inbound',
+        protocol: 'tcp',
+        port_range_start: 22,
+        port_range_end: 22,
+        source_addresses: ['0.0.0.0/0'],
+        description: 'SSH (default)',
+        source: 'provider',
+      },
     ];
     effectivePorts = [22];
   }
@@ -456,8 +517,8 @@ machinesRouter.get('/:id/networking', (req: Request, res: Response) => {
       host_firewall_available: machine.agent_status === 'connected',
       open_ports_available: machine.agent_status === 'connected',
       effective_inbound_ports: effectivePorts,
-      last_updated: new Date().toISOString()
-    }
+      last_updated: new Date().toISOString(),
+    },
   };
 
   res.json(response);
@@ -469,7 +530,7 @@ machinesRouter.post('/sync', async (_req: Request, res: Response) => {
 
   const response: ApiResponse<typeof result> = {
     success: true,
-    data: result
+    data: result,
   };
 
   res.json(response);

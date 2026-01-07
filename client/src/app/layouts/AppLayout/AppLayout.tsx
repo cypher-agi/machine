@@ -31,10 +31,7 @@ export function AppLayout() {
           </div>
 
           {/* Sidekick Panel - handles its own open/close animation */}
-          <Sidekick
-            selection={sidekickSelection}
-            onClose={handleClose}
-          />
+          <Sidekick selection={sidekickSelection} onClose={handleClose} />
         </main>
       </div>
 
@@ -43,4 +40,3 @@ export function AppLayout() {
     </div>
   );
 }
-

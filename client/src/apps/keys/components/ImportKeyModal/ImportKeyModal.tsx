@@ -13,7 +13,7 @@ export interface ImportKeyModalProps {
 export function ImportKeyModal({ onClose }: ImportKeyModalProps) {
   const { addToast } = useAppStore();
   const queryClient = useQueryClient();
-  
+
   const [name, setName] = useState('');
   const [publicKey, setPublicKey] = useState('');
   const [privateKey, setPrivateKey] = useState('');
@@ -36,8 +36,8 @@ export function ImportKeyModal({ onClose }: ImportKeyModalProps) {
     importMutation.mutate({
       name: name.trim(),
       public_key: publicKey.trim(),
-      private_key: privateKey.trim() || undefined,
-      comment: comment.trim() || undefined,
+      ...(privateKey.trim() && { private_key: privateKey.trim() }),
+      ...(comment.trim() && { comment: comment.trim() }),
     });
   };
 
@@ -85,13 +85,7 @@ export function ImportKeyModal({ onClose }: ImportKeyModalProps) {
   );
 
   return (
-    <Modal
-      isOpen={true}
-      onClose={onClose}
-      title="Import SSH Key"
-      size="sm"
-      footer={footer}
-    >
+    <Modal isOpen={true} onClose={onClose} title="Import SSH Key" size="sm" footer={footer}>
       <div className={styles.form}>
         <div className={styles.field}>
           <label className={styles.label}>Name</label>

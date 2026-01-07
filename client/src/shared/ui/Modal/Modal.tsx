@@ -103,12 +103,7 @@ export const Modal: React.FC<ModalProps> = ({
     <div className={styles.overlay} role="dialog" aria-modal="true" onClick={onClose}>
       <div
         ref={modalRef}
-        className={clsx(
-          styles.modal,
-          styles[size],
-          fullHeight && styles.fullHeight,
-          className
-        )}
+        className={clsx(styles.modal, styles[size], fullHeight && styles.fullHeight, className)}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
@@ -125,17 +120,10 @@ export const Modal: React.FC<ModalProps> = ({
           </div>
         </div>
         {animateHeight ? (
-          <div
-            className={styles.contentWrapper}
-            style={{ height: contentHeight }}
-          >
+          <div className={styles.contentWrapper} style={{ height: contentHeight }}>
             <div
               ref={contentRef}
-              className={clsx(
-                styles.content,
-                noPadding && styles.noPadding,
-                contentClassName
-              )}
+              className={clsx(styles.content, noPadding && styles.noPadding, contentClassName)}
             >
               {children}
             </div>

@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { ApiResponse } from '@machina/shared';
+import type { Request, Response, NextFunction } from 'express';
+import type { ApiResponse } from '@machina/shared';
 
 export class AppError extends Error {
   constructor(
@@ -13,12 +13,7 @@ export class AppError extends Error {
   }
 }
 
-export function errorHandler(
-  err: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-): void {
+export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
   console.error('Error:', err);
 
   if (err instanceof AppError) {
@@ -27,8 +22,8 @@ export function errorHandler(
       error: {
         code: err.code,
         message: err.message,
-        details: err.details
-      }
+        ...(err.details && { details: err.details }),
+      },
     };
     res.status(err.statusCode).json(response);
     return;
@@ -39,14 +34,8 @@ export function errorHandler(
     success: false,
     error: {
       code: 'INTERNAL_ERROR',
-      message: process.env.NODE_ENV === 'production' 
-        ? 'An internal error occurred' 
-        : err.message
-    }
+      message: process.env.NODE_ENV === 'production' ? 'An internal error occurred' : err.message,
+    },
   };
   res.status(500).json(response);
 }
-
-
-
-

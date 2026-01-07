@@ -1,10 +1,6 @@
 import { Package } from 'lucide-react';
 import type { BootstrapProfile } from '@machina/shared';
-import {
-  SidekickContentFull,
-  SidekickFullCode,
-  SidekickEmpty,
-} from '../../components';
+import { SidekickContentFull, SidekickFullCode, SidekickEmpty } from '../../components';
 
 interface BootstrapTemplateProps {
   profile: BootstrapProfile;
@@ -28,4 +24,3 @@ export function BootstrapTemplate({ profile }: BootstrapTemplateProps) {
     </SidekickContentFull>
   );
 }
-

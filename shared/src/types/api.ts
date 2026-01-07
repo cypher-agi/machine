@@ -32,7 +32,7 @@ export interface PaginationParams {
 }
 
 // SSE Event types for real-time updates
-export type SSEEventType = 
+export type SSEEventType =
   | 'deployment.log'
   | 'deployment.state_change'
   | 'machine.status_change'
@@ -62,7 +62,3 @@ export interface AuthSession {
   token: string;
   expires_at: string;
 }
-
-
-
-

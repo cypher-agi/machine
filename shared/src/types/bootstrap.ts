@@ -6,26 +6,26 @@ export interface BootstrapProfile {
   name: string;
   description?: string;
   method: BootstrapMethod;
-  
+
   // Templates/scripts (only one should be set based on method)
   cloud_init_template?: string;
   ssh_bootstrap_script?: string;
   ansible_playbook_ref?: string;
-  
+
   // Services to install and run
   services_to_run: ServiceConfig[];
-  
+
   // Configuration variables schema
   config_schema?: ConfigVariable[];
-  
+
   // Metadata
   created_at: string;
   updated_at: string;
   created_by: string;
-  
+
   // Tags
   tags?: string[];
-  
+
   // Whether this is a system profile (read-only)
   is_system_profile: boolean;
 }
@@ -61,7 +61,3 @@ export interface BootstrapProfileCreateRequest {
   config_schema?: ConfigVariable[];
   tags?: string[];
 }
-
-
-
-

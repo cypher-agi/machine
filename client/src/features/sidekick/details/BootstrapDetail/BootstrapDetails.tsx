@@ -1,10 +1,6 @@
 import { format } from 'date-fns';
 import type { BootstrapProfile } from '@machina/shared';
-import {
-  SidekickPanel,
-  SidekickSection,
-  SidekickRow,
-} from '../../components';
+import { SidekickPanel, SidekickSection, SidekickRow } from '../../components';
 import styles from './BootstrapDetail.module.css';
 
 interface BootstrapDetailsProps {
@@ -27,11 +23,7 @@ export function BootstrapDetails({ profile }: BootstrapDetailsProps) {
       {profile.services_to_run.length > 0 && (
         <SidekickSection title="Services Configuration">
           {profile.services_to_run.map((service, idx) => (
-            <SidekickRow 
-              key={idx} 
-              label={service.display_name} 
-              value={service.service_name}
-            />
+            <SidekickRow key={idx} label={service.display_name} value={service.service_name} />
           ))}
         </SidekickSection>
       )}
@@ -55,4 +47,3 @@ export function BootstrapDetails({ profile }: BootstrapDetailsProps) {
     </SidekickPanel>
   );
 }
-

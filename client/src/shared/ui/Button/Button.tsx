@@ -21,14 +21,7 @@ export type ButtonProps = (ButtonAsButton | ButtonAsSpan) & {
 
 export const Button = React.forwardRef<HTMLButtonElement | HTMLSpanElement, ButtonProps>(
   (
-    {
-      variant = 'primary',
-      size = 'md',
-      iconOnly = false,
-      className,
-      as = 'button',
-      ...props
-    },
+    { variant = 'primary', size = 'md', iconOnly = false, className, as = 'button', ...props },
     ref
   ) => {
     const classNames = clsx(

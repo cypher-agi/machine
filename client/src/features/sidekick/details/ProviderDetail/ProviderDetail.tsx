@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Shield, Trash2, RefreshCw } from 'lucide-react';
-import { getProviderAccounts, verifyProviderAccount, deleteProviderAccount, getMachines } from '@/lib/api';
+import {
+  getProviderAccounts,
+  verifyProviderAccount,
+  deleteProviderAccount,
+  getMachines,
+} from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Badge, Button, Modal } from '@/shared/ui';
-import { PROVIDER_LABELS, PROVIDER_FULL_LABELS, CREDENTIAL_STATUS_BADGE_CONFIG } from '@/shared/constants';
+import {
+  PROVIDER_LABELS,
+  PROVIDER_FULL_LABELS,
+  CREDENTIAL_STATUS_BADGE_CONFIG,
+} from '@/shared/constants';
 import {
   SidekickHeader,
   SidekickTabs,
@@ -20,7 +29,7 @@ import styles from './ProviderDetail.module.css';
 export interface ProviderDetailProps {
   providerId: string;
   onClose: () => void;
-  onMinimize?: () => void;
+  onMinimize: () => void;
 }
 
 type TabId = 'overview' | 'machines' | 'details';
@@ -116,31 +125,15 @@ export function ProviderDetail({ providerId, onClose, onMinimize }: ProviderDeta
 
       <SidekickContent>
         {activeTab === 'overview' && (
-          <ProviderOverview 
-            account={account} 
-            machineCount={providerMachines.length}
-          />
+          <ProviderOverview account={account} machineCount={providerMachines.length} />
         )}
-        {activeTab === 'machines' && (
-          <ProviderMachines machines={providerMachines} />
-        )}
-        {activeTab === 'details' && (
-          <ProviderDetails account={account} />
-        )}
+        {activeTab === 'machines' && <ProviderMachines machines={providerMachines} />}
+        {activeTab === 'details' && <ProviderDetails account={account} />}
       </SidekickContent>
 
       <SidekickActionBar spread>
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleVerify}
-          disabled={isVerifying}
-        >
-          {isVerifying ? (
-            <RefreshCw size={14} className="animate-spin" />
-          ) : (
-            <Shield size={14} />
-          )}
+        <Button variant="secondary" size="sm" onClick={handleVerify} disabled={isVerifying}>
+          {isVerifying ? <RefreshCw size={14} className="animate-spin" /> : <Shield size={14} />}
           Verify
         </Button>
         <Button

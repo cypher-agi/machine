@@ -52,9 +52,9 @@ export function Sidekick({ selection, onClose }: SidekickProps) {
   const [displayedSelection, setDisplayedSelection] = useState<SidekickSelection | null>(null);
   const sidekickRef = useRef<HTMLDivElement>(null);
   const isOpen = !!selection;
-  
+
   const toggleMinimize = useCallback(() => {
-    setIsMinimized(prev => !prev);
+    setIsMinimized((prev) => !prev);
   }, []);
 
   // Handle open/close transitions
@@ -70,6 +70,7 @@ export function Sidekick({ selection, onClose }: SidekickProps) {
           setCurrentWidth(width);
         });
       });
+      return;
     } else {
       // Closing - animate width to 0, then clear selection
       setCurrentWidth(0);
@@ -97,7 +98,7 @@ export function Sidekick({ selection, onClose }: SidekickProps) {
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!sidekickRef.current) return;
-      
+
       const containerRight = window.innerWidth;
       const newWidth = containerRight - e.clientX;
       const clampedWidth = Math.max(SIDEKICK_MIN_WIDTH, Math.min(SIDEKICK_MAX_WIDTH, newWidth));
@@ -111,7 +112,7 @@ export function Sidekick({ selection, onClose }: SidekickProps) {
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    
+
     document.body.style.userSelect = 'none';
     document.body.style.cursor = 'ew-resize';
 
@@ -132,9 +133,9 @@ export function Sidekick({ selection, onClose }: SidekickProps) {
   // Render the appropriate detail view based on selection type
   const renderDetailView = () => {
     if (!displayedSelection) return null;
-    
+
     const commonProps = { onClose, onMinimize: toggleMinimize };
-    
+
     switch (displayedSelection.type) {
       case 'machine':
         return <MachineDetail machineId={displayedSelection.id} {...commonProps} />;
@@ -164,26 +165,14 @@ export function Sidekick({ selection, onClose }: SidekickProps) {
   const displayWidth = isMinimized ? SIDEKICK_MINIMIZED_WIDTH : currentWidth;
 
   return (
-    <div 
-      ref={sidekickRef}
-      className={sidekickClassName}
-      style={{ width: displayWidth }}
-    >
+    <div ref={sidekickRef} className={sidekickClassName} style={{ width: displayWidth }}>
       {/* Minimized bar */}
       {isMinimized ? (
         <div className={styles.minimizedBar}>
-          <button
-            className={styles.minimizedExpandButton}
-            onClick={toggleMinimize}
-            title="Expand"
-          >
+          <button className={styles.minimizedExpandButton} onClick={toggleMinimize} title="Expand">
             <ChevronLeft size={16} />
           </button>
-          <button
-            className={styles.minimizedCloseButton}
-            onClick={onClose}
-            title="Close"
-          >
+          <button className={styles.minimizedCloseButton} onClick={onClose} title="Close">
             <X size={16} />
           </button>
         </div>
@@ -191,14 +180,13 @@ export function Sidekick({ selection, onClose }: SidekickProps) {
         <>
           {/* Resize handle */}
           {currentWidth > 0 && (
-            <div 
-              className={styles.resizeHandle}
-              onMouseDown={handleMouseDown}
-            >
+            <div className={styles.resizeHandle} onMouseDown={handleMouseDown}>
               <div className={styles.resizeHandleLine} />
             </div>
           )}
-          <div className={clsx(styles.sidekickInner, currentWidth === 0 && styles.sidekickInnerHidden)}>
+          <div
+            className={clsx(styles.sidekickInner, currentWidth === 0 && styles.sidekickInnerHidden)}
+          >
             {renderDetailView()}
           </div>
         </>

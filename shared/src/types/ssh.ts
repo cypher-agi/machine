@@ -5,15 +5,15 @@ export interface SSHKey {
   name: string;
   fingerprint: string;
   public_key: string;
-  
+
   // Provider key IDs - mapping of provider_type to their key ID
   // e.g., { digitalocean: "12345678", aws: "key-0abc123" }
   provider_key_ids: Record<string, string>;
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
-  
+
   // Metadata
   key_type: SSHKeyType;
   key_bits: number;
@@ -49,5 +49,3 @@ export interface SSHKeyProviderSync {
   synced_at?: string;
   error?: string;
 }
-
-

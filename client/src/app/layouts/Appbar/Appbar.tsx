@@ -1,12 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import {
-  Server,
-  Cloud,
-  GitBranch,
-  Package,
-  Settings,
-  Key
-} from 'lucide-react';
+import { Server, Cloud, GitBranch, Package, Settings, Key } from 'lucide-react';
 import clsx from 'clsx';
 import styles from './Appbar.module.css';
 
@@ -34,9 +27,7 @@ export function Appbar() {
           <NavLink
             key={item.to}
             to={item.to}
-            className={({ isActive }) =>
-              clsx(styles.navLink, isActive && styles.navLinkActive)
-            }
+            className={({ isActive }) => clsx(styles.navLink, isActive && styles.navLinkActive)}
           >
             {({ isActive }) => (
               <>
@@ -61,4 +52,3 @@ export function Appbar() {
     </aside>
   );
 }
-

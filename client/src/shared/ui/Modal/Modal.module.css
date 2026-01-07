@@ -22,11 +22,24 @@
   animation: scale-in 150ms ease-out forwards;
 }
 
-.sm { width: 384px; }
-.md { width: 512px; }
-.lg { width: 640px; }
-.xl { width: 768px; }
-.full { width: 100%; height: 100%; max-height: none; border-radius: 0; }
+.sm {
+  width: 384px;
+}
+.md {
+  width: 512px;
+}
+.lg {
+  width: 640px;
+}
+.xl {
+  width: 768px;
+}
+.full {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+}
 
 .fullHeight {
   height: 80vh;

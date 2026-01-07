@@ -18,7 +18,7 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [containerHeight, setContainerHeight] = useState(0);
-  
+
   const panelRef = useRef<HTMLDivElement>(null);
   const startY = useRef(0);
   const startHeight = useRef(0);
@@ -27,8 +27,11 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
   const headerHeight = 48; // Global header height
 
   // Calculate dynamic heights based on container
-  const getDefaultHeight = () => Math.max(minHeight, Math.floor(containerHeight / 3));
-  const getMaxHeight = () => Math.floor(containerHeight * 0.9);
+  const getDefaultHeight = useCallback(
+    () => Math.max(minHeight, Math.floor(containerHeight / 3)),
+    [containerHeight]
+  );
+  const getMaxHeight = useCallback(() => Math.floor(containerHeight * 0.9), [containerHeight]);
 
   // Measure container height on mount and resize
   useEffect(() => {
@@ -52,7 +55,7 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
     if (containerHeight > 0 && panelHeight === null) {
       setPanelHeight(getDefaultHeight());
     }
-  }, [containerHeight, panelHeight]);
+  }, [containerHeight, panelHeight, getDefaultHeight]);
 
   // Fetch machine data
   const { data: machine } = useQuery({
@@ -67,9 +70,10 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
   });
 
   // Filter keys that are synced to the machine's provider
-  const availableKeys = sshKeys?.filter(key => {
-    return machine && key.provider_key_ids[machine.provider];
-  }) || [];
+  const availableKeys =
+    sshKeys?.filter((key) => {
+      return machine && key.provider_key_ids[machine.provider];
+    }) || [];
 
   // Reset connection state when machine changes
   useEffect(() => {
@@ -78,21 +82,27 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
   }, [machineId]);
 
   // Handle drag to resize
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    startY.current = e.clientY;
-    startHeight.current = panelHeight || getDefaultHeight();
-  }, [panelHeight, containerHeight]);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      setIsDragging(true);
+      startY.current = e.clientY;
+      startHeight.current = panelHeight || getDefaultHeight();
+    },
+    [panelHeight, getDefaultHeight]
+  );
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
-    
-    const deltaY = startY.current - e.clientY;
-    const maxHeight = getMaxHeight();
-    const newHeight = Math.min(maxHeight, Math.max(minHeight, startHeight.current + deltaY));
-    setPanelHeight(newHeight);
-  }, [isDragging, containerHeight]);
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDragging) return;
+
+      const deltaY = startY.current - e.clientY;
+      const maxHeight = getMaxHeight();
+      const newHeight = Math.min(maxHeight, Math.max(minHeight, startHeight.current + deltaY));
+      setPanelHeight(newHeight);
+    },
+    [isDragging, getMaxHeight]
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -137,20 +147,17 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
   const isOverlay = currentHeight > containerHeight * 0.5;
 
   return (
-    <div 
+    <div
       ref={panelRef}
       className={clsx(
-        styles.panel, 
+        styles.panel,
         isDragging && styles.panelResizing,
         isOverlay && styles.panelOverlay
       )}
       style={{ height: isMinimized ? 40 : currentHeight }}
     >
       {/* Drag handle */}
-      <div 
-        className={styles.dragHandle}
-        onMouseDown={handleMouseDown}
-      >
+      <div className={styles.dragHandle} onMouseDown={handleMouseDown}>
         <div className={styles.dragHandleLine} />
       </div>
 
@@ -169,9 +176,7 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
               <span className={styles.machineIp}>{machine.public_ip}</span>
             </>
           )}
-          {isConnected && (
-            <span className={styles.connectedBadge}>Connected</span>
-          )}
+          {isConnected && <span className={styles.connectedBadge}>Connected</span>}
         </div>
 
         <div className={styles.headerRight}>
@@ -182,11 +187,7 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
           >
             {isMinimized ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
-          <button
-            className={styles.headerButton}
-            onClick={onClose}
-            title="Close"
-          >
+          <button className={styles.headerButton} onClick={onClose} title="Close">
             <X size={16} />
           </button>
         </div>
@@ -200,13 +201,13 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
             <div className={styles.notReady}>
               <Terminal size={24} className={styles.notReadyIcon} />
               <p className={styles.notReadyText}>
-                {machine.actual_status === 'provisioning' 
+                {machine.actual_status === 'provisioning'
                   ? 'Machine is still provisioning...'
                   : machine.actual_status === 'stopped'
-                  ? 'Machine is stopped'
-                  : !machine.public_ip
-                  ? 'Machine has no public IP'
-                  : 'Machine is not running'}
+                    ? 'Machine is stopped'
+                    : !machine.public_ip
+                      ? 'Machine has no public IP'
+                      : 'Machine is not running'}
               </p>
             </div>
           ) : !isConnected ? (
@@ -236,12 +237,8 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
               ) : (
                 <div className={styles.noKeys}>
                   <Key size={20} className={styles.noKeysIcon} />
-                  <p className={styles.noKeysText}>
-                    No SSH keys synced to {machine.provider}
-                  </p>
-                  <p className={styles.noKeysHint}>
-                    Go to Keys to create and sync an SSH key
-                  </p>
+                  <p className={styles.noKeysText}>No SSH keys synced to {machine.provider}</p>
+                  <p className={styles.noKeysHint}>Go to Keys to create and sync an SSH key</p>
                 </div>
               )}
             </div>
@@ -250,7 +247,7 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
             <div className={styles.terminal}>
               <SSHTerminal
                 machineId={machine.machine_id}
-                sshKeyId={selectedKeyId!}
+                sshKeyId={selectedKeyId ?? ''}
                 machineName={machine.name}
                 machineIp={machine.public_ip || 'unknown'}
                 onDisconnect={handleDisconnect}
@@ -262,4 +259,3 @@ export function TerminalPanel({ machineId, onClose }: TerminalPanelProps) {
     </div>
   );
 }
-

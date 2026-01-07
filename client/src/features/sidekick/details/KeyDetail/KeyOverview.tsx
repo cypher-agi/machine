@@ -20,18 +20,15 @@ export function KeyOverview({ sshKey }: KeyOverviewProps) {
   return (
     <SidekickPanel>
       <SidekickSection title="Key Information">
-        <SidekickRow 
-          label="Type" 
-          value={KEY_TYPE_LABELS[sshKey.key_type]}
-        />
-        <SidekickRow 
-          label="Fingerprint" 
+        <SidekickRow label="Type" value={KEY_TYPE_LABELS[sshKey.key_type]} />
+        <SidekickRow
+          label="Fingerprint"
           value={sshKey.fingerprint}
           icon={<Fingerprint size={12} />}
           copyable
         />
-        <SidekickRow 
-          label="Created" 
+        <SidekickRow
+          label="Created"
           value={formatDistanceToNow(new Date(sshKey.created_at), { addSuffix: true })}
           icon={<Clock size={12} />}
         />
@@ -39,7 +36,7 @@ export function KeyOverview({ sshKey }: KeyOverviewProps) {
 
       {syncedProviders.length > 0 && (
         <SidekickSection title="Synced To" icon={<Cloud size={12} />}>
-          <SidekickTags tags={syncedProviders.map(p => PROVIDER_FULL_LABELS[p] || p)} />
+          <SidekickTags tags={syncedProviders.map((p) => PROVIDER_FULL_LABELS[p] || p)} />
         </SidekickSection>
       )}
 
@@ -49,4 +46,3 @@ export function KeyOverview({ sshKey }: KeyOverviewProps) {
     </SidekickPanel>
   );
 }
-

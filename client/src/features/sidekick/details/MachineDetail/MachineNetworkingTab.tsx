@@ -1,9 +1,5 @@
 import type { MachineNetworking, OpenPort, FirewallRule } from '@machina/shared';
-import {
-  SidekickPanel,
-  SidekickSection,
-  SidekickEmpty,
-} from '../../components';
+import { SidekickPanel, SidekickSection, SidekickEmpty } from '../../components';
 import styles from './MachineDetail.module.css';
 
 interface MachineNetworkingTabProps {
@@ -30,7 +26,8 @@ export function MachineNetworkingTab({ networking }: MachineNetworkingTabProps) 
   }
 
   const hasOpenPorts = networking.open_ports && networking.open_ports.length > 0;
-  const hasProviderRules = networking.provider_firewall_rules && networking.provider_firewall_rules.length > 0;
+  const hasProviderRules =
+    networking.provider_firewall_rules && networking.provider_firewall_rules.length > 0;
   const hasHostRules = networking.host_firewall_rules && networking.host_firewall_rules.length > 0;
 
   if (!hasOpenPorts && !hasProviderRules && !hasHostRules) {
@@ -42,7 +39,7 @@ export function MachineNetworkingTab({ networking }: MachineNetworkingTabProps) 
       {hasOpenPorts && (
         <SidekickSection title="Open Ports">
           <div className={styles.portsContainer}>
-            {networking.open_ports!.map((port: OpenPort) => (
+            {networking.open_ports?.map((port: OpenPort) => (
               <span key={`${port.port}-${port.protocol}`} className={styles.tag}>
                 <span className={styles.tagSimple}>
                   {port.port}/{port.protocol}
@@ -68,7 +65,7 @@ export function MachineNetworkingTab({ networking }: MachineNetworkingTabProps) 
 
       {hasHostRules && (
         <SidekickSection title="Host Firewall Rules">
-          {networking.host_firewall_rules!.map((rule, idx) => (
+          {networking.host_firewall_rules?.map((rule, idx) => (
             <div key={rule.rule_id || idx} className={styles.row}>
               <span className={styles.label}>
                 {rule.protocol.toUpperCase()} {formatPortRange(rule)}

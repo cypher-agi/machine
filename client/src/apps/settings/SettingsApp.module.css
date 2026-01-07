@@ -180,7 +180,9 @@
   height: 12px;
   background-color: var(--color-text-muted);
   border-radius: 50%;
-  transition: transform var(--transition-fast), background-color var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    background-color var(--transition-fast);
 }
 
 .toggleInput:checked + .toggleSlider {
@@ -268,4 +270,3 @@
   color: var(--color-text-muted);
   margin-bottom: var(--space-1);
 }
-

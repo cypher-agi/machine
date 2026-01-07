@@ -1,5 +1,5 @@
 // Machine - Core compute instance model
-export type MachineStatus = 
+export type MachineStatus =
   | 'pending'
   | 'provisioning'
   | 'running'
@@ -26,37 +26,37 @@ export interface Machine {
   size: string;
   image: string;
   os_name?: string;
-  
+
   // Status
   desired_status: MachineStatus;
   actual_status: MachineStatus;
-  
+
   // Networking
   public_ip?: string;
   private_ip?: string;
   vpc_id?: string;
   subnet_id?: string;
-  
+
   // Timestamps
   created_at: string;
   updated_at: string;
-  
+
   // Tags and metadata
   tags: Record<string, string>;
-  
+
   // Terraform
   terraform_workspace: string;
   terraform_state_status: TerraformStateStatus;
-  
+
   // Provisioning
   provisioning_method: ProvisioningMethod;
   bootstrap_profile_id?: string;
   firewall_profile_id?: string;
-  
+
   // Health & Agent
   last_health_check?: string;
   agent_status: AgentStatus;
-  
+
   // Provider-specific IDs
   provider_resource_id?: string;
 }
@@ -94,6 +94,3 @@ export interface MachineListSort {
 }
 
 export type ProviderType = 'digitalocean' | 'aws' | 'gcp' | 'hetzner' | 'baremetal';
-
-
-

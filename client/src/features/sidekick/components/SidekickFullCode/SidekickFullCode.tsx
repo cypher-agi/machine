@@ -50,8 +50,8 @@ export function SidekickFullCode({ children, language = 'hcl', title }: Sidekick
       {title && (
         <div className={styles.fullCodeHeader}>
           <span className={styles.fullCodeTitle}>{title}</span>
-          <button 
-            className={styles.fullCodeCopyButton} 
+          <button
+            className={styles.fullCodeCopyButton}
             onClick={handleCopy}
             title="Copy to clipboard"
           >
@@ -87,4 +87,3 @@ export function SidekickFullCode({ children, language = 'hcl', title }: Sidekick
     </div>
   );
 }
-

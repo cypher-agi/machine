@@ -32,16 +32,20 @@ const PORT = process.env.PORT || 3001;
 
 // Security middleware
 app.use(helmet());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    credentials: true,
+  })
+);
 
 // Rate limiting for dangerous actions
 const dangerousActionsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // 10 requests per window
-  message: { error: { code: 'RATE_LIMITED', message: 'Too many requests, please try again later' } }
+  message: {
+    error: { code: 'RATE_LIMITED', message: 'Too many requests, please try again later' },
+  },
 });
 
 // Body parsing
@@ -58,7 +62,7 @@ app.get('/health', (_, res) => {
     terraform: {
       available: isTerraformAvailable(),
       modules_dir: modulesDir,
-    }
+    },
   });
 });
 
@@ -81,17 +85,17 @@ app.use('/api', errorHandler);
 // In production, serve the built frontend
 if (isProduction) {
   const clientDistPath = path.join(__dirname, '../../client/dist');
-  
+
   // Serve static files
   app.use(express.static(clientDistPath));
-  
+
   // Handle client-side routing - serve index.html for all non-API routes
   app.get('*', (req, res) => {
     // Don't catch API routes or health check
     if (req.path.startsWith('/api') || req.path === '/health') {
-      res.status(404).json({ 
-        success: false, 
-        error: { code: 'NOT_FOUND', message: 'Endpoint not found' } 
+      res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Endpoint not found' },
       });
     } else {
       res.sendFile(path.join(clientDistPath, 'index.html'));
@@ -100,9 +104,9 @@ if (isProduction) {
 } else {
   // 404 handler for development
   app.use((_, res) => {
-    res.status(404).json({ 
-      success: false, 
-      error: { code: 'NOT_FOUND', message: 'Endpoint not found' } 
+    res.status(404).json({
+      success: false,
+      error: { code: 'NOT_FOUND', message: 'Endpoint not found' },
     });
   });
 }
@@ -117,6 +121,3 @@ server.listen(PORT, () => {
 });
 
 export default app;
-
-
-

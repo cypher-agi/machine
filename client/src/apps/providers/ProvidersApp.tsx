@@ -5,13 +5,13 @@ import { formatDistanceToNow } from 'date-fns';
 import { getProviderAccounts, verifyProviderAccount } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { Button, RefreshButton } from '@/shared/ui';
-import { 
-  PageLayout, 
-  PageEmptyState, 
-  PageList, 
-  ItemCard, 
-  ItemCardMeta, 
-  ItemCardStatus 
+import {
+  PageLayout,
+  PageEmptyState,
+  PageList,
+  ItemCard,
+  ItemCardMeta,
+  ItemCardStatus,
 } from '@/shared/components';
 import { AddProviderModal } from './components/AddProviderModal';
 import { PROVIDER_LABELS, CREDENTIAL_STATUS_CONFIG } from '@/shared/constants';
@@ -22,7 +22,12 @@ export function ProvidersApp() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
-  const { data: accounts, isLoading, refetch, isRefetching } = useQuery({
+  const {
+    data: accounts,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ['provider-accounts'],
     queryFn: getProviderAccounts,
   });
@@ -64,7 +69,9 @@ export function ProvidersApp() {
           {accounts.map((account) => {
             const status = CREDENTIAL_STATUS_CONFIG[account.credential_status];
             const StatusIcon = status.icon;
-            const isSelected = sidekickSelection?.type === 'provider' && sidekickSelection?.id === account.provider_account_id;
+            const isSelected =
+              sidekickSelection?.type === 'provider' &&
+              sidekickSelection?.id === account.provider_account_id;
 
             return (
               <ItemCard
@@ -83,7 +90,8 @@ export function ProvidersApp() {
                 meta={
                   <>
                     <ItemCardMeta>
-                      {account.provider_type.charAt(0).toUpperCase() + account.provider_type.slice(1)}
+                      {account.provider_type.charAt(0).toUpperCase() +
+                        account.provider_type.slice(1)}
                     </ItemCardMeta>
                     <ItemCardMeta>
                       <Clock size={12} />
@@ -132,5 +140,3 @@ export function ProvidersApp() {
     </PageLayout>
   );
 }
-
-

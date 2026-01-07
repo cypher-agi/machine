@@ -1,9 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 import type { Deployment } from '@machina/shared';
-import {
-  SidekickPanel,
-  SidekickEmpty,
-} from '../../components';
+import { SidekickPanel, SidekickEmpty } from '../../components';
 import styles from './MachineDetail.module.css';
 
 interface MachineDeploymentsTabProps {
@@ -23,9 +20,7 @@ export function MachineDeploymentsTab({ deployments }: MachineDeploymentsTabProp
             <div className={styles.cardInfo}>
               <div className={styles.cardTitle}>
                 <span className={styles.cardName}>{deployment.type}</span>
-                <span className={styles.cardState}>
-                  {deployment.state}
-                </span>
+                <span className={styles.cardState}>{deployment.state}</span>
               </div>
               <span className={styles.cardMeta}>
                 {formatDistanceToNow(new Date(deployment.created_at), { addSuffix: true })}

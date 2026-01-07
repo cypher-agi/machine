@@ -44,11 +44,12 @@ const defaultSort: MachineListSort = { field: 'created_at', direction: 'desc' };
 export const useAppStore = create<AppState>((set) => ({
   // Sidekick selection (generic)
   sidekickSelection: null,
-  setSidekickSelection: (selection) => set({ 
-    sidekickSelection: selection,
-    // Open terminal when selecting a machine
-    terminalMachineId: selection?.type === 'machine' ? selection.id : null
-  }),
+  setSidekickSelection: (selection) =>
+    set({
+      sidekickSelection: selection,
+      // Open terminal when selecting a machine
+      terminalMachineId: selection?.type === 'machine' ? selection.id : null,
+    }),
 
   // Terminal panel
   terminalMachineId: null,
@@ -74,10 +75,7 @@ export const useAppStore = create<AppState>((set) => ({
   toasts: [],
   addToast: (toast) =>
     set((state) => ({
-      toasts: [
-        ...state.toasts,
-        { ...toast, id: Math.random().toString(36).substring(7) },
-      ],
+      toasts: [...state.toasts, { ...toast, id: Math.random().toString(36).substring(7) }],
     })),
   removeToast: (id) =>
     set((state) => ({

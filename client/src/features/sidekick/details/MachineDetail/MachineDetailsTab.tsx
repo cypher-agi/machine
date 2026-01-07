@@ -1,11 +1,6 @@
 import { format } from 'date-fns';
 import type { Machine } from '@machina/shared';
-import {
-  SidekickPanel,
-  SidekickSection,
-  SidekickRow,
-  SidekickJson,
-} from '../../components';
+import { SidekickPanel, SidekickSection, SidekickRow, SidekickJson } from '../../components';
 
 interface MachineDetailsTabProps {
   machine: Machine;
@@ -16,7 +11,11 @@ export function MachineDetailsTab({ machine }: MachineDetailsTabProps) {
     <SidekickPanel>
       <SidekickSection title="Identifiers">
         <SidekickRow label="Machine ID" value={machine.machine_id} copyable />
-        <SidekickRow label="Provider Resource ID" value={machine.provider_resource_id} copyable />
+        <SidekickRow
+          label="Provider Resource ID"
+          value={machine.provider_resource_id ?? null}
+          copyable
+        />
         <SidekickRow label="Terraform Workspace" value={machine.terraform_workspace} copyable />
         {machine.vpc_id && <SidekickRow label="VPC ID" value={machine.vpc_id} copyable />}
         {machine.subnet_id && <SidekickRow label="Subnet ID" value={machine.subnet_id} copyable />}
@@ -33,8 +32,8 @@ export function MachineDetailsTab({ machine }: MachineDetailsTabProps) {
       </SidekickSection>
 
       <SidekickSection title="Network">
-        <SidekickRow label="Public IP" value={machine.public_ip} copyable />
-        <SidekickRow label="Private IP" value={machine.private_ip} copyable />
+        <SidekickRow label="Public IP" value={machine.public_ip ?? null} copyable />
+        <SidekickRow label="Private IP" value={machine.private_ip ?? null} copyable />
       </SidekickSection>
 
       <SidekickSection title="Status">
@@ -49,7 +48,10 @@ export function MachineDetailsTab({ machine }: MachineDetailsTabProps) {
         <SidekickRow label="Created At" value={format(new Date(machine.created_at), 'PPpp')} />
         <SidekickRow label="Updated At" value={format(new Date(machine.updated_at), 'PPpp')} />
         {machine.last_health_check && (
-          <SidekickRow label="Last Health Check" value={format(new Date(machine.last_health_check), 'PPpp')} />
+          <SidekickRow
+            label="Last Health Check"
+            value={format(new Date(machine.last_health_check), 'PPpp')}
+          />
         )}
       </SidekickSection>
 
@@ -67,4 +69,3 @@ export function MachineDetailsTab({ machine }: MachineDetailsTabProps) {
     </SidekickPanel>
   );
 }
-

@@ -9,9 +9,18 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   pulse?: boolean;
 }
 
-export const Badge: React.FC<BadgeProps> = ({ variant, pulse = false, className, children, ...props }) => {
+export const Badge: React.FC<BadgeProps> = ({
+  variant,
+  pulse = false,
+  className,
+  children,
+  ...props
+}) => {
   return (
-    <span className={clsx(styles.badge, styles[variant], pulse && styles.pulse, className)} {...props}>
+    <span
+      className={clsx(styles.badge, styles[variant], pulse && styles.pulse, className)}
+      {...props}
+    >
       {pulse && <span className={styles.dot} />}
       {children}
     </span>

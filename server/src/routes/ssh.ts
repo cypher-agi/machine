@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, type Request, type Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 import { spawn } from 'child_process';
@@ -6,12 +6,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { database } from '../services/database';
-import { 
+import type {
   SSHKey,
   SSHKeyCreateRequest,
   SSHKeyImportRequest,
   SSHKeyGenerateResponse,
-  ApiResponse
+  ApiResponse,
 } from '@machina/shared';
 import { AppError } from '../middleware/errorHandler';
 import { getCredentials } from '../services/terraform';
@@ -29,10 +29,14 @@ async function generateSSHKey(
     const keyPath = path.join(tmpDir, 'id_key');
 
     const args = [
-      '-t', keyType,
-      '-f', keyPath,
-      '-N', '', // No passphrase
-      '-C', comment || `machine-${Date.now()}`
+      '-t',
+      keyType,
+      '-f',
+      keyPath,
+      '-N',
+      '', // No passphrase
+      '-C',
+      comment || `machine-${Date.now()}`,
     ];
 
     // RSA-specific options
@@ -59,9 +63,11 @@ async function generateSSHKey(
         const publicKey = fs.readFileSync(`${keyPath}.pub`, 'utf8').trim();
 
         // Get fingerprint using ssh-keygen -l
-        const fingerprintProc = spawn('ssh-keygen', ['-l', '-f', `${keyPath}.pub`], { stdio: 'pipe' });
+        const fingerprintProc = spawn('ssh-keygen', ['-l', '-f', `${keyPath}.pub`], {
+          stdio: 'pipe',
+        });
         let fingerprintOutput = '';
-        
+
         fingerprintProc.stdout.on('data', (data) => {
           fingerprintOutput += data.toString();
         });
@@ -72,7 +78,7 @@ async function generateSSHKey(
             fs.unlinkSync(keyPath);
             fs.unlinkSync(`${keyPath}.pub`);
             fs.rmdirSync(tmpDir);
-          } catch (e) {
+          } catch {
             // Ignore cleanup errors
           }
 
@@ -96,7 +102,9 @@ async function generateSSHKey(
     });
 
     proc.on('error', (error) => {
-      reject(new Error(`Failed to run ssh-keygen: ${error.message}. Make sure OpenSSH is installed.`));
+      reject(
+        new Error(`Failed to run ssh-keygen: ${error.message}. Make sure OpenSSH is installed.`)
+      );
     });
   });
 }
@@ -105,33 +113,43 @@ async function generateSSHKey(
 function calculateFingerprint(publicKey: string): string {
   // Parse the public key to extract the base64 part
   const parts = publicKey.trim().split(' ');
-  if (parts.length < 2) {
+  const keyBase64 = parts[1];
+  if (parts.length < 2 || !keyBase64) {
     throw new Error('Invalid public key format');
   }
-  
-  const keyData = Buffer.from(parts[1], 'base64');
+
+  const keyData = Buffer.from(keyBase64, 'base64');
   const hash = crypto.createHash('sha256').update(keyData).digest('base64');
   // Remove trailing = padding
   return `SHA256:${hash.replace(/=+$/, '')}`;
 }
 
 // Helper to determine key type from public key
-function getKeyTypeFromPublicKey(publicKey: string): { type: 'ed25519' | 'rsa' | 'ecdsa'; bits: number } {
+function getKeyTypeFromPublicKey(publicKey: string): {
+  type: 'ed25519' | 'rsa' | 'ecdsa';
+  bits: number;
+} {
   const parts = publicKey.trim().split(' ');
   const keyType = parts[0];
-  
+  const keyBase64 = parts[1];
+
+  if (!keyType) {
+    return { type: 'rsa', bits: 2048 };
+  }
+
   if (keyType === 'ssh-ed25519') {
     return { type: 'ed25519', bits: 256 };
-  } else if (keyType === 'ssh-rsa') {
+  } else if (keyType === 'ssh-rsa' && keyBase64) {
     // Estimate RSA bits from key length
-    const keyData = Buffer.from(parts[1], 'base64');
-    const bits = Math.round(keyData.length * 8 / 1.2); // Rough estimate
+    const keyData = Buffer.from(keyBase64, 'base64');
+    const bits = Math.round((keyData.length * 8) / 1.2); // Rough estimate
     return { type: 'rsa', bits: bits >= 4096 ? 4096 : bits >= 2048 ? 2048 : 1024 };
   } else if (keyType.startsWith('ecdsa-')) {
     const bitsMatch = keyType.match(/nistp(\d+)/);
-    return { type: 'ecdsa', bits: bitsMatch ? parseInt(bitsMatch[1]) : 256 };
+    const matchedBits = bitsMatch?.[1];
+    return { type: 'ecdsa', bits: matchedBits ? parseInt(matchedBits) : 256 };
   }
-  
+
   return { type: 'rsa', bits: 2048 };
 }
 
@@ -141,7 +159,7 @@ sshRouter.get('/keys', (_req: Request, res: Response) => {
 
   const response: ApiResponse<SSHKey[]> = {
     success: true,
-    data: keys
+    data: keys,
   };
 
   res.json(response);
@@ -149,15 +167,20 @@ sshRouter.get('/keys', (_req: Request, res: Response) => {
 
 // GET /ssh/keys/:id - Get single SSH key
 sshRouter.get('/keys/:id', (req: Request, res: Response) => {
-  const key = database.getSSHKey(req.params.id);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing key ID');
+  }
+
+  const key = database.getSSHKey(id);
 
   if (!key) {
-    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${req.params.id} not found`);
+    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);
   }
 
   const response: ApiResponse<SSHKey> = {
     success: true,
-    data: key
+    data: key,
   };
 
   res.json(response);
@@ -187,7 +210,11 @@ sshRouter.post('/keys/generate', async (req: Request, res: Response) => {
   // Check for duplicate fingerprint
   const existingKey = database.getSSHKeyByFingerprint(keyData.fingerprint);
   if (existingKey) {
-    throw new AppError(409, 'DUPLICATE_KEY', `An SSH key with this fingerprint already exists: ${existingKey.name}`);
+    throw new AppError(
+      409,
+      'DUPLICATE_KEY',
+      `An SSH key with this fingerprint already exists: ${existingKey.name}`
+    );
   }
 
   const keyId = `sshkey_${uuidv4().substring(0, 12)}`;
@@ -202,12 +229,12 @@ sshRouter.post('/keys/generate', async (req: Request, res: Response) => {
     comment,
     provider_key_ids: {},
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   };
 
   // Save to database
   database.insertSSHKey(newKey);
-  
+
   // Store encrypted private key
   database.storeSSHKeyPrivateKey(keyId, keyData.privateKey);
 
@@ -215,8 +242,8 @@ sshRouter.post('/keys/generate', async (req: Request, res: Response) => {
     success: true,
     data: {
       ...newKey,
-      private_key: keyData.privateKey
-    }
+      private_key: keyData.privateKey,
+    },
   };
 
   res.status(201).json(response);
@@ -233,7 +260,7 @@ sshRouter.post('/keys/import', (req: Request, res: Response) => {
   // Validate and parse public key
   let fingerprint: string;
   let keyInfo: { type: 'ed25519' | 'rsa' | 'ecdsa'; bits: number };
-  
+
   try {
     fingerprint = calculateFingerprint(body.public_key);
     keyInfo = getKeyTypeFromPublicKey(body.public_key);
@@ -245,12 +272,17 @@ sshRouter.post('/keys/import', (req: Request, res: Response) => {
   // Check for duplicate fingerprint
   const existingKey = database.getSSHKeyByFingerprint(fingerprint);
   if (existingKey) {
-    throw new AppError(409, 'DUPLICATE_KEY', `An SSH key with this fingerprint already exists: ${existingKey.name}`);
+    throw new AppError(
+      409,
+      'DUPLICATE_KEY',
+      `An SSH key with this fingerprint already exists: ${existingKey.name}`
+    );
   }
 
   // Extract comment from public key if not provided
   const publicKeyParts = body.public_key.trim().split(' ');
-  const keyComment = body.comment || (publicKeyParts.length > 2 ? publicKeyParts.slice(2).join(' ') : undefined);
+  const keyComment =
+    body.comment || (publicKeyParts.length > 2 ? publicKeyParts.slice(2).join(' ') : undefined);
 
   const keyId = `sshkey_${uuidv4().substring(0, 12)}`;
 
@@ -261,10 +293,10 @@ sshRouter.post('/keys/import', (req: Request, res: Response) => {
     public_key: body.public_key.trim(),
     key_type: keyInfo.type,
     key_bits: keyInfo.bits,
-    comment: keyComment,
+    ...(keyComment && { comment: keyComment }),
     provider_key_ids: {},
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
   };
 
   // Save to database
@@ -277,7 +309,7 @@ sshRouter.post('/keys/import', (req: Request, res: Response) => {
 
   const response: ApiResponse<SSHKey> = {
     success: true,
-    data: newKey
+    data: newKey,
   };
 
   res.status(201).json(response);
@@ -285,13 +317,18 @@ sshRouter.post('/keys/import', (req: Request, res: Response) => {
 
 // GET /ssh/keys/:id/private - Download private key (one-time or authorized access)
 sshRouter.get('/keys/:id/private', (req: Request, res: Response) => {
-  const key = database.getSSHKey(req.params.id);
-
-  if (!key) {
-    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${req.params.id} not found`);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing key ID');
   }
 
-  const privateKey = database.getSSHKeyPrivateKey(req.params.id);
+  const key = database.getSSHKey(id);
+
+  if (!key) {
+    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);
+  }
+
+  const privateKey = database.getSSHKeyPrivateKey(id);
 
   if (!privateKey) {
     throw new AppError(404, 'PRIVATE_KEY_NOT_FOUND', 'Private key not available for this SSH key');
@@ -299,7 +336,7 @@ sshRouter.get('/keys/:id/private', (req: Request, res: Response) => {
 
   const response: ApiResponse<{ private_key: string }> = {
     success: true,
-    data: { private_key: privateKey }
+    data: { private_key: privateKey },
   };
 
   res.json(response);
@@ -307,25 +344,38 @@ sshRouter.get('/keys/:id/private', (req: Request, res: Response) => {
 
 // POST /ssh/keys/:id/sync/:providerAccountId - Sync key to a provider
 sshRouter.post('/keys/:id/sync/:providerAccountId', async (req: Request, res: Response) => {
-  const key = database.getSSHKey(req.params.id);
+  const { id, providerAccountId } = req.params;
+  if (!id || !providerAccountId) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing key ID or provider account ID');
+  }
+
+  const key = database.getSSHKey(id);
 
   if (!key) {
-    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${req.params.id} not found`);
+    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);
   }
 
-  const providerAccount = database.getProviderAccount(req.params.providerAccountId);
+  const providerAccount = database.getProviderAccount(providerAccountId);
   if (!providerAccount) {
-    throw new AppError(404, 'ACCOUNT_NOT_FOUND', `Provider account ${req.params.providerAccountId} not found`);
+    throw new AppError(404, 'ACCOUNT_NOT_FOUND', `Provider account ${providerAccountId} not found`);
   }
 
-  const credentials = getCredentials(req.params.providerAccountId);
+  const credentials = getCredentials(providerAccountId);
   if (!credentials) {
-    throw new AppError(400, 'CREDENTIALS_NOT_FOUND', 'No credentials found for this provider account');
+    throw new AppError(
+      400,
+      'CREDENTIALS_NOT_FOUND',
+      'No credentials found for this provider account'
+    );
   }
 
   // Check if key already synced to this provider
   if (key.provider_key_ids[providerAccount.provider_type]) {
-    throw new AppError(409, 'ALREADY_SYNCED', `Key already synced to ${providerAccount.provider_type}`);
+    throw new AppError(
+      409,
+      'ALREADY_SYNCED',
+      `Key already synced to ${providerAccount.provider_type}`
+    );
   }
 
   // Sync based on provider type
@@ -334,39 +384,43 @@ sshRouter.post('/keys/:id/sync/:providerAccountId', async (req: Request, res: Re
       const response = await fetch('https://api.digitalocean.com/v2/account/keys', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${credentials.api_token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${credentials.api_token}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: key.name,
-          public_key: key.public_key
-        })
+          public_key: key.public_key,
+        }),
       });
 
       if (!response.ok) {
-        const error = await response.json() as { message?: string };
+        const error = (await response.json()) as { message?: string };
         throw new Error(error.message || 'Failed to upload key to DigitalOcean');
       }
 
-      const data = await response.json() as { ssh_key: { id: number | string } };
+      const data = (await response.json()) as { ssh_key: { id: number | string } };
       const providerKeyId = String(data.ssh_key.id);
 
       // Update provider_key_ids
       const updatedProviderKeyIds = {
         ...key.provider_key_ids,
-        digitalocean: providerKeyId
+        digitalocean: providerKeyId,
       };
 
       database.updateSSHKey({
         ssh_key_id: key.ssh_key_id,
-        provider_key_ids: updatedProviderKeyIds
+        provider_key_ids: updatedProviderKeyIds,
       });
 
       const updatedKey = database.getSSHKey(key.ssh_key_id);
 
+      if (!updatedKey) {
+        throw new AppError(500, 'UPDATE_FAILED', 'Failed to retrieve updated key');
+      }
+
       const apiResponse: ApiResponse<SSHKey> = {
         success: true,
-        data: updatedKey!
+        data: updatedKey,
       };
 
       res.json(apiResponse);
@@ -375,19 +429,27 @@ sshRouter.post('/keys/:id/sync/:providerAccountId', async (req: Request, res: Re
       throw new AppError(500, 'SYNC_FAILED', `Failed to sync key to DigitalOcean: ${errorMessage}`);
     }
   } else {
-    throw new AppError(501, 'NOT_IMPLEMENTED', `Provider ${providerAccount.provider_type} sync not yet implemented`);
+    throw new AppError(
+      501,
+      'NOT_IMPLEMENTED',
+      `Provider ${providerAccount.provider_type} sync not yet implemented`
+    );
   }
 });
 
 // DELETE /ssh/keys/:id/sync/:providerType - Remove key from a provider
 sshRouter.delete('/keys/:id/sync/:providerType', async (req: Request, res: Response) => {
-  const key = database.getSSHKey(req.params.id);
-
-  if (!key) {
-    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${req.params.id} not found`);
+  const { id, providerType } = req.params;
+  if (!id || !providerType) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing key ID or provider type');
   }
 
-  const providerType = req.params.providerType;
+  const key = database.getSSHKey(id);
+
+  if (!key) {
+    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);
+  }
+
   const providerKeyId = key.provider_key_ids[providerType];
 
   if (!providerKeyId) {
@@ -396,8 +458,8 @@ sshRouter.delete('/keys/:id/sync/:providerType', async (req: Request, res: Respo
 
   // Find a provider account with credentials for this provider type
   const providerAccounts = database.getProviderAccounts();
-  const account = providerAccounts.find(a => a.provider_type === providerType);
-  
+  const account = providerAccounts.find((a) => a.provider_type === providerType);
+
   if (!account) {
     throw new AppError(404, 'NO_PROVIDER_ACCOUNT', `No provider account found for ${providerType}`);
   }
@@ -410,40 +472,50 @@ sshRouter.delete('/keys/:id/sync/:providerType', async (req: Request, res: Respo
   // Remove from provider
   if (providerType === 'digitalocean') {
     try {
-      const response = await fetch(`https://api.digitalocean.com/v2/account/keys/${providerKeyId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${credentials.api_token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `https://api.digitalocean.com/v2/account/keys/${providerKeyId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${credentials.api_token}`,
+            'Content-Type': 'application/json',
+          },
         }
-      });
+      );
 
       // 204 = success, 404 = already deleted (which is fine)
       if (!response.ok && response.status !== 404) {
-        const error = await response.json() as { message?: string };
+        const error = (await response.json()) as { message?: string };
         throw new Error(error.message || 'Failed to remove key from DigitalOcean');
       }
     } catch (error) {
       if (error instanceof AppError) throw error;
       const errorMessage = error instanceof Error ? error.message : String(error);
-      throw new AppError(500, 'REMOVE_FAILED', `Failed to remove key from DigitalOcean: ${errorMessage}`);
+      throw new AppError(
+        500,
+        'REMOVE_FAILED',
+        `Failed to remove key from DigitalOcean: ${errorMessage}`
+      );
     }
   }
 
-  // Update local record
-  const updatedProviderKeyIds = { ...key.provider_key_ids };
-  delete updatedProviderKeyIds[providerType];
+  // Update local record - use object destructuring to omit the key
+  const { [providerType]: _removed, ...updatedProviderKeyIds } = key.provider_key_ids;
 
   database.updateSSHKey({
     ssh_key_id: key.ssh_key_id,
-    provider_key_ids: updatedProviderKeyIds
+    provider_key_ids: updatedProviderKeyIds,
   });
 
   const updatedKey = database.getSSHKey(key.ssh_key_id);
 
+  if (!updatedKey) {
+    throw new AppError(500, 'UPDATE_FAILED', 'Failed to retrieve updated key');
+  }
+
   const apiResponse: ApiResponse<SSHKey> = {
     success: true,
-    data: updatedKey!
+    data: updatedKey,
   };
 
   res.json(apiResponse);
@@ -451,10 +523,15 @@ sshRouter.delete('/keys/:id/sync/:providerType', async (req: Request, res: Respo
 
 // PATCH /ssh/keys/:id - Update SSH key name
 sshRouter.patch('/keys/:id', (req: Request, res: Response) => {
-  const key = database.getSSHKey(req.params.id);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing key ID');
+  }
+
+  const key = database.getSSHKey(id);
 
   if (!key) {
-    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${req.params.id} not found`);
+    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);
   }
 
   const { name } = req.body;
@@ -462,15 +539,19 @@ sshRouter.patch('/keys/:id', (req: Request, res: Response) => {
   if (name) {
     database.updateSSHKey({
       ssh_key_id: key.ssh_key_id,
-      name
+      name,
     });
   }
 
   const updatedKey = database.getSSHKey(key.ssh_key_id);
 
+  if (!updatedKey) {
+    throw new AppError(500, 'UPDATE_FAILED', 'Failed to retrieve updated key');
+  }
+
   const response: ApiResponse<SSHKey> = {
     success: true,
-    data: updatedKey!
+    data: updatedKey,
   };
 
   res.json(response);
@@ -478,22 +559,26 @@ sshRouter.patch('/keys/:id', (req: Request, res: Response) => {
 
 // DELETE /ssh/keys/:id - Delete SSH key
 sshRouter.delete('/keys/:id', (req: Request, res: Response) => {
-  const key = database.getSSHKey(req.params.id);
+  const { id } = req.params;
+  if (!id) {
+    throw new AppError(400, 'BAD_REQUEST', 'Missing key ID');
+  }
+
+  const key = database.getSSHKey(id);
 
   if (!key) {
-    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${req.params.id} not found`);
+    throw new AppError(404, 'SSH_KEY_NOT_FOUND', `SSH key ${id} not found`);
   }
 
   // Note: This does NOT remove the key from providers
   // User should unsync from providers first if needed
-  
-  database.deleteSSHKey(req.params.id);
+
+  database.deleteSSHKey(id);
 
   const response: ApiResponse<{ deleted: boolean }> = {
     success: true,
-    data: { deleted: true }
+    data: { deleted: true },
   };
 
   res.json(response);
 });
-

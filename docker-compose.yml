@@ -5,7 +5,7 @@ services:
     build: .
     ports:
       # Default: expose on port 80 (frontend + API served together)
-      - "${HTTP_PORT:-80}:3001"
+      - '${HTTP_PORT:-80}:3001'
     environment:
       - NODE_ENV=production
       - PORT=3001
@@ -23,8 +23,8 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
@@ -37,4 +37,3 @@ services:
 volumes:
   machina-data:
   terraform-state:
-

@@ -1,4 +1,4 @@
-import { ReactNode, MouseEvent } from 'react';
+import type { ReactNode, MouseEvent } from 'react';
 import clsx from 'clsx';
 import styles from './ItemCard.module.css';
 
@@ -52,11 +52,7 @@ export function ItemCard({
 
   return (
     <div
-      className={clsx(
-        styles.card,
-        selected && styles.cardSelected,
-        className
-      )}
+      className={clsx(styles.card, selected && styles.cardSelected, className)}
       onClick={handleClick}
     >
       {/* Icon badge */}
@@ -73,9 +69,7 @@ export function ItemCard({
       {/* Main info */}
       <div className={styles.info}>
         <div className={styles.titleRow}>
-          <span className={clsx(styles.title, titleSans && styles.titleSans)}>
-            {title}
-          </span>
+          <span className={clsx(styles.title, titleSans && styles.titleSans)}>{title}</span>
           {statusBadge}
         </div>
         {meta && <div className={styles.meta}>{meta}</div>}
@@ -93,10 +87,7 @@ export function ItemCard({
       {/* Actions */}
       {actions && (
         <div
-          className={clsx(
-            styles.actions,
-            actionsAlwaysVisible && styles.actionsAlwaysVisible
-          )}
+          className={clsx(styles.actions, actionsAlwaysVisible && styles.actionsAlwaysVisible)}
           onClick={(e: MouseEvent) => e.stopPropagation()}
         >
           {actions}
@@ -108,11 +99,7 @@ export function ItemCard({
 
 // Sub-components for building meta rows
 export function ItemCardMeta({ children, mono }: { children: ReactNode; mono?: boolean }) {
-  return (
-    <span className={clsx(styles.metaItem, mono && styles.metaMono)}>
-      {children}
-    </span>
-  );
+  return <span className={clsx(styles.metaItem, mono && styles.metaMono)}>{children}</span>;
 }
 
 export function ItemCardCode({ children }: { children: ReactNode }) {
@@ -146,4 +133,3 @@ export function ItemCardStatus({
 
   return <span className={clsx(styles.status, variantClass)}>{children}</span>;
 }
-
