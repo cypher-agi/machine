@@ -17,6 +17,8 @@ export default [
       '**/coverage/**',
       '**/*.min.js',
       '**/vite.config.ts',
+      '**/vitest.config.ts',
+      '**/playwright.config.ts',
       '**/scripts/**',
     ],
   },
@@ -160,6 +162,79 @@ export default [
       'react/no-unescaped-entities': 'warn',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+    },
+  },
+
+  // Test files configuration
+  {
+    files: [
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.spec.ts',
+      '**/test/**/*.ts',
+      '**/test/**/*.tsx',
+      '**/__tests__/**/*.ts',
+    ],
+    languageOptions: {
+      globals: {
+        // Vitest globals
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        test: 'readonly',
+        vi: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        // Browser globals for jsdom
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        HTMLElement: 'readonly',
+        Element: 'readonly',
+        Event: 'readonly',
+        URL: 'readonly',
+        Blob: 'readonly',
+        Headers: 'readonly',
+        console: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        process: 'readonly',
+        IntersectionObserver: 'readonly',
+        IntersectionObserverEntry: 'readonly',
+        ResizeObserver: 'readonly',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+
+  // E2E test files (Playwright)
+  {
+    files: ['e2e/**/*.ts', 'e2e/**/*.spec.ts'],
+    languageOptions: {
+      globals: {
+        // Playwright globals
+        test: 'readonly',
+        expect: 'readonly',
+        page: 'readonly',
+        browser: 'readonly',
+        context: 'readonly',
+        // Node globals for Playwright
+        process: 'readonly',
+        console: 'readonly',
+        __dirname: 'readonly',
+        setTimeout: 'readonly',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
     },
   },
 
