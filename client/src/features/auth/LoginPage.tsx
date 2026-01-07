@@ -1,6 +1,9 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, useLocation, type Location } from 'react-router-dom';
+import { Eye, EyeOff, Zap, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { Input } from '@/shared/ui/Input';
+import { Button } from '@/shared/ui/Button';
 import styles from './LoginPage.module.css';
 
 type AuthMode = 'login' | 'register';
@@ -115,7 +118,7 @@ export function LoginPage() {
         <div className={styles.modal}>
           <div className={styles.formPanel}>
             <div className={styles.loadingContainer}>
-              <img src="/machina_icon.png" alt="Machina" className={styles.logo} />
+              <img src="/machina_icon.png" alt="Machina" className={styles.loadingLogo} />
               <p className={styles.loadingText}>Loading...</p>
             </div>
           </div>
@@ -164,13 +167,12 @@ export function LoginPage() {
                   <label htmlFor="displayName" className={styles.label}>
                     Display Name
                   </label>
-                  <input
+                  <Input
                     id="displayName"
                     type="text"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     placeholder="Your name"
-                    className={styles.input}
                     disabled={submitting}
                     autoComplete="name"
                   />
@@ -181,13 +183,12 @@ export function LoginPage() {
                 <label htmlFor="email" className={styles.label}>
                   Email
                 </label>
-                <input
+                <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter Email"
-                  className={styles.input}
                   disabled={submitting}
                   autoComplete="email"
                   autoFocus
@@ -199,16 +200,15 @@ export function LoginPage() {
                   Password
                 </label>
                 <div className={styles.passwordWrapper}>
-                  <input
+                  <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter Password"
-                    className={styles.input}
                     disabled={submitting}
                     autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
-                    style={{ width: '100%', paddingRight: '40px' }}
+                    style={{ paddingRight: '40px' }}
                   />
                   <button
                     type="button"
@@ -216,7 +216,7 @@ export function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
                   >
-                    {showPassword ? '◉' : '○'}
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
@@ -226,13 +226,12 @@ export function LoginPage() {
                   <label htmlFor="confirmPassword" className={styles.label}>
                     Confirm Password
                   </label>
-                  <input
+                  <Input
                     id="confirmPassword"
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm Password"
-                    className={styles.input}
                     disabled={submitting}
                     autoComplete="new-password"
                   />
@@ -257,22 +256,19 @@ export function LoginPage() {
 
               {error && (
                 <div className={styles.error}>
-                  <span>⚠</span>
+                  <AlertTriangle size={14} />
                   {error}
                 </div>
               )}
 
-              <button
+              <Button
                 type="submit"
-                className={styles.submitButton}
+                variant="primary"
                 disabled={submitting || !email || !password}
+                className={styles.submitButton}
               >
-                {submitting
-                  ? 'Please wait...'
-                  : isRegisterMode
-                    ? 'Create Account'
-                    : 'Login with Machina'}
-              </button>
+                {submitting ? 'Please wait...' : isRegisterMode ? 'Create Account' : 'Sign In'}
+              </Button>
 
               {requiresSetup && (
                 <p className={styles.setupNote}>
@@ -284,15 +280,16 @@ export function LoginPage() {
             {/* Dev mode login */}
             {devMode && !isRegisterMode && (
               <div className={styles.devSection}>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={handleDevLogin}
-                  className={styles.devButton}
                   disabled={submitting}
+                  className={styles.devButton}
                 >
-                  <span>⚡</span>
+                  <Zap size={14} />
                   Quick Dev Login
-                </button>
+                </Button>
               </div>
             )}
           </div>

@@ -113,32 +113,6 @@
   letter-spacing: 0.05em;
 }
 
-.input {
-  padding: var(--space-3) var(--space-4);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  color: var(--color-text-primary);
-  transition: all var(--transition-fast);
-}
-
-.input::placeholder {
-  color: var(--color-text-muted);
-}
-
-.input:focus {
-  outline: none;
-  border-color: rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
-}
-
-.input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* Password field wrapper */
 .passwordWrapper {
   position: relative;
@@ -156,6 +130,9 @@
   cursor: pointer;
   opacity: 0.6;
   transition: opacity var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .passwordToggle:hover {
@@ -196,33 +173,10 @@
   gap: var(--space-2);
 }
 
-/* Submit button */
+/* Submit button - full width override */
 .submitButton {
+  width: 100%;
   margin-top: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-weight: var(--font-medium);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.submitButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--color-text-primary);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.submitButton:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.submitButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* Mode switch */
@@ -257,7 +211,7 @@
 .devSection {
   margin-top: var(--space-4);
   padding-top: var(--space-4);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--color-border);
 }
 
 .devButton {
@@ -266,25 +220,6 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: transparent;
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-  border-radius: var(--radius-md);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.devButton:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: var(--color-text-secondary);
-}
-
-.devButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* Right panel - Visual side with full bleed image */
@@ -310,6 +245,13 @@
   height: 100%;
   object-fit: cover;
   opacity: 0.9;
+}
+
+/* Loading logo - smaller version */
+.loadingLogo {
+  width: 64px;
+  height: 64px;
+  opacity: 0.8;
 }
 
 /* Setup mode */
