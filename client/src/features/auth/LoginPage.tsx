@@ -125,7 +125,7 @@ export function LoginPage() {
           </div>
           <div className={styles.visualPanel}>
             <div className={styles.logoContainer}>
-              <img src="/machina_icon.png" alt="Machina" className={styles.logo} />
+              <img src="/machina-login_icon.png" alt="Machina" className={styles.logo} />
             </div>
           </div>
         </div>
@@ -143,111 +143,61 @@ export function LoginPage() {
           </div>
 
           <div className={styles.content}>
-            <h1 className={styles.title}>
-              {requiresSetup ? 'Welcome' : isRegisterMode ? 'Create Account' : 'Sign In'}
-            </h1>
-            <p className={styles.subtitle}>
-              {requiresSetup ? (
-                <>
-                  Create your admin account for <span className={styles.highlight}>Machina</span>
-                </>
-              ) : isRegisterMode ? (
-                <>
-                  Register a new <span className={styles.highlight}>Machina</span> account
-                </>
-              ) : (
-                <>
-                  Sign in to <span className={styles.highlight}>Machina</span> to continue
-                </>
-              )}
-            </p>
-
             <form onSubmit={handleSubmit} className={styles.form}>
               {isRegisterMode && (
-                <div className={styles.field}>
-                  <label htmlFor="displayName" className={styles.label}>
-                    Display Name
-                  </label>
-                  <Input
-                    id="displayName"
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    placeholder="Your name"
-                    disabled={submitting}
-                    autoComplete="name"
-                  />
-                </div>
+                <Input
+                  id="displayName"
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Your name"
+                  disabled={submitting}
+                  autoComplete="name"
+                />
               )}
 
-              <div className={styles.field}>
-                <label htmlFor="email" className={styles.label}>
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter Email"
-                  disabled={submitting}
-                  autoComplete="email"
-                  autoFocus
-                />
-              </div>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                disabled={submitting}
+                autoComplete="email"
+                autoFocus
+              />
 
-              <div className={styles.field}>
-                <label htmlFor="password" className={styles.label}>
-                  Password
-                </label>
-                <div className={styles.passwordWrapper}>
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter Password"
-                    disabled={submitting}
-                    autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
-                    style={{ paddingRight: '40px' }}
-                  />
-                  <button
-                    type="button"
-                    className={styles.passwordToggle}
-                    onClick={() => setShowPassword(!showPassword)}
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
+              <div className={styles.passwordWrapper}>
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  disabled={submitting}
+                  autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
+                  style={{ paddingRight: '40px' }}
+                />
+                <button
+                  type="button"
+                  className={styles.passwordToggle}
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
 
               {isRegisterMode && (
-                <div className={styles.field}>
-                  <label htmlFor="confirmPassword" className={styles.label}>
-                    Confirm Password
-                  </label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm Password"
-                    disabled={submitting}
-                    autoComplete="new-password"
-                  />
-                </div>
-              )}
-
-              {!isRegisterMode && (
-                <div className={styles.rememberRow}>
-                  <Toggle
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    disabled={submitting}
-                    label="Remember me for 30 days"
-                  />
-                </div>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm Password"
+                  disabled={submitting}
+                  autoComplete="new-password"
+                />
               )}
 
               {error && (
@@ -273,19 +223,15 @@ export function LoginPage() {
               )}
             </form>
 
-            {/* Dev mode login */}
-            {devMode && !isRegisterMode && (
-              <div className={styles.devSection}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={handleDevLogin}
+            {/* Remember me */}
+            {!isRegisterMode && (
+              <div className={styles.rememberRow}>
+                <span className={styles.rememberLabel}>Remember me for 30 days</span>
+                <Toggle
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   disabled={submitting}
-                  className={styles.devButton}
-                >
-                  <Zap size={14} />
-                  Quick Dev Login
-                </Button>
+                />
               </div>
             )}
           </div>
@@ -323,10 +269,24 @@ export function LoginPage() {
         {/* Right Panel - Visual */}
         <div className={styles.visualPanel}>
           <div className={styles.logoContainer}>
-            <img src="/machina_icon.png" alt="Machina" className={styles.logo} />
+            <img src="/machina-login_icon.png" alt="Machina" className={styles.logo} />
           </div>
         </div>
       </div>
+
+      {/* Dev mode login - bottom right corner */}
+      {devMode && !isRegisterMode && (
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={handleDevLogin}
+          disabled={submitting}
+          className={styles.devButton}
+        >
+          <Zap size={14} />
+          Quick Dev Login
+        </Button>
+      )}
     </div>
   );
 }

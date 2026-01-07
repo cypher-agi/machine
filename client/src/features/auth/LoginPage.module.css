@@ -23,8 +23,8 @@
 .modal {
   display: flex;
   width: 100%;
-  max-width: 800px;
-  min-height: 480px;
+  max-width: 960px;
+  min-height: 600px;
   margin: var(--space-4);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -45,23 +45,23 @@
   }
 }
 
-/* Left panel - Form side */
+/* Left panel - Form side (1/3 of modal) */
 .formPanel {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: var(--space-8);
-  min-width: 320px;
+  min-width: 280px;
 }
 
 /* Branding */
 .brand {
-  margin-bottom: auto;
+  /* Stays at top */
 }
 
 .brandName {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.35em;
   color: var(--color-text-primary);
@@ -69,8 +69,9 @@
   text-transform: uppercase;
 }
 
-/* Content section */
+/* Content section - pushed to bottom */
 .content {
+  margin-top: auto;
   padding: var(--space-6) 0;
 }
 
@@ -141,7 +142,15 @@
 
 /* Remember me toggle */
 .rememberRow {
-  margin-top: var(--space-1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-3);
+}
+
+.rememberLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
 }
 
 /* Error */
@@ -165,7 +174,6 @@
 
 /* Mode switch */
 .modeSwitch {
-  margin-top: auto;
   padding-top: var(--space-4);
 }
 
@@ -191,26 +199,27 @@
   text-decoration: underline;
 }
 
-/* Dev mode section */
-.devSection {
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
-}
-
+/* Dev mode button - fixed bottom right */
 .devButton {
-  width: 100%;
+  position: fixed;
+  bottom: var(--space-4);
+  right: var(--space-4);
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: var(--space-2);
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
 }
 
-/* Right panel - Visual side with full bleed image */
+.devButton:hover {
+  opacity: 1;
+}
+
+/* Right panel - Visual side with full bleed image (2/3 of modal) */
 .visualPanel {
-  flex: 1;
+  flex: 2;
   position: relative;
-  min-width: 320px;
+  min-width: 400px;
   overflow: hidden;
   background: var(--color-bg);
 }
