@@ -8,7 +8,7 @@ import { MachineCard, DeployWizard, MachineFilters } from './components';
 import { useMachineGroups } from './hooks';
 import { TerminalPanel } from '@/features/terminal';
 import { Button, Input, RefreshButton } from '@/shared/ui';
-import { PageLayout, PageEmptyState, PageList } from '@/shared/components';
+import { PageLayout, PageEmptyState, PageList, CollapsibleGroup } from '@/shared/components';
 import clsx from 'clsx';
 import styles from './MachinesApp.module.css';
 
@@ -148,19 +148,25 @@ export function MachinesApp() {
           {/* Content */}
           {groupedMachines && groupedMachines.some((g) => g.machines.length > 0) ? (
             <PageList>
-              {groupedMachines.map((group) => (
-                <div key={group.status || 'all'} className={styles.group}>
-                  {group.status && groupByStatus && (
-                    <div className={styles.groupHeader}>
-                      <span className={styles.groupLabel}>{group.label}</span>
-                      <span className={styles.groupCount}>{group.machines.length}</span>
-                    </div>
-                  )}
-                  {group.machines.map((machine) => (
-                    <MachineCard key={machine.machine_id} machine={machine} />
-                  ))}
-                </div>
-              ))}
+              {groupedMachines.map((group) =>
+                group.status && groupByStatus ? (
+                  <CollapsibleGroup
+                    key={group.status}
+                    label={group.label}
+                    count={group.machines.length}
+                  >
+                    {group.machines.map((machine) => (
+                      <MachineCard key={machine.machine_id} machine={machine} />
+                    ))}
+                  </CollapsibleGroup>
+                ) : (
+                  <div key="all">
+                    {group.machines.map((machine) => (
+                      <MachineCard key={machine.machine_id} machine={machine} />
+                    ))}
+                  </div>
+                )
+              )}
             </PageList>
           ) : (
             <PageEmptyState

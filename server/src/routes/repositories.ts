@@ -14,6 +14,13 @@ import type {
   AddRepositoryFromGitHubRequest,
   RepositorySyncRequest,
   RepositorySyncResponse,
+  RepositoriesSyncAllResponse,
+  CommitDateGroup,
+  CommitGroupWithStats,
+  GroupedCommitsResponse,
+  SourceType,
+  RepositorySyncStatus,
+  PullRequestState,
 } from '@machina/shared';
 import { AppError } from '../middleware/errorHandler';
 import { requireTeamAdmin } from '../middleware/auth';
@@ -22,23 +29,141 @@ import { repositorySyncService } from '../services/repositorySync';
 
 export const repositoriesRouter = Router();
 
+// ============ Date Grouping Helpers ============
+
+const DATE_GROUP_LABELS: Record<CommitDateGroup, string> = {
+  today: 'Today',
+  yesterday: 'Yesterday',
+  thisWeek: 'This Week',
+  lastWeek: 'Last Week',
+  thisMonth: 'This Month',
+  lastMonth: 'Last Month',
+  older: 'Older',
+};
+
+const DATE_GROUP_ORDER: CommitDateGroup[] = [
+  'today',
+  'yesterday',
+  'thisWeek',
+  'lastWeek',
+  'thisMonth',
+  'lastMonth',
+  'older',
+];
+
+function isToday(date: Date): boolean {
+  const now = new Date();
+  return (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate()
+  );
+}
+
+function isYesterday(date: Date): boolean {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return (
+    date.getFullYear() === yesterday.getFullYear() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getDate() === yesterday.getDate()
+  );
+}
+
+function getWeekStart(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Monday start
+  d.setDate(diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function isThisWeek(date: Date): boolean {
+  const now = new Date();
+  const weekStart = getWeekStart(now);
+  return date >= weekStart && date <= now;
+}
+
+function isLastWeek(date: Date): boolean {
+  const now = new Date();
+  const thisWeekStart = getWeekStart(now);
+  const lastWeekStart = new Date(thisWeekStart);
+  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+  return date >= lastWeekStart && date < thisWeekStart;
+}
+
+function isThisMonth(date: Date): boolean {
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+}
+
+function isLastMonth(date: Date): boolean {
+  const now = new Date();
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  return date.getFullYear() === lastMonth.getFullYear() && date.getMonth() === lastMonth.getMonth();
+}
+
+function getDateGroup(dateStr: string): CommitDateGroup {
+  const date = new Date(dateStr);
+
+  if (isToday(date)) return 'today';
+  if (isYesterday(date)) return 'yesterday';
+  if (isThisWeek(date)) return 'thisWeek';
+  if (isLastWeek(date)) return 'lastWeek';
+  if (isThisMonth(date)) return 'thisMonth';
+  if (isLastMonth(date)) return 'lastMonth';
+  return 'older';
+}
+
+function groupCommitsByDate(commits: CommitWithRepo[]): CommitGroupWithStats[] {
+  const groups: Map<CommitDateGroup, CommitWithRepo[]> = new Map();
+
+  commits.forEach((commit) => {
+    const group = getDateGroup(commit.authored_at);
+    if (!groups.has(group)) {
+      groups.set(group, []);
+    }
+    groups.get(group)?.push(commit);
+  });
+
+  // Return groups in order, only including non-empty ones, with calculated stats
+  return DATE_GROUP_ORDER.filter((group) => groups.has(group)).map((group) => {
+    const groupCommits = groups.get(group) ?? [];
+
+    // Calculate aggregate stats for the group
+    const stats = groupCommits.reduce(
+      (acc, commit) => ({
+        totalFilesChanged: acc.totalFilesChanged + (commit.stats.files_changed || 0),
+        totalAdditions: acc.totalAdditions + (commit.stats.additions || 0),
+        totalDeletions: acc.totalDeletions + (commit.stats.deletions || 0),
+      }),
+      { totalFilesChanged: 0, totalAdditions: 0, totalDeletions: 0 }
+    );
+
+    return {
+      group,
+      label: DATE_GROUP_LABELS[group],
+      commits: groupCommits,
+      stats,
+    };
+  });
+}
+
 // ============ Repositories CRUD ============
 
 // GET /repositories - List tracked repositories
 repositoriesRouter.get('/', (req: Request, res: Response, next: NextFunction) => {
   try {
     const teamId = req.teamId as string;
-    const filter: RepositoryListFilter = {
-      search: req.query.search as string,
-      source_type: req.query.source_type as RepositoryListFilter['source_type'],
-      is_tracking:
-        req.query.is_tracking === 'true'
-          ? true
-          : req.query.is_tracking === 'false'
-            ? false
-            : undefined,
-      sync_status: req.query.sync_status as RepositoryListFilter['sync_status'],
-    };
+    const filter: RepositoryListFilter = {};
+
+    if (req.query['search']) filter.search = req.query['search'] as string;
+    if (req.query['source_type']) filter.source_type = req.query['source_type'] as SourceType;
+    if (req.query['is_tracking'] === 'true') filter.is_tracking = true;
+    else if (req.query['is_tracking'] === 'false') filter.is_tracking = false;
+    if (req.query['sync_status'])
+      filter.sync_status = req.query['sync_status'] as RepositorySyncStatus;
 
     const repos = database.getRepositories(teamId, filter);
 
@@ -59,16 +184,12 @@ repositoriesRouter.get('/', (req: Request, res: Response, next: NextFunction) =>
 repositoriesRouter.get('/contributors', (req: Request, res: Response, next: NextFunction) => {
   try {
     const teamId = req.teamId as string;
-    const filter: ContributorListFilter = {
-      search: req.query.search as string,
-      has_team_member:
-        req.query.has_team_member === 'true'
-          ? true
-          : req.query.has_team_member === 'false'
-            ? false
-            : undefined,
-      repo_id: req.query.repo_id as string,
-    };
+    const filter: ContributorListFilter = {};
+
+    if (req.query['search']) filter.search = req.query['search'] as string;
+    if (req.query['has_team_member'] === 'true') filter.has_team_member = true;
+    else if (req.query['has_team_member'] === 'false') filter.has_team_member = false;
+    if (req.query['repo_id']) filter.repo_id = req.query['repo_id'] as string;
 
     const contributors = database.getContributors(teamId, filter);
 
@@ -87,7 +208,10 @@ repositoriesRouter.get('/contributors', (req: Request, res: Response, next: Next
 repositoriesRouter.get('/contributors/:id', (req: Request, res: Response, next: NextFunction) => {
   try {
     const teamId = req.teamId as string;
-    const { id } = req.params;
+    const id = req.params['id'];
+    if (!id) {
+      throw new AppError(400, 'INVALID_REQUEST', 'Contributor ID is required');
+    }
 
     const contributor = database.getContributor(id, teamId);
     if (!contributor) {
@@ -112,7 +236,10 @@ repositoriesRouter.post(
   (req: Request, res: Response, next: NextFunction) => {
     try {
       const teamId = req.teamId as string;
-      const { id } = req.params;
+      const id = req.params['id'];
+      if (!id) {
+        throw new AppError(400, 'INVALID_REQUEST', 'Contributor ID is required');
+      }
       const { team_member_id } = req.body;
 
       const contributor = database.getContributor(id, teamId);
@@ -137,7 +264,7 @@ repositoriesRouter.post(
 
       const response: ApiResponse<Contributor | null> = {
         success: true,
-        data: updated,
+        data: updated ?? null,
       };
 
       res.json(response);
@@ -153,7 +280,10 @@ repositoriesRouter.get(
   (req: Request, res: Response, next: NextFunction) => {
     try {
       const teamId = req.teamId as string;
-      const { id } = req.params;
+      const id = req.params['id'];
+      if (!id) {
+        throw new AppError(400, 'INVALID_REQUEST', 'Contributor ID is required');
+      }
 
       const contributor = database.getContributor(id, teamId);
       if (!contributor) {
@@ -180,7 +310,10 @@ repositoriesRouter.get(
   (req: Request, res: Response, next: NextFunction) => {
     try {
       const teamId = req.teamId as string;
-      const { id } = req.params;
+      const id = req.params['id'];
+      if (!id) {
+        throw new AppError(400, 'INVALID_REQUEST', 'Contributor ID is required');
+      }
 
       const contributor = database.getContributor(id, teamId);
       if (!contributor) {
@@ -208,12 +341,12 @@ repositoriesRouter.get('/commits', (req: Request, res: Response, next: NextFunct
   try {
     const teamId = req.teamId as string;
     const filter: CommitListFilter = {
-      repo_id: req.query.repo_id as string,
-      contributor_id: req.query.contributor_id as string,
-      since: req.query.since as string,
-      until: req.query.until as string,
-      search: req.query.search as string,
-      branch: req.query.branch as string,
+      repo_id: req.query['repo_id'] as string,
+      contributor_id: req.query['contributor_id'] as string,
+      since: req.query['since'] as string,
+      until: req.query['until'] as string,
+      search: req.query['search'] as string,
+      branch: req.query['branch'] as string,
     };
 
     const commits = database.getCommits(teamId, filter);
@@ -233,7 +366,10 @@ repositoriesRouter.get('/commits', (req: Request, res: Response, next: NextFunct
 repositoriesRouter.get('/commits/:id', (req: Request, res: Response, next: NextFunction) => {
   try {
     const teamId = req.teamId as string;
-    const { id } = req.params;
+    const id = req.params['id'];
+    if (!id) {
+      throw new AppError(400, 'INVALID_REQUEST', 'Commit ID is required');
+    }
 
     // Try by commit_id first (cmt_ prefix), fall back to SHA lookup
     const commit = id.startsWith('cmt_')
@@ -261,12 +397,12 @@ repositoriesRouter.get('/commits/:id', (req: Request, res: Response, next: NextF
 repositoriesRouter.get('/pull-requests', (req: Request, res: Response, next: NextFunction) => {
   try {
     const teamId = req.teamId as string;
-    const filter: PullRequestListFilter = {
-      repo_id: req.query.repo_id as string,
-      contributor_id: req.query.contributor_id as string,
-      state: req.query.state as PullRequestListFilter['state'],
-      search: req.query.search as string,
-    };
+    const filter: PullRequestListFilter = {};
+
+    if (req.query['repo_id']) filter.repo_id = req.query['repo_id'] as string;
+    if (req.query['contributor_id']) filter.contributor_id = req.query['contributor_id'] as string;
+    if (req.query['state']) filter.state = req.query['state'] as PullRequestState;
+    if (req.query['search']) filter.search = req.query['search'] as string;
 
     const prs = database.getPullRequests(teamId, filter);
 
@@ -285,7 +421,10 @@ repositoriesRouter.get('/pull-requests', (req: Request, res: Response, next: Nex
 repositoriesRouter.get('/pull-requests/:id', (req: Request, res: Response, next: NextFunction) => {
   try {
     const teamId = req.teamId as string;
-    const { id } = req.params;
+    const id = req.params['id'];
+    if (!id) {
+      throw new AppError(400, 'INVALID_REQUEST', 'Pull request ID is required');
+    }
 
     const pr = database.getPullRequest(id, teamId);
     if (!pr) {
@@ -309,7 +448,10 @@ repositoriesRouter.get(
   (req: Request, res: Response, next: NextFunction) => {
     try {
       const teamId = req.teamId as string;
-      const { id } = req.params;
+      const id = req.params['id'];
+      if (!id) {
+        throw new AppError(400, 'INVALID_REQUEST', 'Pull request ID is required');
+      }
 
       const pr = database.getPullRequest(id, teamId);
       if (!pr) {
@@ -337,7 +479,10 @@ repositoriesRouter.get(
 repositoriesRouter.get('/:id', (req: Request, res: Response, next: NextFunction) => {
   try {
     const teamId = req.teamId as string;
-    const { id } = req.params;
+    const id = req.params['id'];
+    if (!id) {
+      throw new AppError(400, 'INVALID_REQUEST', 'Repository ID is required');
+    }
 
     const repo = database.getRepository(id, teamId);
     if (!repo) {
@@ -389,7 +534,8 @@ repositoriesRouter.post(
         }
 
         // Parse owner from full_name (format: owner/repo)
-        const [ownerName] = githubRepo.full_name.split('/');
+        const parts = githubRepo.full_name.split('/');
+        const ownerName = parts[0] ?? githubRepo.full_name;
 
         // Create repository record
         const repo: Repository = {
@@ -402,28 +548,30 @@ repositoriesRouter.post(
           owner_name: ownerName,
           name: githubRepo.name,
           full_name: githubRepo.full_name,
-          description: githubRepo.description,
           url: githubRepo.html_url,
           clone_url: `${githubRepo.html_url}.git`,
           default_branch: githubRepo.default_branch,
           is_private: githubRepo.private,
           is_archived: githubRepo.archived,
-          primary_language: githubRepo.language,
           stargazers_count: githubRepo.stargazers_count,
           forks_count: githubRepo.forks_count,
           open_issues_count: githubRepo.open_issues_count,
           is_tracking: true,
-          tracking_since,
           tracked_branches: [],
           sync_status: 'idle',
           commits_synced_count: 0,
           prs_synced_count: 0,
           branches_synced_count: 0,
           created_at_source: now, // We don't have this from the GitHub repo table
-          pushed_at_source: githubRepo.pushed_at,
           added_at: now,
           updated_at: now,
         };
+
+        // Only set optional properties if they have values
+        if (githubRepo.description) repo.description = githubRepo.description;
+        if (githubRepo.language) repo.primary_language = githubRepo.language;
+        if (githubRepo.pushed_at) repo.pushed_at_source = githubRepo.pushed_at;
+        if (tracking_since) repo.tracking_since = tracking_since;
 
         database.insertRepository(repo);
         added.push(repo);
@@ -448,7 +596,10 @@ repositoriesRouter.delete(
   (req: Request, res: Response, next: NextFunction) => {
     try {
       const teamId = req.teamId as string;
-      const { id } = req.params;
+      const id = req.params['id'];
+      if (!id) {
+        throw new AppError(400, 'INVALID_REQUEST', 'Repository ID is required');
+      }
 
       const repo = database.getRepository(id, teamId);
       if (!repo) {
@@ -470,6 +621,68 @@ repositoriesRouter.delete(
   }
 );
 
+// POST /repositories/sync - Sync ALL repositories for the current team
+repositoriesRouter.post(
+  '/sync',
+  requireTeamAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const teamId = req.teamId as string;
+      const userId = (req.user as { user_id: string }).user_id;
+
+      // Get all tracking repositories for this team
+      const repos = database.getRepositories(teamId, { is_tracking: true });
+
+      const results: RepositorySyncResponse[] = [];
+      let syncedRepos = 0;
+      let failedRepos = 0;
+      let totalCommitsSynced = 0;
+      let totalPrsSynced = 0;
+      let totalContributorsCreated = 0;
+
+      // Sync each repository
+      for (const repo of repos) {
+        const result = await repositorySyncService.syncRepository({
+          repo,
+          teamId,
+          userId,
+          syncCommits: true,
+          syncPrs: true,
+          forceFullSync: false,
+        });
+
+        results.push(result);
+
+        if (result.success) {
+          syncedRepos++;
+          totalCommitsSynced += result.commits_synced;
+          totalPrsSynced += result.prs_synced;
+          totalContributorsCreated += result.contributors_created;
+        } else {
+          failedRepos++;
+        }
+      }
+
+      const response: ApiResponse<RepositoriesSyncAllResponse> = {
+        success: true,
+        data: {
+          total_repos: repos.length,
+          synced_repos: syncedRepos,
+          failed_repos: failedRepos,
+          total_commits_synced: totalCommitsSynced,
+          total_prs_synced: totalPrsSynced,
+          total_contributors_created: totalContributorsCreated,
+          results,
+        },
+      };
+
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // POST /repositories/:id/sync - Sync repository commits and PRs
 repositoriesRouter.post(
   '/:id/sync',
@@ -478,7 +691,10 @@ repositoriesRouter.post(
     try {
       const teamId = req.teamId as string;
       const userId = (req.user as { user_id: string }).user_id;
-      const { id } = req.params;
+      const id = req.params['id'];
+      if (!id) {
+        throw new AppError(400, 'INVALID_REQUEST', 'Repository ID is required');
+      }
       const {
         sync_commits = true,
         sync_prs = true,
@@ -519,7 +735,10 @@ repositoriesRouter.patch(
   (req: Request, res: Response, next: NextFunction) => {
     try {
       const teamId = req.teamId as string;
-      const { id } = req.params;
+      const id = req.params['id'];
+      if (!id) {
+        throw new AppError(400, 'INVALID_REQUEST', 'Repository ID is required');
+      }
       const { is_tracking, tracking_since } = req.body;
 
       const repo = database.getRepository(id, teamId);
@@ -538,7 +757,7 @@ repositoriesRouter.patch(
 
       const response: ApiResponse<Repository | null> = {
         success: true,
-        data: updated,
+        data: updated ?? null,
       };
 
       res.json(response);
@@ -550,18 +769,21 @@ repositoriesRouter.patch(
 
 // ============ Commits ============
 
-// GET /repositories/:id/commits - List commits for a repository
+// GET /repositories/:id/commits - List commits for a repository (grouped by date with stats)
 repositoriesRouter.get('/:id/commits', (req: Request, res: Response, next: NextFunction) => {
   try {
     const teamId = req.teamId as string;
-    const { id } = req.params;
+    const id = req.params['id'];
+    if (!id) {
+      throw new AppError(400, 'INVALID_REQUEST', 'Repository ID is required');
+    }
     const filter: CommitListFilter = {
       repo_id: id,
-      contributor_id: req.query.contributor_id as string,
-      since: req.query.since as string,
-      until: req.query.until as string,
-      search: req.query.search as string,
-      branch: req.query.branch as string,
+      contributor_id: req.query['contributor_id'] as string,
+      since: req.query['since'] as string,
+      until: req.query['until'] as string,
+      search: req.query['search'] as string,
+      branch: req.query['branch'] as string,
     };
 
     const repo = database.getRepository(id, teamId);
@@ -571,9 +793,15 @@ repositoriesRouter.get('/:id/commits', (req: Request, res: Response, next: NextF
 
     const commits = database.getCommits(teamId, filter);
 
-    const response: ApiResponse<CommitWithRepo[]> = {
+    // Group commits by date with aggregate stats
+    const groups = groupCommitsByDate(commits);
+
+    const response: ApiResponse<GroupedCommitsResponse> = {
       success: true,
-      data: commits,
+      data: {
+        groups,
+        totalCommits: commits.length,
+      },
     };
 
     res.json(response);
@@ -588,13 +816,15 @@ repositoriesRouter.get('/:id/commits', (req: Request, res: Response, next: NextF
 repositoriesRouter.get('/:id/pull-requests', (req: Request, res: Response, next: NextFunction) => {
   try {
     const teamId = req.teamId as string;
-    const { id } = req.params;
-    const filter: PullRequestListFilter = {
-      repo_id: id,
-      contributor_id: req.query.contributor_id as string,
-      state: req.query.state as PullRequestListFilter['state'],
-      search: req.query.search as string,
-    };
+    const id = req.params['id'];
+    if (!id) {
+      throw new AppError(400, 'INVALID_REQUEST', 'Repository ID is required');
+    }
+    const filter: PullRequestListFilter = { repo_id: id };
+
+    if (req.query['contributor_id']) filter.contributor_id = req.query['contributor_id'] as string;
+    if (req.query['state']) filter.state = req.query['state'] as PullRequestState;
+    if (req.query['search']) filter.search = req.query['search'] as string;
 
     const repo = database.getRepository(id, teamId);
     if (!repo) {

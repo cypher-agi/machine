@@ -39,7 +39,9 @@
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@machina/shared": ["../shared/src/index.ts"],
+      "@machina/shared/*": ["../shared/src/*"]
     }
   },
   "include": ["src"],

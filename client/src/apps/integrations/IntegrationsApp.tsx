@@ -31,9 +31,9 @@ import {
   ItemCardMeta,
   ItemCardStatus,
   ItemCardBadge,
+  CollapsibleGroup,
 } from '@/shared/components';
 import { ConnectIntegrationModal } from './components';
-import styles from './IntegrationsApp.module.css';
 
 const INTEGRATION_ICONS: Record<string, typeof Github> = {
   github: Github,
@@ -184,11 +184,7 @@ export function IntegrationsApp() {
       {integrations && integrations.length > 0 ? (
         <PageList>
           {groups.map((group) => (
-            <div key={group.key} className={styles.group}>
-              <div className={styles.groupHeader}>
-                <span className={styles.groupLabel}>{group.label}</span>
-                <span className={styles.groupCount}>{group.items.length}</span>
-              </div>
+            <CollapsibleGroup key={group.key} label={group.label} count={group.items.length}>
               {group.items.map((integration) => (
                 <IntegrationItem
                   key={integration.type}
@@ -207,7 +203,7 @@ export function IntegrationsApp() {
                   }
                 />
               ))}
-            </div>
+            </CollapsibleGroup>
           ))}
         </PageList>
       ) : (

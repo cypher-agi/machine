@@ -1,16 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { GitCommit, ExternalLink, User, ChevronDown } from 'lucide-react';
-import {
-  formatDistanceToNow,
-  isToday,
-  isYesterday,
-  isThisWeek,
-  isThisMonth,
-  isAfter,
-  subWeeks,
-  subMonths,
-} from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import type { CommitWithRepo } from '@machina/shared';
 import { getRepositoryCommits } from '@/lib/api';
@@ -22,85 +13,13 @@ interface RepositoryCommitsProps {
   repositoryId: string;
 }
 
-type DateGroup =
-  | 'today'
-  | 'yesterday'
-  | 'thisWeek'
-  | 'lastWeek'
-  | 'thisMonth'
-  | 'lastMonth'
-  | 'older';
-
-const DATE_GROUP_LABELS: Record<DateGroup, string> = {
-  today: 'Today',
-  yesterday: 'Yesterday',
-  thisWeek: 'This Week',
-  lastWeek: 'Last Week',
-  thisMonth: 'This Month',
-  lastMonth: 'Last Month',
-  older: 'Older',
-};
-
-const DATE_GROUP_ORDER: DateGroup[] = [
-  'today',
-  'yesterday',
-  'thisWeek',
-  'lastWeek',
-  'thisMonth',
-  'lastMonth',
-  'older',
-];
-
-function getDateGroup(dateStr: string): DateGroup {
-  const date = new Date(dateStr);
-  const now = new Date();
-
-  if (isToday(date)) return 'today';
-  if (isYesterday(date)) return 'yesterday';
-  if (isThisWeek(date, { weekStartsOn: 1 })) return 'thisWeek';
-  if (isAfter(date, subWeeks(now, 2)) && !isThisWeek(date, { weekStartsOn: 1 })) return 'lastWeek';
-  if (isThisMonth(date)) return 'thisMonth';
-  if (isAfter(date, subMonths(now, 2))) return 'lastMonth';
-  return 'older';
-}
-
-interface CommitGroup {
-  group: DateGroup;
-  label: string;
-  commits: CommitWithRepo[];
-}
-
-function groupCommitsByDate(commits: CommitWithRepo[]): CommitGroup[] {
-  const groups: Map<DateGroup, CommitWithRepo[]> = new Map();
-
-  commits.forEach((commit) => {
-    const group = getDateGroup(commit.authored_at);
-    if (!groups.has(group)) {
-      groups.set(group, []);
-    }
-    groups.get(group)?.push(commit);
-  });
-
-  // Return groups in order, only including non-empty ones
-  return DATE_GROUP_ORDER.filter((group) => groups.has(group)).map((group) => ({
-    group,
-    label: DATE_GROUP_LABELS[group],
-    commits: groups.get(group) ?? [],
-  }));
-}
-
 export function RepositoryCommits({ repositoryId }: RepositoryCommitsProps) {
   const [expandedCommits, setExpandedCommits] = useState<Set<string>>(new Set());
 
-  const { data: commits, isLoading } = useQuery({
+  const { data: response, isLoading } = useQuery({
     queryKey: ['repository-commits', repositoryId],
     queryFn: () => getRepositoryCommits(repositoryId),
   });
-
-  const groupedCommits = useMemo(() => {
-    if (!commits) return [];
-    return groupCommitsByDate(commits);
-  }, [commits]);
 
   const toggleExpand = (commitId: string) => {
     setExpandedCommits((prev) => {
@@ -123,7 +42,7 @@ export function RepositoryCommits({ repositoryId }: RepositoryCommitsProps) {
     return <SidekickLoading />;
   }
 
-  if (!commits || commits.length === 0) {
+  if (!response || response.totalCommits === 0) {
     return (
       <SidekickPanel>
         <div className={styles['emptyState']}>
@@ -140,11 +59,29 @@ export function RepositoryCommits({ repositoryId }: RepositoryCommitsProps) {
   return (
     <SidekickPanel>
       <div className={styles['commitsList']}>
-        {groupedCommits.map((group) => (
+        {response.groups.map((group) => (
           <div key={group.group} className={styles['commitGroup']}>
             <div className={styles['commitGroupHeader']}>
               <span className={styles['commitGroupLabel']}>{group.label}</span>
               <span className={styles['commitGroupCount']}>{group.commits.length}</span>
+              <div className={styles['commitGroupStats']}>
+                {group.stats.totalFilesChanged > 0 && (
+                  <span className={styles['commitGroupFilesChanged']}>
+                    {group.stats.totalFilesChanged} file
+                    {group.stats.totalFilesChanged !== 1 ? 's' : ''}
+                  </span>
+                )}
+                {group.stats.totalAdditions > 0 && (
+                  <span className={styles['commitGroupAdditions']}>
+                    +{group.stats.totalAdditions.toLocaleString()}
+                  </span>
+                )}
+                {group.stats.totalDeletions > 0 && (
+                  <span className={styles['commitGroupDeletions']}>
+                    -{group.stats.totalDeletions.toLocaleString()}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className={styles['commitGroupItems']}>

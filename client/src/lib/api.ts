@@ -54,6 +54,8 @@ import type {
   ContributorListFilter,
   AddRepositoryFromGitHubRequest,
   RepositorySyncResponse,
+  RepositoriesSyncAllResponse,
+  GroupedCommitsResponse,
 } from '@machina/shared';
 
 const API_BASE = '/api';
@@ -722,6 +724,12 @@ export async function syncRepository(repoId: string): Promise<RepositorySyncResp
   });
 }
 
+export async function syncAllRepositories(): Promise<RepositoriesSyncAllResponse> {
+  return fetchApi<RepositoriesSyncAllResponse>('/repositories/sync', {
+    method: 'POST',
+  });
+}
+
 export async function deleteRepository(repoId: string): Promise<{ deleted: boolean }> {
   return fetchApi<{ deleted: boolean }>(`/repositories/${repoId}`, { method: 'DELETE' });
 }
@@ -735,8 +743,10 @@ export async function getCommits(filter?: CommitListFilter): Promise<CommitWithR
 export async function getRepositoryCommits(
   repoId: string,
   filter?: Omit<CommitListFilter, 'repo_id'>
-): Promise<CommitWithRepo[]> {
-  return fetchApi<CommitWithRepo[]>(`/repositories/${repoId}/commits${buildQueryString(filter)}`);
+): Promise<GroupedCommitsResponse> {
+  return fetchApi<GroupedCommitsResponse>(
+    `/repositories/${repoId}/commits${buildQueryString(filter)}`
+  );
 }
 
 export async function getCommit(idOrSha: string): Promise<CommitWithRepo> {

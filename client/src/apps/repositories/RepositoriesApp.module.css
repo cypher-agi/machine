@@ -126,19 +126,23 @@
   gap: 24px;
 }
 
-.commitsDateGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* Stats styles used in CollapsibleGroup stats slot */
+.commitsDateFilesChanged {
+  color: #8b8b8d;
+  min-width: 70px;
+  text-align: right;
 }
 
-.commitsDateHeader {
-  font-size: 13px;
-  font-weight: 600;
+.commitsDateAdditions {
+  color: #60a5fa; /* Blue for totals */
+  min-width: 70px;
+  text-align: right;
+}
+
+.commitsDateDeletions {
   color: #8b8b8d;
-  padding: 0 4px 8px;
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 4px;
+  min-width: 60px;
+  text-align: right;
 }
 
 .commitsDateList {

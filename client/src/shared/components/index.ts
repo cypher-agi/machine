@@ -15,3 +15,5 @@ export { PageEmptyState } from './PageEmptyState';
 export type { PageEmptyStateProps } from './PageEmptyState';
 export { PageList } from './PageList';
 export type { PageListProps } from './PageList';
+export { CollapsibleGroup } from './CollapsibleGroup';
+export type { CollapsibleGroupProps } from './CollapsibleGroup';

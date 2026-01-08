@@ -1,0 +1,81 @@
+.group {
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 4px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #8b8b8d;
+}
+
+.count {
+  font-size: 11px;
+  color: #6b6b6d;
+  background-color: var(--surface-2);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  margin-right: 12px; /* Align with child row stats (account for link icon gap) */
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #6b6b6d;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.toggle:hover {
+  background: var(--surface-3);
+  color: #fff;
+}
+
+.toggle svg {
+  transition: transform 0.2s ease;
+}
+
+.toggleCollapsed svg {
+  transform: rotate(-90deg);
+}
+
+/* Slide animation container */
+.content {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.25s ease-out;
+}
+
+.contentCollapsed {
+  grid-template-rows: 0fr;
+}
+
+.contentInner {
+  overflow: hidden;
+}

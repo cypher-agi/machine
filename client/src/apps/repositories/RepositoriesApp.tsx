@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   FolderGit2,
   GitCommit,
@@ -17,7 +17,13 @@ import type {
   PullRequestWithDetails,
   Contributor,
 } from '@machina/shared';
-import { getRepositories, getCommits, getPullRequests, getContributors } from '@/lib/api';
+import {
+  getRepositories,
+  getCommits,
+  getPullRequests,
+  getContributors,
+  syncAllRepositories,
+} from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { Button, RefreshButton } from '@/shared/ui';
@@ -29,6 +35,7 @@ import {
   ItemCardMeta,
   ItemCardStatus,
   ItemCardBadge,
+  CollapsibleGroup,
 } from '@/shared/components';
 import { AddRepositoryModal } from './components';
 import styles from './RepositoriesApp.module.css';
@@ -43,12 +50,7 @@ export function RepositoriesApp() {
 
   const currentTeamRole = getCurrentTeam()?.role;
 
-  const {
-    data: repositories,
-    isLoading: reposLoading,
-    refetch: refetchRepos,
-    isRefetching: isRefetchingRepos,
-  } = useQuery({
+  const { data: repositories, isLoading: reposLoading } = useQuery({
     queryKey: ['repositories', currentTeamId],
     queryFn: () => getRepositories(),
   });
@@ -69,6 +71,19 @@ export function RepositoriesApp() {
     queryKey: ['contributors', currentTeamId],
     queryFn: () => getContributors(),
     enabled: viewMode === 'contributors',
+  });
+
+  const queryClient = useQueryClient();
+
+  const syncMutation = useMutation({
+    mutationFn: syncAllRepositories,
+    onSuccess: () => {
+      // Invalidate all repository-related queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['repositories', currentTeamId] });
+      queryClient.invalidateQueries({ queryKey: ['commits', currentTeamId] });
+      queryClient.invalidateQueries({ queryKey: ['pull-requests', currentTeamId] });
+      queryClient.invalidateQueries({ queryKey: ['contributors', currentTeamId] });
+    },
   });
 
   const isAdmin = currentTeamRole === 'admin';
@@ -135,7 +150,11 @@ export function RepositoriesApp() {
               Contributors
             </button>
           </div>
-          <RefreshButton onRefresh={() => refetchRepos()} isRefreshing={isRefetchingRepos} />
+          <RefreshButton
+            onRefresh={() => syncMutation.mutate()}
+            isRefreshing={syncMutation.isPending}
+            title="Sync all repositories"
+          />
           {isAdmin && (
             <Button variant="primary" size="sm" onClick={() => setShowAddModal(true)}>
               <Plus size={14} />
@@ -194,7 +213,7 @@ export function RepositoriesApp() {
 interface RepositoryItemProps {
   repo: RepositoryWithStats;
   onSelect: () => void;
-  getSyncStatusVariant: (status: RepositorySyncStatus) => 'valid' | 'muted' | 'warning';
+  getSyncStatusVariant: (status: RepositorySyncStatus) => 'valid' | 'muted' | 'warning' | 'invalid';
   isSelected: boolean;
 }
 
@@ -312,6 +331,14 @@ function getCommitTypeClass(type: string): string {
   return classMap[type] ?? styles['commitTypeDefault'] ?? '';
 }
 
+// Group stats interface
+interface DateGroupStats {
+  commits: CommitWithRepo[];
+  totalFilesChanged: number;
+  totalAdditions: number;
+  totalDeletions: number;
+}
+
 // Commit List View - Readable list format
 function CommitListView({ commits }: { commits: CommitWithRepo[] }) {
   const { setSidekickSelection, sidekickSelection } = useAppStore();
@@ -330,8 +357,8 @@ function CommitListView({ commits }: { commits: CommitWithRepo[] }) {
     (a, b) => new Date(b.authored_at).getTime() - new Date(a.authored_at).getTime()
   );
 
-  // Group commits by date
-  const groupedByDate: Record<string, CommitWithRepo[]> = sortedCommits.reduce(
+  // Group commits by date with aggregated stats
+  const groupedByDate: Record<string, DateGroupStats> = sortedCommits.reduce(
     (groups, commit) => {
       const date = new Date(commit.authored_at).toLocaleDateString('en-US', {
         weekday: 'long',
@@ -339,20 +366,51 @@ function CommitListView({ commits }: { commits: CommitWithRepo[] }) {
         month: 'long',
         day: 'numeric',
       });
-      if (!groups[date]) groups[date] = [];
-      groups[date].push(commit);
+      if (!groups[date]) {
+        groups[date] = {
+          commits: [],
+          totalFilesChanged: 0,
+          totalAdditions: 0,
+          totalDeletions: 0,
+        };
+      }
+      groups[date].commits.push(commit);
+      groups[date].totalFilesChanged += commit.stats.files_changed || 0;
+      groups[date].totalAdditions += commit.stats.additions || 0;
+      groups[date].totalDeletions += commit.stats.deletions || 0;
       return groups;
     },
-    {} as Record<string, CommitWithRepo[]>
+    {} as Record<string, DateGroupStats>
   );
 
   return (
     <div className={styles['commitsList']}>
-      {Object.entries(groupedByDate).map(([date, dateCommits]) => (
-        <div key={date} className={styles['commitsDateGroup']}>
-          <div className={styles['commitsDateHeader']}>{date}</div>
+      {Object.entries(groupedByDate).map(([date, groupStats]) => (
+        <CollapsibleGroup
+          key={date}
+          label={date}
+          stats={
+            <>
+              {groupStats.totalFilesChanged > 0 && (
+                <span className={styles['commitsDateFilesChanged']}>
+                  {groupStats.totalFilesChanged} file{groupStats.totalFilesChanged !== 1 ? 's' : ''}
+                </span>
+              )}
+              {groupStats.totalAdditions > 0 && (
+                <span className={styles['commitsDateAdditions']}>
+                  +{groupStats.totalAdditions.toLocaleString()}
+                </span>
+              )}
+              {groupStats.totalDeletions > 0 && (
+                <span className={styles['commitsDateDeletions']}>
+                  -{groupStats.totalDeletions.toLocaleString()}
+                </span>
+              )}
+            </>
+          }
+        >
           <div className={styles['commitsDateList']}>
-            {dateCommits.map((commit) => {
+            {groupStats.commits.map((commit) => {
               const { type, message } = parseCommitType(commit.message_headline);
               const isSelected =
                 sidekickSelection?.type === 'commit' && sidekickSelection?.id === commit.commit_id;
@@ -445,7 +503,7 @@ function CommitListView({ commits }: { commits: CommitWithRepo[] }) {
               );
             })}
           </div>
-        </div>
+        </CollapsibleGroup>
       ))}
     </div>
   );

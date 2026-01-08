@@ -525,3 +525,54 @@ export interface RepositorySyncResponse {
   finished_at?: string;
   error?: string;
 }
+
+export interface RepositoriesSyncAllResponse {
+  total_repos: number;
+  synced_repos: number;
+  failed_repos: number;
+  total_commits_synced: number;
+  total_prs_synced: number;
+  total_contributors_created: number;
+  results: RepositorySyncResponse[];
+}
+
+// ============ Grouped Commits Response ============
+
+/**
+ * Date group for commits (relative time periods)
+ */
+export type CommitDateGroup =
+  | 'today'
+  | 'yesterday'
+  | 'thisWeek'
+  | 'lastWeek'
+  | 'thisMonth'
+  | 'lastMonth'
+  | 'older';
+
+/**
+ * Aggregate stats for a group of commits
+ */
+export interface CommitGroupStats {
+  totalFilesChanged: number;
+  totalAdditions: number;
+  totalDeletions: number;
+}
+
+/**
+ * A group of commits with aggregate stats
+ */
+export interface CommitGroupWithStats {
+  group: CommitDateGroup;
+  label: string;
+  commits: CommitWithRepo[];
+  stats: CommitGroupStats;
+}
+
+/**
+ * Response for grouped commits endpoint
+ */
+export interface GroupedCommitsResponse {
+  groups: CommitGroupWithStats[];
+  totalCommits: number;
+}

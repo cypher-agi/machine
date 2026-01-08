@@ -234,6 +234,33 @@
   border-radius: var(--radius-sm);
 }
 
+.commitGroupStats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.commitGroupFilesChanged {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.commitGroupAdditions {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--font-medium);
+  color: var(--color-success);
+}
+
+.commitGroupDeletions {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
+}
+
 .commitGroupItems {
   display: flex;
   flex-direction: column;
