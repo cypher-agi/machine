@@ -78,8 +78,8 @@
 }
 
 .userRole {
-  font-size: 10px;
-  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
   text-transform: capitalize;
   line-height: 1;
 }

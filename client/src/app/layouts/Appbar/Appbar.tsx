@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Server, Cloud, GitBranch, Package, Key, Plug } from 'lucide-react';
+import { Server, Cloud, GitBranch, Package, Key, Plug, Users, FolderGit2 } from 'lucide-react';
 import clsx from 'clsx';
 import styles from './Appbar.module.css';
 
@@ -13,9 +13,11 @@ const navItems: NavItem[] = [
   { to: '/machines', icon: Server, label: 'Machines' },
   { to: '/providers', icon: Cloud, label: 'Providers' },
   { to: '/keys', icon: Key, label: 'Keys' },
+  { to: '/repositories', icon: FolderGit2, label: 'Repositories' },
   { to: '/deployments', icon: GitBranch, label: 'Deployments' },
   { to: '/bootstrap', icon: Package, label: 'Bootstrap' },
   { to: '/integrations', icon: Plug, label: 'Integrations' },
+  { to: '/members', icon: Users, label: 'Members' },
 ];
 
 export function Appbar() {

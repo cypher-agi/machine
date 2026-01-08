@@ -4,6 +4,7 @@
   border-radius: var(--radius-md);
   margin-bottom: var(--space-3);
   overflow: hidden;
+  min-width: 0;
 }
 
 .section:last-child {
@@ -50,6 +51,7 @@
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 200ms ease;
+  min-width: 0;
 }
 
 .sectionContentOpen {
@@ -59,6 +61,7 @@
 .sectionContentInner {
   overflow: hidden;
   padding: 0 var(--space-3);
+  min-width: 0;
 }
 
 .sectionContentOpen .sectionContentInner {

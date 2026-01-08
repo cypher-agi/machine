@@ -1,0 +1,130 @@
+/* Members App Styles */
+
+.avatarBadge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.roleBadgeAdmin {
+  background: var(--status-running-bg);
+  color: var(--status-running);
+}
+
+.roleBadgeMember {
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+.emailText {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.youBadge {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+/* Search container */
+.searchContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 10px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+
+.searchInput {
+  padding-left: 32px !important;
+  width: 180px;
+}
+
+.clearSearch {
+  position: absolute;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: var(--surface-3);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--text-tertiary);
+}
+
+.clearSearch:hover {
+  background: var(--surface-4);
+  color: var(--text-secondary);
+}
+
+/* Filter group */
+.filterGroup {
+  display: flex;
+  gap: 2px;
+  background: var(--surface-2);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.filterButton {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filterButton:hover {
+  color: var(--text-primary);
+}
+
+.filterButtonActive {
+  background: var(--surface-3);
+  color: var(--text-primary);
+}
+
+/* Danger button */
+.dangerButton {
+  color: var(--status-error) !important;
+}
+
+.dangerButton:hover {
+  background: var(--status-error-bg) !important;
+}

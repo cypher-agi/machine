@@ -4,6 +4,7 @@
   justify-content: space-between;
   padding: var(--space-1-5) 0;
   font-size: var(--text-xs);
+  min-width: 0;
 }
 
 .row:not(:last-child) {
@@ -15,6 +16,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-1);
+  flex-shrink: 0;
 }
 
 .value {
@@ -22,6 +24,9 @@
   font-family: var(--font-mono);
   text-align: right;
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .valueAccent {
@@ -40,6 +45,17 @@
 }
 
 .valueCopyable .value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.valueWithAction {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.valueWithAction .value {
   overflow: hidden;
   text-overflow: ellipsis;
 }

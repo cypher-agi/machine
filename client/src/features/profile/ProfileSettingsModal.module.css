@@ -1,0 +1,54 @@
+/* Profile Settings Modal Layout */
+.layout {
+  display: flex;
+  min-height: 420px;
+  max-height: 60vh;
+}
+
+.nav {
+  width: 160px;
+  padding: var(--space-3);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  background: var(--color-background);
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.navButton:hover {
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+.navButtonActive {
+  background: var(--color-elevated);
+  color: var(--color-text-primary);
+}
+
+.navButtonActive:hover {
+  background: var(--color-elevated);
+  color: var(--color-text-primary);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-4);
+  min-width: 0;
+}

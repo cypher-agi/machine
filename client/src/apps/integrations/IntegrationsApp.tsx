@@ -7,7 +7,6 @@ import {
   Headphones,
   Twitter,
   RefreshCw,
-  Unlink,
   CheckCircle,
   Circle,
   Settings,
@@ -19,12 +18,11 @@ import {
   getIntegrations,
   getIntegrationStatus,
   syncIntegration,
-  disconnectIntegration,
   removeIntegrationConfig,
 } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, RefreshButton, ConfirmModal } from '@/shared/ui';
+import { Button, RefreshButton } from '@/shared/ui';
 import {
   PageLayout,
   PageEmptyState,
@@ -35,6 +33,7 @@ import {
   ItemCardBadge,
 } from '@/shared/components';
 import { ConnectIntegrationModal } from './components';
+import styles from './IntegrationsApp.module.css';
 
 const INTEGRATION_ICONS: Record<string, typeof Github> = {
   github: Github,
@@ -44,11 +43,10 @@ const INTEGRATION_ICONS: Record<string, typeof Github> = {
 };
 
 export function IntegrationsApp() {
-  const { addToast, setSidekickSelection } = useAppStore();
+  const { addToast, setSidekickSelection, sidekickSelection } = useAppStore();
   const { currentTeamId } = useAuthStore();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [disconnecting, setDisconnecting] = useState<string | null>(null);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [connectingIntegration, setConnectingIntegration] = useState<{
     type: IntegrationType;
@@ -113,27 +111,6 @@ export function IntegrationsApp() {
     },
   });
 
-  const disconnectMutation = useMutation({
-    mutationFn: (type: IntegrationType) => disconnectIntegration(type),
-    onSuccess: (_, type) => {
-      addToast({
-        type: 'success',
-        title: 'Disconnected',
-        message: `${type} has been disconnected`,
-      });
-      queryClient.invalidateQueries({ queryKey: ['integrations'] });
-      setDisconnecting(null);
-    },
-    onError: (error: Error) => {
-      addToast({
-        type: 'error',
-        title: 'Disconnect Failed',
-        message: error.message,
-      });
-      setDisconnecting(null);
-    },
-  });
-
   const removeConfigMutation = useMutation({
     mutationFn: (type: IntegrationType) => removeIntegrationConfig(type),
     onSuccess: (_, type) => {
@@ -161,43 +138,76 @@ export function IntegrationsApp() {
     });
   };
 
-  const handleSync = (type: IntegrationType, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setSyncing(type);
-    syncMutation.mutate(type);
-  };
-
-  const handleDisconnect = (type: IntegrationType) => {
-    disconnectMutation.mutate(type);
-    setDisconnecting(null);
+  const handleRefresh = () => {
+    // If there are connected integrations, sync them; otherwise just refetch
+    const connectedIntegrations = integrations?.filter((i) => i.connected) || [];
+    if (connectedIntegrations.length > 0) {
+      const firstConnected = connectedIntegrations[0];
+      setSyncing(firstConnected.type);
+      syncMutation.mutate(firstConnected.type);
+    } else {
+      refetch();
+    }
   };
 
   const connectedCount = integrations?.filter((i) => i.connected).length ?? 0;
+  const isSyncing = syncing !== null;
+
+  // Group integrations by status
+  const groupedIntegrations = integrations
+    ? {
+        connected: integrations.filter((i) => i.connected),
+        available: integrations.filter((i) => !i.connected && i.available),
+        future: integrations.filter((i) => !i.available),
+      }
+    : { connected: [], available: [], future: [] };
+
+  const groups = [
+    { key: 'connected', label: 'Connected', items: groupedIntegrations.connected },
+    { key: 'available', label: 'Available', items: groupedIntegrations.available },
+    { key: 'future', label: 'Coming Soon', items: groupedIntegrations.future },
+  ].filter((g) => g.items.length > 0);
 
   return (
     <PageLayout
       title="Integrations"
       count={connectedCount}
       isLoading={isLoading}
-      actions={<RefreshButton onRefresh={() => refetch()} isRefreshing={isRefetching} />}
+      actions={
+        <RefreshButton
+          onRefresh={handleRefresh}
+          isRefreshing={isSyncing || isRefetching}
+          title={connectedCount > 0 ? 'Sync integrations' : 'Refresh'}
+        />
+      }
     >
       {integrations && integrations.length > 0 ? (
         <PageList>
-          {integrations.map((integration) => (
-            <IntegrationItem
-              key={integration.type}
-              integration={integration}
-              onConnect={() => handleConnect(integration)}
-              onSync={(e) => handleSync(integration.type, e)}
-              onDisconnect={() => setDisconnecting(integration.type)}
-              onRemoveConfig={() => removeConfigMutation.mutate(integration.type)}
-              onSelect={() => {
-                if (integration.connected) {
-                  setSidekickSelection({ type: 'integration', id: integration.type });
-                }
-              }}
-              isSyncing={syncing === integration.type}
-            />
+          {groups.map((group) => (
+            <div key={group.key} className={styles.group}>
+              <div className={styles.groupHeader}>
+                <span className={styles.groupLabel}>{group.label}</span>
+                <span className={styles.groupCount}>{group.items.length}</span>
+              </div>
+              {group.items.map((integration) => (
+                <IntegrationItem
+                  key={integration.type}
+                  integration={integration}
+                  onConnect={() => handleConnect(integration)}
+                  onRemoveConfig={() => removeConfigMutation.mutate(integration.type)}
+                  onSelect={() => {
+                    if (integration.connected) {
+                      setSidekickSelection({ type: 'integration', id: integration.type });
+                    }
+                  }}
+                  isSyncing={syncing === integration.type}
+                  isSelected={
+                    sidekickSelection?.type === 'integration' &&
+                    sidekickSelection?.id === integration.type
+                  }
+                />
+              ))}
+            </div>
           ))}
         </PageList>
       ) : (
@@ -213,19 +223,6 @@ export function IntegrationsApp() {
           onClose={() => setConnectingIntegration(null)}
         />
       )}
-
-      {/* Disconnect Confirmation */}
-      {disconnecting && (
-        <ConfirmModal
-          isOpen={true}
-          title="Disconnect Integration"
-          message={`Are you sure you want to disconnect ${disconnecting}? This will remove all synced data.`}
-          confirmLabel="Disconnect"
-          danger
-          onConfirm={() => handleDisconnect(disconnecting as IntegrationType)}
-          onClose={() => setDisconnecting(null)}
-        />
-      )}
     </PageLayout>
   );
 }
@@ -233,21 +230,19 @@ export function IntegrationsApp() {
 interface IntegrationItemProps {
   integration: IntegrationListItem;
   onConnect: () => void;
-  onSync: (e: React.MouseEvent) => void;
-  onDisconnect: () => void;
   onRemoveConfig: () => void;
   onSelect: () => void;
   isSyncing: boolean;
+  isSelected: boolean;
 }
 
 function IntegrationItem({
   integration,
   onConnect,
-  onSync,
-  onDisconnect,
   onRemoveConfig,
   onSelect,
   isSyncing,
+  isSelected,
 }: IntegrationItemProps) {
   const Icon = INTEGRATION_ICONS[integration.icon] || Github;
 
@@ -278,6 +273,7 @@ function IntegrationItem({
       iconBadge={<Icon size={14} />}
       title={integration.name}
       titleSans
+      selected={isSelected}
       onClick={integration.connected ? onSelect : undefined}
       statusBadge={
         <ItemCardStatus variant={getStatusVariant()}>
@@ -331,32 +327,7 @@ function IntegrationItem({
       }
       actions={
         integration.available ? (
-          integration.connected ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                iconOnly
-                onClick={onSync}
-                disabled={isSyncing}
-                title="Sync"
-              >
-                <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                iconOnly
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDisconnect();
-                }}
-                title="Disconnect"
-              >
-                <Unlink size={14} />
-              </Button>
-            </>
-          ) : integration.configured ? (
+          integration.connected ? undefined : integration.configured ? (
             <>
               <Button
                 variant="ghost"

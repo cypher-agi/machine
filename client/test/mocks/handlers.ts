@@ -7,6 +7,15 @@ import type {
   FirewallProfile,
   SSHKey,
   AuditEvent,
+  TeamWithMembership,
+  TeamDetailResponse,
+  TeamMember,
+  TeamInvite,
+  IntegrationListItem,
+  IntegrationStatusResponse,
+  IntegrationSetupInfo,
+  GitHubRepository,
+  GitHubMember,
 } from '@machina/shared';
 
 const API_BASE = '/api';
@@ -94,6 +103,103 @@ export const mockAuditEvent = (overrides: Partial<AuditEvent> = {}): AuditEvent 
   action: 'machine.create',
   outcome: 'success',
   timestamp: new Date().toISOString(),
+  ...overrides,
+});
+
+// Teams mock factories
+export const mockTeam = (overrides: Partial<TeamWithMembership> = {}): TeamWithMembership => ({
+  team_id: 'team-1',
+  name: 'Test Team',
+  handle: 'test-team',
+  role: 'admin',
+  member_count: 3,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  created_by: 'user-1',
+  ...overrides,
+});
+
+export const mockTeamMember = (overrides: Partial<TeamMember> = {}): TeamMember => ({
+  team_member_id: 'tmem-1',
+  team_id: 'team-1',
+  user_id: 'user-1',
+  role: 'admin',
+  joined_at: new Date().toISOString(),
+  ...overrides,
+});
+
+export const mockTeamInvite = (overrides: Partial<TeamInvite> = {}): TeamInvite => ({
+  invite_id: 'inv-1',
+  team_id: 'team-1',
+  invite_code: 'ABC123XYZ',
+  created_by: 'user-1',
+  created_at: new Date().toISOString(),
+  expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  ...overrides,
+});
+
+// Integrations mock factories
+export const mockIntegration = (
+  overrides: Partial<IntegrationListItem> = {}
+): IntegrationListItem => ({
+  type: 'github',
+  name: 'GitHub',
+  description: 'Import repositories and team members from GitHub',
+  icon: 'github',
+  features: ['repos', 'members'],
+  available: true,
+  connected: false,
+  configured: false,
+  ...overrides,
+});
+
+export const mockIntegrationStatus = (
+  overrides: Partial<IntegrationStatusResponse> = {}
+): IntegrationStatusResponse => ({
+  connected: false,
+  configured: false,
+  definition: {
+    type: 'github',
+    name: 'GitHub',
+    description: 'Import repositories and team members',
+    icon: 'github',
+    features: ['repos', 'members'],
+    available: true,
+  },
+  ...overrides,
+});
+
+export const mockGitHubRepo = (overrides: Partial<GitHubRepository> = {}): GitHubRepository => ({
+  repo_id: 'ghr_1',
+  team_id: 'team-1',
+  integration_id: 'int-1',
+  github_repo_id: 12345,
+  name: 'test-repo',
+  full_name: 'testorg/test-repo',
+  private: false,
+  archived: false,
+  disabled: false,
+  default_branch: 'main',
+  html_url: 'https://github.com/testorg/test-repo',
+  sync_status: 'ok',
+  imported_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  ...overrides,
+});
+
+export const mockGitHubMember = (overrides: Partial<GitHubMember> = {}): GitHubMember => ({
+  member_id: 'ghm_1',
+  team_id: 'team-1',
+  integration_id: 'int-1',
+  github_user_id: 67890,
+  login: 'testuser',
+  avatar_url: 'https://avatars.githubusercontent.com/u/67890',
+  html_url: 'https://github.com/testuser',
+  organization: 'testorg',
+  role: 'member',
+  sync_status: 'ok',
+  imported_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
   ...overrides,
 });
 
@@ -444,6 +550,253 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       data: { deleted: true },
+    });
+  }),
+
+  // Teams
+  http.get(`${API_BASE}/teams`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: [mockTeam()],
+    });
+  }),
+
+  http.get(`${API_BASE}/teams/check-handle/:handle`, ({ params }) => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        handle: params.handle as string,
+        available: true,
+      },
+    });
+  }),
+
+  http.post(`${API_BASE}/teams`, async ({ request }) => {
+    const body = await request.json();
+    const { name, handle } = body as { name: string; handle: string };
+    return HttpResponse.json({
+      success: true,
+      data: mockTeam({ name, handle }),
+    });
+  }),
+
+  http.get(`${API_BASE}/teams/:id`, ({ params }) => {
+    const teamId = params.id as string;
+    const response: TeamDetailResponse = {
+      team: {
+        team_id: teamId,
+        name: 'Test Team',
+        handle: 'test-team',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: 'user-1',
+      },
+      members: [
+        mockTeamMember({ team_id: teamId }),
+        mockTeamMember({ team_member_id: 'tmem-2', user_id: 'user-2', role: 'member' }),
+      ],
+      pending_invites: [mockTeamInvite({ team_id: teamId })],
+      current_user_role: 'admin',
+    };
+    return HttpResponse.json({
+      success: true,
+      data: response,
+    });
+  }),
+
+  http.put(`${API_BASE}/teams/:id`, async ({ request, params }) => {
+    const body = await request.json();
+    const { name, handle } = body as { name?: string; handle?: string };
+    return HttpResponse.json({
+      success: true,
+      data: {
+        team_id: params.id as string,
+        name: name || 'Test Team',
+        handle: handle || 'test-team',
+        updated_at: new Date().toISOString(),
+      },
+    });
+  }),
+
+  http.delete(`${API_BASE}/teams/:id`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: { deleted: true },
+    });
+  }),
+
+  http.post(`${API_BASE}/teams/:id/invites`, ({ params }) => {
+    return HttpResponse.json({
+      success: true,
+      data: mockTeamInvite({ team_id: params.id as string }),
+    });
+  }),
+
+  http.delete(`${API_BASE}/teams/:id/invites/:inviteId`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: { deleted: true },
+    });
+  }),
+
+  http.post(`${API_BASE}/teams/join`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        member: mockTeamMember({ role: 'member' }),
+        team: mockTeam(),
+      },
+    });
+  }),
+
+  http.delete(`${API_BASE}/teams/:id/members/:memberId`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: { deleted: true },
+    });
+  }),
+
+  http.put(`${API_BASE}/teams/:id/members/:memberId`, async ({ request }) => {
+    const body = await request.json();
+    const { role } = body as { role: string };
+    return HttpResponse.json({
+      success: true,
+      data: mockTeamMember({ role: role as 'admin' | 'member' }),
+    });
+  }),
+
+  // Integrations
+  http.get(`${API_BASE}/integrations`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        mockIntegration({ type: 'github', name: 'GitHub', available: true }),
+        mockIntegration({
+          type: 'slack',
+          name: 'Slack',
+          available: false,
+          description: 'Send notifications to Slack',
+        }),
+      ],
+    });
+  }),
+
+  http.get(`${API_BASE}/integrations/:type/setup`, ({ params }) => {
+    const setupInfo: IntegrationSetupInfo = {
+      type: params.type as 'github',
+      name: params.type === 'github' ? 'GitHub' : 'Slack',
+      instructions: [
+        'Go to GitHub Developer Settings',
+        'Create a new OAuth App',
+        'Copy the Client ID and Client Secret',
+        'Paste them below',
+      ],
+      credential_fields: [
+        { name: 'client_id', label: 'Client ID', type: 'text', required: true },
+        { name: 'client_secret', label: 'Client Secret', type: 'password', required: true },
+      ],
+      callback_url: `http://localhost:5173/api/integrations/${params.type}/connect/callback`,
+    };
+    return HttpResponse.json({
+      success: true,
+      data: setupInfo,
+    });
+  }),
+
+  http.post(`${API_BASE}/integrations/:type/configure`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: { configured: true },
+    });
+  }),
+
+  http.delete(`${API_BASE}/integrations/:type/configure`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: { removed: true },
+    });
+  }),
+
+  http.get(`${API_BASE}/integrations/:type/status`, ({ params }) => {
+    return HttpResponse.json({
+      success: true,
+      data: mockIntegrationStatus({
+        connected: false,
+        configured: false,
+        definition: {
+          type: params.type as 'github',
+          name: params.type === 'github' ? 'GitHub' : 'Slack',
+          description: 'Integration description',
+          icon: params.type as string,
+          features: ['feature1'],
+          available: true,
+        },
+      }),
+    });
+  }),
+
+  http.get(`${API_BASE}/integrations/:type/connect/start`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: { url: 'https://github.com/login/oauth/authorize?client_id=test' },
+    });
+  }),
+
+  http.post(`${API_BASE}/integrations/:type/sync`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        success: true,
+        started_at: new Date().toISOString(),
+        items_synced: 10,
+      },
+    });
+  }),
+
+  http.delete(`${API_BASE}/integrations/:type`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: { disconnected: true },
+    });
+  }),
+
+  // GitHub Data Endpoints
+  http.get(`${API_BASE}/integrations/github/repos`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        mockGitHubRepo({ repo_id: 'ghr_1', name: 'repo-1', full_name: 'org/repo-1' }),
+        mockGitHubRepo({
+          repo_id: 'ghr_2',
+          name: 'repo-2',
+          full_name: 'org/repo-2',
+          private: true,
+        }),
+      ],
+    });
+  }),
+
+  http.get(`${API_BASE}/integrations/github/repos/:id`, ({ params }) => {
+    return HttpResponse.json({
+      success: true,
+      data: mockGitHubRepo({ repo_id: params.id as string }),
+    });
+  }),
+
+  http.get(`${API_BASE}/integrations/github/members`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        mockGitHubMember({ member_id: 'ghm_1', login: 'user1' }),
+        mockGitHubMember({ member_id: 'ghm_2', login: 'user2', role: 'admin' }),
+      ],
+    });
+  }),
+
+  http.get(`${API_BASE}/integrations/github/members/:id`, ({ params }) => {
+    return HttpResponse.json({
+      success: true,
+      data: mockGitHubMember({ member_id: params.id as string }),
     });
   }),
 ];

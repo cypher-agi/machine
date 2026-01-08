@@ -5,6 +5,7 @@
   display: flex;
   flex-direction: column;
   background-color: var(--color-bg);
+  min-width: 0; /* Prevent content from forcing parent to grow during sidekick animation */
 }
 
 .header {

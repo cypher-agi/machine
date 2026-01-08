@@ -18,3 +18,12 @@ export type { TeamDetailProps } from './TeamDetail';
 
 export { IntegrationDetail } from './IntegrationDetail';
 export type { IntegrationDetailProps } from './IntegrationDetail';
+
+export { MemberDetail } from './MemberDetail';
+export type { MemberDetailProps } from './MemberDetail/MemberDetail';
+
+export { RepositoryDetail } from './RepositoryDetail';
+export type { RepositoryDetailProps } from './RepositoryDetail/RepositoryDetail';
+
+export { CommitDetail } from './CommitDetail';
+export type { CommitDetailProps } from './CommitDetail/CommitDetail';

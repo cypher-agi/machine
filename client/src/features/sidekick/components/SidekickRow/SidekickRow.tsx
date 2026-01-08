@@ -7,13 +7,15 @@ import styles from './SidekickRow.module.css';
 
 export interface SidekickRowProps {
   label: string;
-  value?: string | null;
+  value?: string | ReactNode | null;
   icon?: ReactNode;
   accent?: boolean;
   copyable?: boolean;
   mono?: boolean;
   /** Max characters before middle truncation kicks in */
   maxLength?: number;
+  /** Optional action button to display at the end of the row */
+  action?: ReactNode;
 }
 
 /** Truncate string in the middle with ellipsis */
@@ -33,40 +35,65 @@ export function SidekickRow({
   copyable,
   mono,
   maxLength = 22,
+  action,
 }: SidekickRowProps) {
   const { addToast } = useAppStore();
 
+  const isStringValue = typeof value === 'string';
+
   const handleCopy = async () => {
-    if (value) {
+    if (isStringValue && value) {
       await copyToClipboard(value);
       addToast({ type: 'info', title: 'Copied', message: `${label} copied` });
     }
   };
 
-  const displayValue = value ? truncateMiddle(value, maxLength) : null;
+  const displayValue = isStringValue && value ? truncateMiddle(value, maxLength) : value;
 
   return (
-    <div className={styles.row}>
-      <span className={styles.label}>
+    <div className={styles['row']}>
+      <span className={styles['label']}>
         {icon}
         {label}
       </span>
-      {copyable && value ? (
-        <div className={styles.valueCopyable}>
+      {copyable && isStringValue && value ? (
+        <div className={styles['valueCopyable']}>
           <span
-            className={clsx(styles.value, accent && styles.valueAccent, mono && styles.valueMono)}
+            className={clsx(
+              styles['value'],
+              accent && styles['valueAccent'],
+              mono && styles['valueMono']
+            )}
             title={value}
           >
             {displayValue}
           </span>
-          <button onClick={handleCopy} className={styles.copyButton}>
+          <button onClick={handleCopy} className={styles['copyButton']}>
             <Copy size={12} />
           </button>
         </div>
+      ) : action ? (
+        <div className={styles['valueWithAction']}>
+          <span
+            className={clsx(
+              styles['value'],
+              accent && styles['valueAccent'],
+              mono && styles['valueMono']
+            )}
+            title={isStringValue ? value || undefined : undefined}
+          >
+            {displayValue || '—'}
+          </span>
+          {action}
+        </div>
       ) : (
         <span
-          className={clsx(styles.value, accent && styles.valueAccent, mono && styles.valueMono)}
-          title={value || undefined}
+          className={clsx(
+            styles['value'],
+            accent && styles['valueAccent'],
+            mono && styles['valueMono']
+          )}
+          title={isStringValue ? value || undefined : undefined}
         >
           {displayValue || '—'}
         </span>

@@ -5,5 +5,5 @@ export { KeysApp } from './keys';
 export { DeploymentsApp } from './deployments';
 export { BootstrapApp } from './bootstrap';
 export { TeamsApp } from './teams';
-export { SettingsApp } from './settings';
 export { IntegrationsApp } from './integrations';
+export { MembersApp } from './members';

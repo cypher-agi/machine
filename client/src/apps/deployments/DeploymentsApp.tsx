@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
-import { getDeployments, getMachines } from '@/lib/api';
+import { getDeployments, getMachines, getMembers } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { Select, RefreshButton } from '@/shared/ui';
@@ -43,9 +43,30 @@ export function DeploymentsApp() {
     queryFn: () => getMachines(),
   });
 
+  const { data: members } = useQuery({
+    queryKey: ['members', currentTeamId],
+    queryFn: () => getMembers(),
+  });
+
+  // Create a lookup map from user_id to display_name
+  const userDisplayNames = useMemo(() => {
+    const map = new Map<string, string>();
+    if (members) {
+      for (const member of members) {
+        map.set(member.user_id, member.user.display_name);
+      }
+    }
+    return map;
+  }, [members]);
+
   const getMachineName = (machineId?: string) => {
     if (!machineId) return 'Unknown';
     return machines?.find((m) => m.machine_id === machineId)?.name || machineId.substring(0, 12);
+  };
+
+  const getUserDisplayName = (userId?: string) => {
+    if (!userId) return undefined;
+    return userDisplayNames.get(userId) || userId.substring(0, 12);
   };
 
   const handleSelectDeployment = (deploymentId: string) => {
@@ -117,7 +138,7 @@ export function DeploymentsApp() {
                       {formatDistanceToNow(new Date(deployment.created_at), { addSuffix: true })}
                     </ItemCardMeta>
                     {deployment.initiated_by && (
-                      <ItemCardMeta>by {deployment.initiated_by}</ItemCardMeta>
+                      <ItemCardMeta>by {getUserDisplayName(deployment.initiated_by)}</ItemCardMeta>
                     )}
                   </>
                 }

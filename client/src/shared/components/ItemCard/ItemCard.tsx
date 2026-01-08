@@ -10,7 +10,7 @@ export interface ItemCardProps {
   /** Icon badge content - can be text (e.g., "DO", "AWS") or a React node (icon) */
   iconBadge?: ReactNode;
   /** Main title/name of the item */
-  title: string;
+  title: ReactNode;
   /** Use sans-serif font for title instead of mono */
   titleSans?: boolean;
   /** Status badge content (rendered after title) */

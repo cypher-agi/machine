@@ -17,7 +17,9 @@ import { agentRouter } from './routes/agent';
 import { sshRouter } from './routes/ssh';
 import { authRouter } from './routes/auth';
 import { teamsRouter } from './routes/teams';
+import { membersRouter } from './routes/members';
 import { integrationsRouter } from './routes/integrations';
+import { repositoriesRouter } from './routes/repositories';
 import { errorHandler } from './middleware/errorHandler';
 import { requireAuth, requireTeamContext } from './middleware/auth';
 import { setupTerminalWebSocket } from './services/terminal';
@@ -90,6 +92,8 @@ app.use('/api/deployments', requireAuth, requireTeamContext, deploymentsRouter);
 app.use('/api/bootstrap', requireAuth, requireTeamContext, bootstrapRouter);
 app.use('/api/ssh', requireAuth, requireTeamContext, sshRouter);
 app.use('/api/integrations', requireAuth, requireTeamContext, integrationsRouter);
+app.use('/api/repositories', requireAuth, requireTeamContext, repositoriesRouter);
+app.use('/api/members', membersRouter); // Has own auth handling
 
 // Protected routes without team context (global resources)
 app.use('/api/audit', requireAuth, auditRouter);

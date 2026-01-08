@@ -25,6 +25,9 @@ import type {
   TeamInvite,
   TeamWithMembership,
   TeamDetailResponse,
+  TeamMemberWithUser,
+  TeamMemberDetail,
+  TeamMemberListFilter,
   TeamRole,
   CreateTeamRequest,
   UpdateTeamRequest,
@@ -39,6 +42,18 @@ import type {
   GitHubMember,
   GitHubRepoFilter,
   GitHubMemberFilter,
+  // Repository types
+  Repository,
+  RepositoryWithStats,
+  CommitWithRepo,
+  PullRequestWithDetails,
+  Contributor,
+  RepositoryListFilter,
+  CommitListFilter,
+  PullRequestListFilter,
+  ContributorListFilter,
+  AddRepositoryFromGitHubRequest,
+  RepositorySyncResponse,
 } from '@machina/shared';
 
 const API_BASE = '/api';
@@ -661,4 +676,128 @@ export async function getGitHubMembers(filter?: GitHubMemberFilter): Promise<Git
 
 export async function getGitHubMember(id: string): Promise<GitHubMember> {
   return fetchApi<GitHubMember>(`/integrations/github/members/${id}`);
+}
+
+// ============ Members API ============
+
+export type MemberListParams = TeamMemberListFilter;
+
+export async function getMembers(params?: MemberListParams): Promise<TeamMemberWithUser[]> {
+  return fetchApi<TeamMemberWithUser[]>(`/members${buildQueryString(params)}`);
+}
+
+export async function getMember(memberId: string): Promise<TeamMemberDetail> {
+  return fetchApi<TeamMemberDetail>(`/members/${memberId}`);
+}
+
+export async function getCurrentUserRole(): Promise<{ role: TeamRole }> {
+  return fetchApi<{ role: TeamRole }>('/members/current-role');
+}
+
+// ============ Repositories API ============
+
+export async function getRepositories(
+  filter?: RepositoryListFilter
+): Promise<RepositoryWithStats[]> {
+  return fetchApi<RepositoryWithStats[]>(`/repositories${buildQueryString(filter)}`);
+}
+
+export async function getRepository(repoId: string): Promise<RepositoryWithStats> {
+  return fetchApi<RepositoryWithStats>(`/repositories/${repoId}`);
+}
+
+export async function addRepositoriesFromGitHub(
+  request: AddRepositoryFromGitHubRequest
+): Promise<Repository[]> {
+  return fetchApi<Repository[]>('/repositories/from-github', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
+}
+
+export async function syncRepository(repoId: string): Promise<RepositorySyncResponse> {
+  return fetchApi<RepositorySyncResponse>(`/repositories/${repoId}/sync`, {
+    method: 'POST',
+    body: JSON.stringify({ repo_id: repoId }),
+  });
+}
+
+export async function deleteRepository(repoId: string): Promise<{ deleted: boolean }> {
+  return fetchApi<{ deleted: boolean }>(`/repositories/${repoId}`, { method: 'DELETE' });
+}
+
+// ============ Commits API ============
+
+export async function getCommits(filter?: CommitListFilter): Promise<CommitWithRepo[]> {
+  return fetchApi<CommitWithRepo[]>(`/repositories/commits${buildQueryString(filter)}`);
+}
+
+export async function getRepositoryCommits(
+  repoId: string,
+  filter?: Omit<CommitListFilter, 'repo_id'>
+): Promise<CommitWithRepo[]> {
+  return fetchApi<CommitWithRepo[]>(`/repositories/${repoId}/commits${buildQueryString(filter)}`);
+}
+
+export async function getCommit(idOrSha: string): Promise<CommitWithRepo> {
+  return fetchApi<CommitWithRepo>(`/repositories/commits/${idOrSha}`);
+}
+
+// ============ Pull Requests API ============
+
+export async function getPullRequests(
+  filter?: PullRequestListFilter
+): Promise<PullRequestWithDetails[]> {
+  return fetchApi<PullRequestWithDetails[]>(
+    `/repositories/pull-requests${buildQueryString(filter)}`
+  );
+}
+
+export async function getRepositoryPullRequests(
+  repoId: string,
+  filter?: Omit<PullRequestListFilter, 'repo_id'>
+): Promise<PullRequestWithDetails[]> {
+  return fetchApi<PullRequestWithDetails[]>(
+    `/repositories/${repoId}/pull-requests${buildQueryString(filter)}`
+  );
+}
+
+export async function getPullRequest(prId: string): Promise<PullRequestWithDetails> {
+  return fetchApi<PullRequestWithDetails>(`/repositories/pull-requests/${prId}`);
+}
+
+export async function getPullRequestCommits(prId: string): Promise<CommitWithRepo[]> {
+  return fetchApi<CommitWithRepo[]>(`/repositories/pull-requests/${prId}/commits`);
+}
+
+// ============ Contributors API ============
+
+export async function getContributors(filter?: ContributorListFilter): Promise<Contributor[]> {
+  return fetchApi<Contributor[]>(`/repositories/contributors${buildQueryString(filter)}`);
+}
+
+export async function getContributor(contributorId: string): Promise<Contributor> {
+  return fetchApi<Contributor>(`/repositories/contributors/${contributorId}`);
+}
+
+export async function linkContributorToMember(
+  contributorId: string,
+  teamMemberId: string | null
+): Promise<Contributor> {
+  return fetchApi<Contributor>(`/repositories/contributors/${contributorId}/link-member`, {
+    method: 'POST',
+    body: JSON.stringify({ team_member_id: teamMemberId }),
+  });
+}
+
+export async function getContributorCommits(contributorId: string): Promise<CommitWithRepo[]> {
+  return fetchApi<CommitWithRepo[]>(`/repositories/contributors/${contributorId}/commits`);
+}
+
+export async function getContributorPullRequests(
+  contributorId: string
+): Promise<PullRequestWithDetails[]> {
+  return fetchApi<PullRequestWithDetails[]>(
+    `/repositories/contributors/${contributorId}/pull-requests`
+  );
 }

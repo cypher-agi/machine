@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { User, ExternalLink, Shield, Building2 } from 'lucide-react';
+import { User, Building2 } from 'lucide-react';
 import { getGitHubMembers } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { Input } from '@/shared/ui';
@@ -84,39 +84,34 @@ export function IntegrationMembers() {
             </a>
           }
         >
-          <div className={styles.memberList}>
+          <div className={styles.orgMembersList}>
             {membersByOrg[org].map((member) => (
-              <div key={member.member_id} className={styles.memberCard}>
-                <div className={styles.memberCardAvatar}>
+              <a
+                key={member.member_id}
+                href={member.html_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.orgMemberItem}
+              >
+                <div className={styles.orgMemberAvatar}>
                   {member.avatar_url ? (
                     <img
                       src={member.avatar_url}
                       alt={member.login}
-                      className={styles.memberCardAvatarImg}
+                      className={styles.orgMemberAvatarImg}
                     />
                   ) : (
-                    <User size={16} />
+                    <User size={14} />
                   )}
                 </div>
-                <div className={styles.memberCardInfo}>
-                  <span className={styles.memberCardName}>{member.login}</span>
-                  {member.role === 'admin' && (
-                    <span className={styles.memberCardRole}>
-                      <Shield size={10} />
-                      Admin
-                    </span>
-                  )}
+                <div className={styles.orgMemberInfo}>
+                  <div className={styles.orgMemberName}>{member.login}</div>
+                  <div className={styles.orgMemberMeta}>github.com/{member.login}</div>
                 </div>
-                <a
-                  href={member.html_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.memberCardLink}
-                  title="View GitHub profile"
-                >
-                  <ExternalLink size={14} />
-                </a>
-              </div>
+                {member.role === 'admin' && (
+                  <span className={styles.orgMemberBadgeAdmin}>Admin</span>
+                )}
+              </a>
             ))}
           </div>
         </SidekickSection>

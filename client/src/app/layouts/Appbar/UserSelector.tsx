@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, LogOut, ChevronUp } from 'lucide-react';
+import { User, Settings, LogOut, ChevronUp } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuthStore } from '@/store/authStore';
+import { useAppStore } from '@/store/appStore';
 import styles from './UserSelector.module.css';
 
 export function UserSelector() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { openProfileModal } = useAppStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -91,7 +93,19 @@ export function UserSelector() {
               className={styles.menuItem}
               onClick={() => {
                 setMenuOpen(false);
-                navigate('/settings');
+                openProfileModal('profile');
+              }}
+              role="menuitem"
+            >
+              <User size={14} />
+              <span>Profile</span>
+            </button>
+
+            <button
+              className={styles.menuItem}
+              onClick={() => {
+                setMenuOpen(false);
+                openProfileModal('settings');
               }}
               role="menuitem"
             >

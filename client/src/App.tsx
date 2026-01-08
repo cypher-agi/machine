@@ -18,12 +18,15 @@ const DeploymentsApp = lazy(() =>
 const BootstrapApp = lazy(() =>
   import('./apps/bootstrap/BootstrapApp').then((m) => ({ default: m.BootstrapApp }))
 );
-const SettingsApp = lazy(() =>
-  import('./apps/settings/SettingsApp').then((m) => ({ default: m.SettingsApp }))
-);
 const TeamsApp = lazy(() => import('./apps/teams/TeamsApp').then((m) => ({ default: m.TeamsApp })));
 const IntegrationsApp = lazy(() =>
   import('./apps/integrations/IntegrationsApp').then((m) => ({ default: m.IntegrationsApp }))
+);
+const MembersApp = lazy(() =>
+  import('./apps/members/MembersApp').then((m) => ({ default: m.MembersApp }))
+);
+const RepositoriesApp = lazy(() =>
+  import('./apps/repositories/RepositoriesApp').then((m) => ({ default: m.RepositoriesApp }))
 );
 
 function App() {
@@ -99,10 +102,18 @@ function App() {
           }
         />
         <Route
-          path="settings"
+          path="repositories"
           element={
             <Suspense fallback={<PageLoader />}>
-              <SettingsApp />
+              <RepositoriesApp />
+            </Suspense>
+          }
+        />
+        <Route
+          path="members"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <MembersApp />
             </Suspense>
           }
         />

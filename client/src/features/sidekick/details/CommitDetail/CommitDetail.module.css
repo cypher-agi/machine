@@ -1,0 +1,311 @@
+/* ===== Stats Grid ===== */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  min-width: 0;
+}
+
+.statCard {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  text-align: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.statValue {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+}
+
+.statValueAdditions {
+  color: var(--color-neon-cyan);
+}
+
+.statValueDeletions {
+  color: var(--color-text-secondary);
+}
+
+.statLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
+}
+
+/* ===== Commit Message ===== */
+.commitMessage {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.commitHeadline {
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  line-height: 1.4;
+  margin: 0 0 var(--space-2) 0;
+  word-break: break-word;
+}
+
+.commitType {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  font-family: var(--font-mono);
+  margin-right: var(--space-2);
+  text-transform: lowercase;
+}
+
+.commitTypeFeat {
+  background: rgba(1, 244, 203, 0.12);
+  color: var(--color-neon-cyan);
+}
+
+.commitTypeFix {
+  background: rgba(244, 1, 42, 0.12);
+  color: var(--color-error);
+}
+
+.commitTypeDocs {
+  background: rgba(1, 164, 244, 0.12);
+  color: var(--color-accent);
+}
+
+.commitTypeRefactor {
+  background: rgba(203, 1, 244, 0.12);
+  color: var(--color-neon-purple);
+}
+
+.commitTypeTest {
+  background: rgba(1, 164, 244, 0.12);
+  color: var(--color-accent);
+}
+
+.commitTypePerf {
+  background: rgba(1, 244, 203, 0.12);
+  color: var(--color-neon-cyan);
+}
+
+.commitTypeChore {
+  background: rgba(107, 114, 128, 0.15);
+  color: var(--color-text-muted);
+}
+
+.commitTypeRevert {
+  background: rgba(244, 1, 42, 0.12);
+  color: var(--color-error);
+}
+
+.commitTypeWip {
+  background: rgba(203, 1, 244, 0.12);
+  color: var(--color-neon-purple);
+}
+
+.commitBody {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+/* ===== Author Section ===== */
+.authorSection {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.authorAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.authorAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.authorInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.authorName {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+}
+
+.authorEmail {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  margin-top: var(--space-0-5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== Badges ===== */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.badgeMerge {
+  background: rgba(203, 1, 244, 0.12);
+  color: var(--color-neon-purple);
+}
+
+.badgeDefault {
+  background: rgba(1, 244, 203, 0.12);
+  color: var(--color-neon-cyan);
+}
+
+/* ===== Repository Link ===== */
+.repoLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.repoLink:hover {
+  background: var(--color-surface-hover);
+}
+
+.repoIcon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.repoName {
+  flex: 1;
+  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  color: var(--color-text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repoOrg {
+  color: var(--color-text-muted);
+}
+
+.repoChevron {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* ===== Tags Section ===== */
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.tag svg {
+  flex-shrink: 0;
+}
+
+/* ===== PR References ===== */
+.prList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.prBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  background: rgba(1, 164, 244, 0.1);
+  color: var(--color-accent);
+}
+
+/* ===== Parent Commits ===== */
+.parentsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.parentSha {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-surface);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+}
+
+/* ===== Action Bar ===== */
+.actionGroup {
+  display: flex;
+  gap: var(--space-2);
+}

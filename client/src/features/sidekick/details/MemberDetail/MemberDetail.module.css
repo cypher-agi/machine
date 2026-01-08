@@ -1,0 +1,99 @@
+/* Member Detail Styles */
+
+.avatarLarge {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.infoGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.infoRow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.infoLabel {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.infoValue {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.infoValueMono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  width: fit-content;
+}
+
+.roleBadgeAdmin {
+  background: var(--status-running-bg);
+  color: var(--status-running);
+}
+
+.roleBadgeMember {
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+.invitedByRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inviterName {
+  color: var(--text-primary);
+}
+
+/* Action buttons */
+.dangerButton {
+  color: var(--status-error) !important;
+}
+
+.dangerButton:hover {
+  background: var(--status-error-bg) !important;
+}
+
+/* Confirm dialog text */
+.confirmText {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.confirmText strong {
+  color: var(--text-primary);
+}
+
+.warningText {
+  display: block;
+  margin-top: 8px;
+  color: var(--status-warning);
+  font-size: 12px;
+}
+
+/* Action bar buttons */
+.actionButton {
+  flex: 1;
+}

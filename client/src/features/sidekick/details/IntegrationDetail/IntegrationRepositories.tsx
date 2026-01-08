@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { GitBranch, ExternalLink, Lock, Archive } from 'lucide-react';
+import { FolderGit2, ExternalLink, Lock, Archive } from 'lucide-react';
 import {
   formatDistanceToNow,
   isToday,
@@ -175,7 +175,7 @@ export function IntegrationRepositories() {
                 >
                   <div className={styles.repoHeader}>
                     <div className={styles.repoIcon}>
-                      <GitBranch size={14} />
+                      <FolderGit2 size={14} />
                     </div>
                     <span className={styles.repoFullName}>
                       <span className={styles.repoOrg}>{repo.full_name.split('/')[0]}</span>

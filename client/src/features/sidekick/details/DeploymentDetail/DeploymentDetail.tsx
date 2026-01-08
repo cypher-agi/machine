@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Server, User, FileText, Terminal } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { getDeployments, getMachines } from '@/lib/api';
+import { getDeployments, getMachines, getMembers } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { Badge } from '@/shared/ui';
@@ -53,6 +53,27 @@ export function DeploymentDetail({ deploymentId, onClose, onMinimize }: Deployme
     queryFn: () => getMachines(),
   });
 
+  const { data: members } = useQuery({
+    queryKey: ['members', currentTeamId],
+    queryFn: () => getMembers(),
+  });
+
+  // Create a lookup map from user_id to display_name
+  const userDisplayNames = useMemo(() => {
+    const map = new Map<string, string>();
+    if (members) {
+      for (const member of members) {
+        map.set(member.user_id, member.user.display_name);
+      }
+    }
+    return map;
+  }, [members]);
+
+  const getUserDisplayName = (userId?: string) => {
+    if (!userId) return undefined;
+    return userDisplayNames.get(userId) || userId.substring(0, 12);
+  };
+
   const deployment = deployments?.find((d) => d.deployment_id === deploymentId);
 
   if (isLoading) {
@@ -91,6 +112,7 @@ export function DeploymentDetail({ deploymentId, onClose, onMinimize }: Deployme
           <DeploymentOverview
             deployment={deployment}
             machine={machine ?? null}
+            getUserDisplayName={getUserDisplayName}
             onMachineClick={() => {
               if (deployment.machine_id) {
                 setSidekickSelection({ type: 'machine', id: deployment.machine_id });
@@ -100,7 +122,9 @@ export function DeploymentDetail({ deploymentId, onClose, onMinimize }: Deployme
         )}
         {activeTab === 'plan' && <DeploymentPlan deployment={deployment} />}
         {activeTab === 'logs' && <DeploymentLogs deployment={deployment} />}
-        {activeTab === 'details' && <DeploymentDetails deployment={deployment} />}
+        {activeTab === 'details' && (
+          <DeploymentDetails deployment={deployment} getUserDisplayName={getUserDisplayName} />
+        )}
       </SidekickContent>
     </>
   );
@@ -109,10 +133,12 @@ export function DeploymentDetail({ deploymentId, onClose, onMinimize }: Deployme
 function DeploymentOverview({
   deployment,
   machine,
+  getUserDisplayName,
   onMachineClick,
 }: {
   deployment: Deployment;
   machine: Machine | null;
+  getUserDisplayName: (userId?: string) => string | undefined;
   onMachineClick: () => void;
 }) {
   const state = DEPLOYMENT_STATE_BADGE_CONFIG[deployment.state];
@@ -166,7 +192,11 @@ function DeploymentOverview({
 
       {deployment.initiated_by && (
         <SidekickSection title="Initiated By">
-          <SidekickRow label="User" value={deployment.initiated_by} icon={<User size={12} />} />
+          <SidekickRow
+            label="User"
+            value={getUserDisplayName(deployment.initiated_by) ?? null}
+            icon={<User size={12} />}
+          />
         </SidekickSection>
       )}
 
@@ -232,7 +262,13 @@ function DeploymentLogs({ deployment }: { deployment: Deployment }) {
   );
 }
 
-function DeploymentDetails({ deployment }: { deployment: Deployment }) {
+function DeploymentDetails({
+  deployment,
+  getUserDisplayName,
+}: {
+  deployment: Deployment;
+  getUserDisplayName: (userId?: string) => string | undefined;
+}) {
   return (
     <SidekickPanel>
       <SidekickSection title="Identifiers">
@@ -249,7 +285,10 @@ function DeploymentDetails({ deployment }: { deployment: Deployment }) {
         <SidekickRow label="Type" value={deployment.type} />
         <SidekickRow label="State" value={deployment.state} />
         {deployment.initiated_by && (
-          <SidekickRow label="Initiated By" value={deployment.initiated_by} />
+          <SidekickRow
+            label="Initiated By"
+            value={getUserDisplayName(deployment.initiated_by) ?? null}
+          />
         )}
       </SidekickSection>
 

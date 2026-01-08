@@ -27,6 +27,27 @@ import type {
   IntegrationType,
   SyncOperationStatus,
   SyncStatus,
+  // Repository types
+  Repository,
+  RepositoryWithStats,
+  Branch,
+  Commit,
+  CommitWithRepo,
+  PullRequest,
+  PullRequestWithDetails,
+  PullRequestReview,
+  PullRequestLabel,
+  Contributor,
+  Tag,
+  Release,
+  RepositoryListFilter,
+  CommitListFilter,
+  PullRequestListFilter,
+  ContributorListFilter,
+  SourceType,
+  RepositorySyncStatus,
+  PullRequestState,
+  PullRequestReviewState,
 } from '@machina/shared';
 
 // Raw database row types (before JSON parsing)
@@ -162,6 +183,195 @@ interface AgentMetrics {
   disk_total_gb: number;
   disk_used_gb: number;
   last_heartbeat: string;
+}
+
+// ============ Repository Framework Row Types ============
+
+interface RepositoryRow {
+  repo_id: string;
+  team_id: string;
+  source_type: string;
+  source_integration_id: string | null;
+  source_repo_id: string;
+  owner_type: string;
+  owner_name: string;
+  owner_id: string | null;
+  owner_avatar_url: string | null;
+  name: string;
+  full_name: string;
+  description: string | null;
+  url: string;
+  clone_url: string | null;
+  ssh_url: string | null;
+  default_branch: string;
+  is_private: number;
+  is_archived: number;
+  primary_language: string | null;
+  stargazers_count: number;
+  forks_count: number;
+  open_issues_count: number;
+  is_tracking: number;
+  tracking_since: string | null;
+  tracked_branches: string;
+  sync_status: string;
+  last_sync_at: string | null;
+  last_sync_error: string | null;
+  commits_synced_count: number;
+  prs_synced_count: number;
+  branches_synced_count: number;
+  created_at_source: string;
+  pushed_at_source: string | null;
+  added_at: string;
+  updated_at: string;
+}
+
+interface BranchRow {
+  branch_id: string;
+  repo_id: string;
+  team_id: string;
+  name: string;
+  sha: string;
+  is_default: number;
+  is_protected: number;
+  protection_rules: string | null;
+  ahead_of_default: number;
+  behind_default: number;
+  last_commit_at: string | null;
+  synced_at: string;
+}
+
+interface ContributorRow {
+  contributor_id: string;
+  team_id: string;
+  name: string;
+  email: string;
+  emails: string;
+  team_member_id: string | null;
+  external_accounts: string;
+  total_commits: number;
+  total_prs: number;
+  first_commit_at: string | null;
+  last_commit_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CommitRow {
+  commit_id: string;
+  repo_id: string;
+  team_id: string;
+  sha: string;
+  short_sha: string;
+  branch_name: string | null;
+  is_on_default_branch: number;
+  contributor_id: string;
+  author_name: string;
+  author_email: string;
+  authored_at: string;
+  committer_name: string | null;
+  committer_email: string | null;
+  committed_at: string;
+  message: string;
+  message_headline: string;
+  stats: string;
+  source_type: string;
+  html_url: string;
+  parent_shas: string;
+  pr_numbers: string | null;
+  tag_names: string | null;
+  is_merge_commit: number;
+  synced_at: string;
+}
+
+interface PullRequestRow {
+  pr_id: string;
+  repo_id: string;
+  team_id: string;
+  number: number;
+  source_type: string;
+  source_pr_id: string;
+  title: string;
+  body: string | null;
+  state: string;
+  is_draft: number;
+  contributor_id: string;
+  author_username: string;
+  head_branch: string;
+  head_sha: string;
+  head_repo_full_name: string | null;
+  base_branch: string;
+  base_sha: string;
+  review_decision: string | null;
+  merged_at: string | null;
+  merged_by_contributor_id: string | null;
+  merge_commit_sha: string | null;
+  commits_count: number;
+  additions: number;
+  deletions: number;
+  changed_files: number;
+  comments_count: number;
+  review_comments_count: number;
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+  closed_at: string | null;
+  synced_at: string;
+}
+
+interface PullRequestReviewRow {
+  review_id: string;
+  pr_id: string;
+  team_id: string;
+  contributor_id: string;
+  reviewer_username: string;
+  reviewer_avatar_url: string | null;
+  state: string;
+  body: string | null;
+  submitted_at: string;
+}
+
+interface PullRequestLabelRow {
+  pr_id: string;
+  name: string;
+  color: string;
+  description: string | null;
+}
+
+interface TagRow {
+  tag_id: string;
+  repo_id: string;
+  team_id: string;
+  name: string;
+  sha: string;
+  is_annotated: number;
+  message: string | null;
+  tagger_name: string | null;
+  tagger_email: string | null;
+  tagged_at: string | null;
+  html_url: string;
+  tarball_url: string | null;
+  zipball_url: string | null;
+  synced_at: string;
+}
+
+interface ReleaseRow {
+  release_id: string;
+  repo_id: string;
+  team_id: string;
+  source_release_id: string;
+  tag_name: string;
+  name: string;
+  body: string | null;
+  body_html: string | null;
+  is_draft: number;
+  is_prerelease: number;
+  contributor_id: string;
+  author_username: string;
+  assets: string;
+  html_url: string;
+  created_at: string;
+  published_at: string | null;
+  synced_at: string;
 }
 
 // Database file location
@@ -556,6 +766,243 @@ db.exec(`
     FOREIGN KEY (integration_id) REFERENCES team_integrations(integration_id) ON DELETE CASCADE
   );
 
+  -- ============ Repositories Framework Tables ============
+
+  -- Repositories (provider-agnostic)
+  CREATE TABLE IF NOT EXISTS repositories (
+    repo_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
+    source_type TEXT NOT NULL,
+    source_integration_id TEXT,
+    source_repo_id TEXT NOT NULL,
+    owner_type TEXT NOT NULL DEFAULT 'organization',
+    owner_name TEXT NOT NULL,
+    owner_id TEXT,
+    owner_avatar_url TEXT,
+    name TEXT NOT NULL,
+    full_name TEXT NOT NULL,
+    description TEXT,
+    url TEXT NOT NULL,
+    clone_url TEXT,
+    ssh_url TEXT,
+    default_branch TEXT NOT NULL DEFAULT 'main',
+    is_private INTEGER NOT NULL DEFAULT 0,
+    is_archived INTEGER NOT NULL DEFAULT 0,
+    primary_language TEXT,
+    stargazers_count INTEGER NOT NULL DEFAULT 0,
+    forks_count INTEGER NOT NULL DEFAULT 0,
+    open_issues_count INTEGER NOT NULL DEFAULT 0,
+    is_tracking INTEGER NOT NULL DEFAULT 1,
+    tracking_since TEXT,
+    tracked_branches TEXT NOT NULL DEFAULT '[]',
+    sync_status TEXT NOT NULL DEFAULT 'idle',
+    last_sync_at TEXT,
+    last_sync_error TEXT,
+    commits_synced_count INTEGER NOT NULL DEFAULT 0,
+    prs_synced_count INTEGER NOT NULL DEFAULT 0,
+    branches_synced_count INTEGER NOT NULL DEFAULT 0,
+    created_at_source TEXT NOT NULL,
+    pushed_at_source TEXT,
+    added_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    FOREIGN KEY (source_integration_id) REFERENCES team_integrations(integration_id),
+    UNIQUE(team_id, source_type, source_repo_id)
+  );
+
+  -- Branches
+  CREATE TABLE IF NOT EXISTS branches (
+    branch_id TEXT PRIMARY KEY,
+    repo_id TEXT NOT NULL,
+    team_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    sha TEXT NOT NULL,
+    is_default INTEGER NOT NULL DEFAULT 0,
+    is_protected INTEGER NOT NULL DEFAULT 0,
+    protection_rules TEXT,
+    ahead_of_default INTEGER NOT NULL DEFAULT 0,
+    behind_default INTEGER NOT NULL DEFAULT 0,
+    last_commit_at TEXT,
+    synced_at TEXT NOT NULL,
+    FOREIGN KEY (repo_id) REFERENCES repositories(repo_id) ON DELETE CASCADE,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    UNIQUE(repo_id, name)
+  );
+
+  -- Contributors (provider-agnostic authors)
+  CREATE TABLE IF NOT EXISTS contributors (
+    contributor_id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    emails TEXT NOT NULL DEFAULT '[]',
+    team_member_id TEXT,
+    external_accounts TEXT NOT NULL DEFAULT '[]',
+    total_commits INTEGER NOT NULL DEFAULT 0,
+    total_prs INTEGER NOT NULL DEFAULT 0,
+    first_commit_at TEXT,
+    last_commit_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    FOREIGN KEY (team_member_id) REFERENCES team_members(team_member_id),
+    UNIQUE(team_id, email)
+  );
+
+  -- Commits (provider-agnostic)
+  CREATE TABLE IF NOT EXISTS commits (
+    commit_id TEXT PRIMARY KEY,
+    repo_id TEXT NOT NULL,
+    team_id TEXT NOT NULL,
+    sha TEXT NOT NULL,
+    short_sha TEXT NOT NULL,
+    branch_name TEXT,
+    is_on_default_branch INTEGER NOT NULL DEFAULT 1,
+    contributor_id TEXT NOT NULL,
+    author_name TEXT NOT NULL,
+    author_email TEXT NOT NULL,
+    authored_at TEXT NOT NULL,
+    committer_name TEXT,
+    committer_email TEXT,
+    committed_at TEXT NOT NULL,
+    message TEXT NOT NULL,
+    message_headline TEXT NOT NULL,
+    stats TEXT NOT NULL DEFAULT '{"additions":0,"deletions":0,"files_changed":0}',
+    source_type TEXT NOT NULL,
+    html_url TEXT NOT NULL,
+    parent_shas TEXT NOT NULL DEFAULT '[]',
+    pr_numbers TEXT,
+    tag_names TEXT,
+    is_merge_commit INTEGER NOT NULL DEFAULT 0,
+    synced_at TEXT NOT NULL,
+    FOREIGN KEY (repo_id) REFERENCES repositories(repo_id) ON DELETE CASCADE,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    FOREIGN KEY (contributor_id) REFERENCES contributors(contributor_id),
+    UNIQUE(repo_id, sha)
+  );
+
+  -- Pull Requests (provider-agnostic)
+  CREATE TABLE IF NOT EXISTS pull_requests (
+    pr_id TEXT PRIMARY KEY,
+    repo_id TEXT NOT NULL,
+    team_id TEXT NOT NULL,
+    number INTEGER NOT NULL,
+    source_type TEXT NOT NULL,
+    source_pr_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT,
+    state TEXT NOT NULL DEFAULT 'open',
+    is_draft INTEGER NOT NULL DEFAULT 0,
+    contributor_id TEXT NOT NULL,
+    author_username TEXT NOT NULL,
+    head_branch TEXT NOT NULL,
+    head_sha TEXT NOT NULL,
+    head_repo_full_name TEXT,
+    base_branch TEXT NOT NULL,
+    base_sha TEXT NOT NULL,
+    review_decision TEXT,
+    merged_at TEXT,
+    merged_by_contributor_id TEXT,
+    merge_commit_sha TEXT,
+    commits_count INTEGER NOT NULL DEFAULT 0,
+    additions INTEGER NOT NULL DEFAULT 0,
+    deletions INTEGER NOT NULL DEFAULT 0,
+    changed_files INTEGER NOT NULL DEFAULT 0,
+    comments_count INTEGER NOT NULL DEFAULT 0,
+    review_comments_count INTEGER NOT NULL DEFAULT 0,
+    html_url TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    closed_at TEXT,
+    synced_at TEXT NOT NULL,
+    FOREIGN KEY (repo_id) REFERENCES repositories(repo_id) ON DELETE CASCADE,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    FOREIGN KEY (contributor_id) REFERENCES contributors(contributor_id),
+    FOREIGN KEY (merged_by_contributor_id) REFERENCES contributors(contributor_id),
+    UNIQUE(repo_id, number)
+  );
+
+  -- PR Reviews
+  CREATE TABLE IF NOT EXISTS pull_request_reviews (
+    review_id TEXT PRIMARY KEY,
+    pr_id TEXT NOT NULL,
+    team_id TEXT NOT NULL,
+    contributor_id TEXT NOT NULL,
+    reviewer_username TEXT NOT NULL,
+    reviewer_avatar_url TEXT,
+    state TEXT NOT NULL,
+    body TEXT,
+    submitted_at TEXT NOT NULL,
+    FOREIGN KEY (pr_id) REFERENCES pull_requests(pr_id) ON DELETE CASCADE,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    FOREIGN KEY (contributor_id) REFERENCES contributors(contributor_id)
+  );
+
+  -- PR Labels
+  CREATE TABLE IF NOT EXISTS pull_request_labels (
+    pr_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    color TEXT NOT NULL,
+    description TEXT,
+    PRIMARY KEY (pr_id, name),
+    FOREIGN KEY (pr_id) REFERENCES pull_requests(pr_id) ON DELETE CASCADE
+  );
+
+  -- PR to Commit mapping
+  CREATE TABLE IF NOT EXISTS pull_request_commits (
+    pr_id TEXT NOT NULL,
+    commit_id TEXT NOT NULL,
+    PRIMARY KEY (pr_id, commit_id),
+    FOREIGN KEY (pr_id) REFERENCES pull_requests(pr_id) ON DELETE CASCADE,
+    FOREIGN KEY (commit_id) REFERENCES commits(commit_id) ON DELETE CASCADE
+  );
+
+  -- Tags
+  CREATE TABLE IF NOT EXISTS tags (
+    tag_id TEXT PRIMARY KEY,
+    repo_id TEXT NOT NULL,
+    team_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    sha TEXT NOT NULL,
+    is_annotated INTEGER NOT NULL DEFAULT 0,
+    message TEXT,
+    tagger_name TEXT,
+    tagger_email TEXT,
+    tagged_at TEXT,
+    html_url TEXT NOT NULL,
+    tarball_url TEXT,
+    zipball_url TEXT,
+    synced_at TEXT NOT NULL,
+    FOREIGN KEY (repo_id) REFERENCES repositories(repo_id) ON DELETE CASCADE,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    UNIQUE(repo_id, name)
+  );
+
+  -- Releases
+  CREATE TABLE IF NOT EXISTS releases (
+    release_id TEXT PRIMARY KEY,
+    repo_id TEXT NOT NULL,
+    team_id TEXT NOT NULL,
+    source_release_id TEXT NOT NULL,
+    tag_name TEXT NOT NULL,
+    name TEXT NOT NULL,
+    body TEXT,
+    body_html TEXT,
+    is_draft INTEGER NOT NULL DEFAULT 0,
+    is_prerelease INTEGER NOT NULL DEFAULT 0,
+    contributor_id TEXT NOT NULL,
+    author_username TEXT NOT NULL,
+    assets TEXT NOT NULL DEFAULT '[]',
+    html_url TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    published_at TEXT,
+    synced_at TEXT NOT NULL,
+    FOREIGN KEY (repo_id) REFERENCES repositories(repo_id) ON DELETE CASCADE,
+    FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
+    FOREIGN KEY (contributor_id) REFERENCES contributors(contributor_id),
+    UNIQUE(repo_id, tag_name)
+  );
+
   -- Create indexes
   CREATE INDEX IF NOT EXISTS idx_machines_status ON machines(actual_status);
   CREATE INDEX IF NOT EXISTS idx_machines_provider ON machines(provider);
@@ -585,6 +1032,52 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_oauth_states_expires ON oauth_states(expires_at);
   CREATE INDEX IF NOT EXISTS idx_oauth_configs_team ON integration_oauth_configs(team_id);
   CREATE UNIQUE INDEX IF NOT EXISTS idx_oauth_configs_team_type ON integration_oauth_configs(team_id, type);
+
+  -- Repository Framework Indexes
+  CREATE INDEX IF NOT EXISTS idx_repositories_team ON repositories(team_id);
+  CREATE INDEX IF NOT EXISTS idx_repositories_source ON repositories(source_type, source_integration_id);
+  CREATE INDEX IF NOT EXISTS idx_repositories_sync ON repositories(sync_status);
+  CREATE INDEX IF NOT EXISTS idx_repositories_tracking ON repositories(is_tracking);
+  CREATE INDEX IF NOT EXISTS idx_repositories_owner ON repositories(owner_name);
+
+  CREATE INDEX IF NOT EXISTS idx_branches_repo ON branches(repo_id);
+  CREATE INDEX IF NOT EXISTS idx_branches_team ON branches(team_id);
+  CREATE INDEX IF NOT EXISTS idx_branches_default ON branches(is_default);
+
+  CREATE INDEX IF NOT EXISTS idx_contributors_team ON contributors(team_id);
+  CREATE INDEX IF NOT EXISTS idx_contributors_email ON contributors(email);
+  CREATE INDEX IF NOT EXISTS idx_contributors_member ON contributors(team_member_id);
+
+  CREATE INDEX IF NOT EXISTS idx_commits_repo ON commits(repo_id);
+  CREATE INDEX IF NOT EXISTS idx_commits_team ON commits(team_id);
+  CREATE INDEX IF NOT EXISTS idx_commits_contributor ON commits(contributor_id);
+  CREATE INDEX IF NOT EXISTS idx_commits_authored ON commits(authored_at);
+  CREATE INDEX IF NOT EXISTS idx_commits_sha ON commits(sha);
+  CREATE INDEX IF NOT EXISTS idx_commits_branch ON commits(branch_name);
+
+  CREATE INDEX IF NOT EXISTS idx_pull_requests_repo ON pull_requests(repo_id);
+  CREATE INDEX IF NOT EXISTS idx_pull_requests_team ON pull_requests(team_id);
+  CREATE INDEX IF NOT EXISTS idx_pull_requests_contributor ON pull_requests(contributor_id);
+  CREATE INDEX IF NOT EXISTS idx_pull_requests_state ON pull_requests(state);
+  CREATE INDEX IF NOT EXISTS idx_pull_requests_created ON pull_requests(created_at);
+  CREATE INDEX IF NOT EXISTS idx_pull_requests_review ON pull_requests(review_decision);
+
+  CREATE INDEX IF NOT EXISTS idx_pr_reviews_pr ON pull_request_reviews(pr_id);
+  CREATE INDEX IF NOT EXISTS idx_pr_reviews_contributor ON pull_request_reviews(contributor_id);
+
+  CREATE INDEX IF NOT EXISTS idx_pr_labels_pr ON pull_request_labels(pr_id);
+
+  CREATE INDEX IF NOT EXISTS idx_pr_commits_pr ON pull_request_commits(pr_id);
+  CREATE INDEX IF NOT EXISTS idx_pr_commits_commit ON pull_request_commits(commit_id);
+
+  CREATE INDEX IF NOT EXISTS idx_tags_repo ON tags(repo_id);
+  CREATE INDEX IF NOT EXISTS idx_tags_team ON tags(team_id);
+  CREATE INDEX IF NOT EXISTS idx_tags_sha ON tags(sha);
+
+  CREATE INDEX IF NOT EXISTS idx_releases_repo ON releases(repo_id);
+  CREATE INDEX IF NOT EXISTS idx_releases_team ON releases(team_id);
+  CREATE INDEX IF NOT EXISTS idx_releases_tag ON releases(tag_name);
+  CREATE INDEX IF NOT EXISTS idx_releases_published ON releases(published_at);
 `);
 
 // Add last_health_check column if it doesn't exist
@@ -1093,10 +1586,10 @@ const statements = {
 
   // GitHub Repositories
   getGitHubRepositories: db.prepare(
-    'SELECT * FROM github_repositories WHERE team_id = ? ORDER BY updated_at DESC'
+    'SELECT * FROM github_repositories WHERE team_id = ? ORDER BY COALESCE(pushed_at, updated_at) DESC'
   ),
   getGitHubRepositoriesByIntegration: db.prepare(
-    'SELECT * FROM github_repositories WHERE integration_id = ? ORDER BY updated_at DESC'
+    'SELECT * FROM github_repositories WHERE integration_id = ? ORDER BY COALESCE(pushed_at, updated_at) DESC'
   ),
   getGitHubRepository: db.prepare('SELECT * FROM github_repositories WHERE repo_id = ?'),
   getGitHubRepositoryWithTeam: db.prepare(
@@ -1159,6 +1652,242 @@ const statements = {
     "SELECT COUNT(*) as count FROM github_members WHERE integration_id = ? AND sync_status != 'removed'"
   ),
   clearGitHubMembers: db.prepare('DELETE FROM github_members WHERE integration_id = ?'),
+
+  // ============ Repository Framework ============
+
+  // Repositories
+  getRepositoriesByTeam: db.prepare(
+    'SELECT * FROM repositories WHERE team_id = ? ORDER BY COALESCE(pushed_at_source, updated_at) DESC'
+  ),
+  getRepository: db.prepare('SELECT * FROM repositories WHERE repo_id = ?'),
+  getRepositoryWithTeam: db.prepare('SELECT * FROM repositories WHERE repo_id = ? AND team_id = ?'),
+  getRepositoryBySource: db.prepare(
+    'SELECT * FROM repositories WHERE team_id = ? AND source_type = ? AND source_repo_id = ?'
+  ),
+  insertRepository: db.prepare(`
+    INSERT INTO repositories (
+      repo_id, team_id, source_type, source_integration_id, source_repo_id,
+      owner_type, owner_name, owner_id, owner_avatar_url,
+      name, full_name, description, url, clone_url, ssh_url, default_branch,
+      is_private, is_archived, primary_language, stargazers_count, forks_count, open_issues_count,
+      is_tracking, tracking_since, tracked_branches, sync_status, last_sync_at, last_sync_error,
+      commits_synced_count, prs_synced_count, branches_synced_count,
+      created_at_source, pushed_at_source, added_at, updated_at
+    ) VALUES (
+      @repo_id, @team_id, @source_type, @source_integration_id, @source_repo_id,
+      @owner_type, @owner_name, @owner_id, @owner_avatar_url,
+      @name, @full_name, @description, @url, @clone_url, @ssh_url, @default_branch,
+      @is_private, @is_archived, @primary_language, @stargazers_count, @forks_count, @open_issues_count,
+      @is_tracking, @tracking_since, @tracked_branches, @sync_status, @last_sync_at, @last_sync_error,
+      @commits_synced_count, @prs_synced_count, @branches_synced_count,
+      @created_at_source, @pushed_at_source, @added_at, @updated_at
+    )
+  `),
+  updateRepository: db.prepare(`
+    UPDATE repositories SET
+      is_tracking = @is_tracking, tracking_since = @tracking_since, tracked_branches = @tracked_branches,
+      sync_status = @sync_status, last_sync_at = @last_sync_at, last_sync_error = @last_sync_error,
+      commits_synced_count = @commits_synced_count, prs_synced_count = @prs_synced_count,
+      branches_synced_count = @branches_synced_count, pushed_at_source = @pushed_at_source,
+      stargazers_count = @stargazers_count, forks_count = @forks_count, open_issues_count = @open_issues_count,
+      updated_at = @updated_at
+    WHERE repo_id = @repo_id
+  `),
+  deleteRepository: db.prepare('DELETE FROM repositories WHERE repo_id = ?'),
+
+  // Branches
+  getBranchesByRepo: db.prepare(
+    'SELECT * FROM branches WHERE repo_id = ? ORDER BY is_default DESC, name ASC'
+  ),
+  getBranch: db.prepare('SELECT * FROM branches WHERE branch_id = ?'),
+  upsertBranch: db.prepare(`
+    INSERT INTO branches (
+      branch_id, repo_id, team_id, name, sha, is_default, is_protected,
+      protection_rules, ahead_of_default, behind_default, last_commit_at, synced_at
+    ) VALUES (
+      @branch_id, @repo_id, @team_id, @name, @sha, @is_default, @is_protected,
+      @protection_rules, @ahead_of_default, @behind_default, @last_commit_at, @synced_at
+    ) ON CONFLICT(repo_id, name) DO UPDATE SET
+      sha = @sha, is_protected = @is_protected, protection_rules = @protection_rules,
+      ahead_of_default = @ahead_of_default, behind_default = @behind_default,
+      last_commit_at = @last_commit_at, synced_at = @synced_at
+  `),
+  deleteBranchesByRepo: db.prepare('DELETE FROM branches WHERE repo_id = ?'),
+
+  // Contributors
+  getContributorsByTeam: db.prepare(
+    'SELECT * FROM contributors WHERE team_id = ? ORDER BY total_commits DESC'
+  ),
+  getContributor: db.prepare('SELECT * FROM contributors WHERE contributor_id = ?'),
+  getContributorWithTeam: db.prepare(
+    'SELECT * FROM contributors WHERE contributor_id = ? AND team_id = ?'
+  ),
+  getContributorByEmail: db.prepare('SELECT * FROM contributors WHERE team_id = ? AND email = ?'),
+  insertContributor: db.prepare(`
+    INSERT INTO contributors (
+      contributor_id, team_id, name, email, emails, team_member_id, external_accounts,
+      total_commits, total_prs, first_commit_at, last_commit_at, created_at, updated_at
+    ) VALUES (
+      @contributor_id, @team_id, @name, @email, @emails, @team_member_id, @external_accounts,
+      @total_commits, @total_prs, @first_commit_at, @last_commit_at, @created_at, @updated_at
+    )
+  `),
+  updateContributor: db.prepare(`
+    UPDATE contributors SET
+      name = @name, emails = @emails, team_member_id = @team_member_id, external_accounts = @external_accounts,
+      total_commits = @total_commits, total_prs = @total_prs,
+      first_commit_at = @first_commit_at, last_commit_at = @last_commit_at, updated_at = @updated_at
+    WHERE contributor_id = @contributor_id
+  `),
+
+  // Commits
+  getCommitsByRepo: db.prepare(
+    'SELECT * FROM commits WHERE repo_id = ? ORDER BY authored_at DESC LIMIT 500'
+  ),
+  getCommitsByTeam: db.prepare(
+    'SELECT * FROM commits WHERE team_id = ? ORDER BY authored_at DESC LIMIT 500'
+  ),
+  getCommit: db.prepare('SELECT * FROM commits WHERE commit_id = ?'),
+  getCommitBySha: db.prepare('SELECT * FROM commits WHERE team_id = ? AND sha = ?'),
+  getCommitById: db.prepare('SELECT * FROM commits WHERE team_id = ? AND commit_id = ?'),
+  getCommitsByContributor: db.prepare(
+    'SELECT * FROM commits WHERE contributor_id = ? ORDER BY authored_at DESC LIMIT 200'
+  ),
+  insertCommit: db.prepare(`
+    INSERT INTO commits (
+      commit_id, repo_id, team_id, sha, short_sha, branch_name, is_on_default_branch,
+      contributor_id, author_name, author_email, authored_at,
+      committer_name, committer_email, committed_at,
+      message, message_headline, stats, source_type, html_url,
+      parent_shas, pr_numbers, tag_names, is_merge_commit, synced_at
+    ) VALUES (
+      @commit_id, @repo_id, @team_id, @sha, @short_sha, @branch_name, @is_on_default_branch,
+      @contributor_id, @author_name, @author_email, @authored_at,
+      @committer_name, @committer_email, @committed_at,
+      @message, @message_headline, @stats, @source_type, @html_url,
+      @parent_shas, @pr_numbers, @tag_names, @is_merge_commit, @synced_at
+    ) ON CONFLICT(repo_id, sha) DO UPDATE SET
+      branch_name = @branch_name, stats = @stats, pr_numbers = @pr_numbers, tag_names = @tag_names, synced_at = @synced_at
+  `),
+  countCommitsByRepo: db.prepare('SELECT COUNT(*) as count FROM commits WHERE repo_id = ?'),
+
+  // Pull Requests
+  getPullRequestsByRepo: db.prepare(
+    'SELECT * FROM pull_requests WHERE repo_id = ? ORDER BY created_at DESC'
+  ),
+  getPullRequestsByTeam: db.prepare(
+    'SELECT * FROM pull_requests WHERE team_id = ? ORDER BY created_at DESC LIMIT 500'
+  ),
+  getPullRequest: db.prepare('SELECT * FROM pull_requests WHERE pr_id = ?'),
+  getPullRequestWithTeam: db.prepare('SELECT * FROM pull_requests WHERE pr_id = ? AND team_id = ?'),
+  getPullRequestsByContributor: db.prepare(
+    'SELECT * FROM pull_requests WHERE contributor_id = ? ORDER BY created_at DESC LIMIT 100'
+  ),
+  insertPullRequest: db.prepare(`
+    INSERT INTO pull_requests (
+      pr_id, repo_id, team_id, number, source_type, source_pr_id,
+      title, body, state, is_draft, contributor_id, author_username,
+      head_branch, head_sha, head_repo_full_name, base_branch, base_sha,
+      review_decision, merged_at, merged_by_contributor_id, merge_commit_sha,
+      commits_count, additions, deletions, changed_files, comments_count, review_comments_count,
+      html_url, created_at, updated_at, closed_at, synced_at
+    ) VALUES (
+      @pr_id, @repo_id, @team_id, @number, @source_type, @source_pr_id,
+      @title, @body, @state, @is_draft, @contributor_id, @author_username,
+      @head_branch, @head_sha, @head_repo_full_name, @base_branch, @base_sha,
+      @review_decision, @merged_at, @merged_by_contributor_id, @merge_commit_sha,
+      @commits_count, @additions, @deletions, @changed_files, @comments_count, @review_comments_count,
+      @html_url, @created_at, @updated_at, @closed_at, @synced_at
+    ) ON CONFLICT(repo_id, number) DO UPDATE SET
+      title = @title, body = @body, state = @state, is_draft = @is_draft,
+      head_sha = @head_sha, review_decision = @review_decision,
+      merged_at = @merged_at, merged_by_contributor_id = @merged_by_contributor_id, merge_commit_sha = @merge_commit_sha,
+      commits_count = @commits_count, additions = @additions, deletions = @deletions,
+      changed_files = @changed_files, comments_count = @comments_count, review_comments_count = @review_comments_count,
+      updated_at = @updated_at, closed_at = @closed_at, synced_at = @synced_at
+  `),
+  countPullRequestsByRepo: db.prepare(
+    'SELECT COUNT(*) as count FROM pull_requests WHERE repo_id = ?'
+  ),
+  countOpenPullRequestsByRepo: db.prepare(
+    "SELECT COUNT(*) as count FROM pull_requests WHERE repo_id = ? AND state = 'open'"
+  ),
+
+  // PR Reviews
+  getReviewsByPR: db.prepare(
+    'SELECT * FROM pull_request_reviews WHERE pr_id = ? ORDER BY submitted_at ASC'
+  ),
+  insertReview: db.prepare(`
+    INSERT INTO pull_request_reviews (
+      review_id, pr_id, team_id, contributor_id, reviewer_username, reviewer_avatar_url,
+      state, body, submitted_at
+    ) VALUES (
+      @review_id, @pr_id, @team_id, @contributor_id, @reviewer_username, @reviewer_avatar_url,
+      @state, @body, @submitted_at
+    ) ON CONFLICT(review_id) DO UPDATE SET
+      state = @state, body = @body
+  `),
+  deleteReviewsByPR: db.prepare('DELETE FROM pull_request_reviews WHERE pr_id = ?'),
+
+  // PR Labels
+  getLabelsByPR: db.prepare('SELECT * FROM pull_request_labels WHERE pr_id = ?'),
+  insertLabel: db.prepare(`
+    INSERT OR REPLACE INTO pull_request_labels (pr_id, name, color, description)
+    VALUES (@pr_id, @name, @color, @description)
+  `),
+  deleteLabelsByPR: db.prepare('DELETE FROM pull_request_labels WHERE pr_id = ?'),
+
+  // PR Commits
+  getCommitsByPR: db.prepare(`
+    SELECT c.* FROM commits c
+    JOIN pull_request_commits prc ON c.commit_id = prc.commit_id
+    WHERE prc.pr_id = ?
+    ORDER BY c.authored_at ASC
+  `),
+  linkCommitToPR: db.prepare(
+    'INSERT OR IGNORE INTO pull_request_commits (pr_id, commit_id) VALUES (?, ?)'
+  ),
+  unlinkCommitsFromPR: db.prepare('DELETE FROM pull_request_commits WHERE pr_id = ?'),
+
+  // Tags
+  getTagsByRepo: db.prepare('SELECT * FROM tags WHERE repo_id = ? ORDER BY synced_at DESC'),
+  insertTag: db.prepare(`
+    INSERT INTO tags (
+      tag_id, repo_id, team_id, name, sha, is_annotated, message,
+      tagger_name, tagger_email, tagged_at, html_url, tarball_url, zipball_url, synced_at
+    ) VALUES (
+      @tag_id, @repo_id, @team_id, @name, @sha, @is_annotated, @message,
+      @tagger_name, @tagger_email, @tagged_at, @html_url, @tarball_url, @zipball_url, @synced_at
+    ) ON CONFLICT(repo_id, name) DO UPDATE SET
+      sha = @sha, is_annotated = @is_annotated, message = @message,
+      tagger_name = @tagger_name, tagger_email = @tagger_email, tagged_at = @tagged_at, synced_at = @synced_at
+  `),
+
+  // Releases
+  getReleasesByRepo: db.prepare(
+    'SELECT * FROM releases WHERE repo_id = ? ORDER BY created_at DESC'
+  ),
+  insertRelease: db.prepare(`
+    INSERT INTO releases (
+      release_id, repo_id, team_id, source_release_id, tag_name, name,
+      body, body_html, is_draft, is_prerelease,
+      contributor_id, author_username, assets, html_url, created_at, published_at, synced_at
+    ) VALUES (
+      @release_id, @repo_id, @team_id, @source_release_id, @tag_name, @name,
+      @body, @body_html, @is_draft, @is_prerelease,
+      @contributor_id, @author_username, @assets, @html_url, @created_at, @published_at, @synced_at
+    ) ON CONFLICT(repo_id, tag_name) DO UPDATE SET
+      name = @name, body = @body, body_html = @body_html, is_draft = @is_draft, is_prerelease = @is_prerelease,
+      assets = @assets, published_at = @published_at, synced_at = @synced_at
+  `),
+
+  // Stats queries
+  countContributorsByRepo: db.prepare(`
+    SELECT COUNT(DISTINCT contributor_id) as count FROM commits WHERE repo_id = ?
+  `),
+  getRecentCommitCountByRepo: db.prepare(`
+    SELECT COUNT(*) as count FROM commits WHERE repo_id = ? AND authored_at > datetime('now', '-30 days')
+  `),
 };
 
 // Helper to parse JSON fields from DB rows
@@ -1300,6 +2029,213 @@ function parseSSHKey(row: SSHKeyRow): SSHKey {
   return {
     ...row,
     provider_key_ids: JSON.parse(row.provider_key_ids || '{}'),
+  };
+}
+
+// ============ Repository Framework Parse Functions ============
+
+function parseRepository(row: RepositoryRow): Repository {
+  return {
+    repo_id: row.repo_id,
+    team_id: row.team_id,
+    source_type: row.source_type as SourceType,
+    source_integration_id: row.source_integration_id || undefined,
+    source_repo_id: row.source_repo_id,
+    owner_type: row.owner_type as 'organization' | 'user',
+    owner_name: row.owner_name,
+    owner_id: row.owner_id || undefined,
+    owner_avatar_url: row.owner_avatar_url || undefined,
+    name: row.name,
+    full_name: row.full_name,
+    description: row.description || undefined,
+    url: row.url,
+    clone_url: row.clone_url || undefined,
+    ssh_url: row.ssh_url || undefined,
+    default_branch: row.default_branch,
+    is_private: Boolean(row.is_private),
+    is_archived: Boolean(row.is_archived),
+    primary_language: row.primary_language || undefined,
+    stargazers_count: row.stargazers_count,
+    forks_count: row.forks_count,
+    open_issues_count: row.open_issues_count,
+    is_tracking: Boolean(row.is_tracking),
+    tracking_since: row.tracking_since || undefined,
+    tracked_branches: JSON.parse(row.tracked_branches || '[]'),
+    sync_status: row.sync_status as RepositorySyncStatus,
+    last_sync_at: row.last_sync_at || undefined,
+    last_sync_error: row.last_sync_error || undefined,
+    commits_synced_count: row.commits_synced_count,
+    prs_synced_count: row.prs_synced_count,
+    branches_synced_count: row.branches_synced_count,
+    created_at_source: row.created_at_source,
+    pushed_at_source: row.pushed_at_source || undefined,
+    added_at: row.added_at,
+    updated_at: row.updated_at,
+  };
+}
+
+function parseBranch(row: BranchRow): Branch {
+  return {
+    branch_id: row.branch_id,
+    repo_id: row.repo_id,
+    team_id: row.team_id,
+    name: row.name,
+    sha: row.sha,
+    is_default: Boolean(row.is_default),
+    is_protected: Boolean(row.is_protected),
+    protection_rules: row.protection_rules ? JSON.parse(row.protection_rules) : undefined,
+    ahead_of_default: row.ahead_of_default,
+    behind_default: row.behind_default,
+    last_commit_at: row.last_commit_at || undefined,
+    synced_at: row.synced_at,
+  };
+}
+
+function parseContributor(row: ContributorRow): Contributor {
+  return {
+    contributor_id: row.contributor_id,
+    team_id: row.team_id,
+    name: row.name,
+    email: row.email,
+    emails: JSON.parse(row.emails || '[]'),
+    team_member_id: row.team_member_id || undefined,
+    external_accounts: JSON.parse(row.external_accounts || '[]'),
+    total_commits: row.total_commits,
+    total_prs: row.total_prs,
+    first_commit_at: row.first_commit_at || undefined,
+    last_commit_at: row.last_commit_at || undefined,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
+}
+
+function parseCommit(row: CommitRow): Commit {
+  return {
+    commit_id: row.commit_id,
+    repo_id: row.repo_id,
+    team_id: row.team_id,
+    sha: row.sha,
+    short_sha: row.short_sha,
+    branch_name: row.branch_name || undefined,
+    is_on_default_branch: Boolean(row.is_on_default_branch),
+    contributor_id: row.contributor_id,
+    author_name: row.author_name,
+    author_email: row.author_email,
+    authored_at: row.authored_at,
+    committer_name: row.committer_name || undefined,
+    committer_email: row.committer_email || undefined,
+    committed_at: row.committed_at,
+    message: row.message,
+    message_headline: row.message_headline,
+    stats: JSON.parse(row.stats),
+    source_type: row.source_type as SourceType,
+    html_url: row.html_url,
+    parent_shas: JSON.parse(row.parent_shas || '[]'),
+    pr_numbers: row.pr_numbers ? JSON.parse(row.pr_numbers) : undefined,
+    tag_names: row.tag_names ? JSON.parse(row.tag_names) : undefined,
+    is_merge_commit: Boolean(row.is_merge_commit),
+    synced_at: row.synced_at,
+  };
+}
+
+function parsePullRequest(row: PullRequestRow): PullRequest {
+  return {
+    pr_id: row.pr_id,
+    repo_id: row.repo_id,
+    team_id: row.team_id,
+    number: row.number,
+    source_type: row.source_type as SourceType,
+    source_pr_id: row.source_pr_id,
+    title: row.title,
+    body: row.body || undefined,
+    state: row.state as PullRequestState,
+    is_draft: Boolean(row.is_draft),
+    contributor_id: row.contributor_id,
+    author_username: row.author_username,
+    head_branch: row.head_branch,
+    head_sha: row.head_sha,
+    head_repo_full_name: row.head_repo_full_name || undefined,
+    base_branch: row.base_branch,
+    base_sha: row.base_sha,
+    labels: [], // Populated separately
+    reviews: [], // Populated separately
+    review_decision: row.review_decision as PullRequest['review_decision'],
+    merged_at: row.merged_at || undefined,
+    merged_by_contributor_id: row.merged_by_contributor_id || undefined,
+    merge_commit_sha: row.merge_commit_sha || undefined,
+    commits_count: row.commits_count,
+    additions: row.additions,
+    deletions: row.deletions,
+    changed_files: row.changed_files,
+    comments_count: row.comments_count,
+    review_comments_count: row.review_comments_count,
+    html_url: row.html_url,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    closed_at: row.closed_at || undefined,
+    synced_at: row.synced_at,
+  };
+}
+
+function parsePullRequestReview(row: PullRequestReviewRow): PullRequestReview {
+  return {
+    review_id: row.review_id,
+    pr_id: row.pr_id,
+    contributor_id: row.contributor_id,
+    reviewer_username: row.reviewer_username,
+    reviewer_avatar_url: row.reviewer_avatar_url || undefined,
+    state: row.state as PullRequestReviewState,
+    body: row.body || undefined,
+    submitted_at: row.submitted_at,
+  };
+}
+
+function parsePullRequestLabel(row: PullRequestLabelRow): PullRequestLabel {
+  return {
+    name: row.name,
+    color: row.color,
+    description: row.description || undefined,
+  };
+}
+
+function parseTag(row: TagRow): Tag {
+  return {
+    tag_id: row.tag_id,
+    repo_id: row.repo_id,
+    team_id: row.team_id,
+    name: row.name,
+    sha: row.sha,
+    is_annotated: Boolean(row.is_annotated),
+    message: row.message || undefined,
+    tagger_name: row.tagger_name || undefined,
+    tagger_email: row.tagger_email || undefined,
+    tagged_at: row.tagged_at || undefined,
+    html_url: row.html_url,
+    tarball_url: row.tarball_url || undefined,
+    zipball_url: row.zipball_url || undefined,
+    synced_at: row.synced_at,
+  };
+}
+
+function parseRelease(row: ReleaseRow): Release {
+  return {
+    release_id: row.release_id,
+    repo_id: row.repo_id,
+    team_id: row.team_id,
+    source_release_id: row.source_release_id,
+    tag_name: row.tag_name,
+    name: row.name,
+    body: row.body || undefined,
+    body_html: row.body_html || undefined,
+    is_draft: Boolean(row.is_draft),
+    is_prerelease: Boolean(row.is_prerelease),
+    contributor_id: row.contributor_id,
+    author_username: row.author_username,
+    assets: JSON.parse(row.assets || '[]'),
+    html_url: row.html_url,
+    created_at: row.created_at,
+    published_at: row.published_at || undefined,
+    synced_at: row.synced_at,
   };
 }
 
@@ -2314,6 +3250,605 @@ export const database = {
     db.prepare(
       "UPDATE github_members SET sync_status = 'removed', updated_at = ? WHERE integration_id = ?"
     ).run(now, integrationId);
+  },
+
+  // ============ Repository Framework ============
+
+  // Repositories
+  getRepositories(teamId: string, filter?: RepositoryListFilter): RepositoryWithStats[] {
+    let rows = statements.getRepositoriesByTeam.all(teamId) as RepositoryRow[];
+
+    // Apply filters in memory
+    if (filter) {
+      if (filter.search) {
+        const search = filter.search.toLowerCase();
+        rows = rows.filter(
+          (r) =>
+            r.name.toLowerCase().includes(search) ||
+            r.full_name.toLowerCase().includes(search) ||
+            r.description?.toLowerCase().includes(search)
+        );
+      }
+      if (filter.source_type) {
+        rows = rows.filter((r) => r.source_type === filter.source_type);
+      }
+      if (filter.is_tracking !== undefined) {
+        rows = rows.filter((r) => Boolean(r.is_tracking) === filter.is_tracking);
+      }
+      if (filter.sync_status) {
+        rows = rows.filter((r) => r.sync_status === filter.sync_status);
+      }
+    }
+
+    return rows.map((row) => {
+      const repo = parseRepository(row);
+      const contributorCount =
+        (statements.countContributorsByRepo.get(row.repo_id) as { count: number })?.count || 0;
+      const recentCommitCount =
+        (statements.getRecentCommitCountByRepo.get(row.repo_id) as { count: number })?.count || 0;
+      const openPrCount =
+        (statements.countOpenPullRequestsByRepo.get(row.repo_id) as { count: number })?.count || 0;
+      return {
+        ...repo,
+        contributor_count: contributorCount,
+        recent_commit_count: recentCommitCount,
+        open_pr_count: openPrCount,
+      };
+    });
+  },
+  getRepository(repoId: string, teamId?: string): RepositoryWithStats | undefined {
+    const row = teamId
+      ? (statements.getRepositoryWithTeam.get(repoId, teamId) as RepositoryRow | undefined)
+      : (statements.getRepository.get(repoId) as RepositoryRow | undefined);
+    if (!row) return undefined;
+    const repo = parseRepository(row);
+    const contributorCount =
+      (statements.countContributorsByRepo.get(row.repo_id) as { count: number })?.count || 0;
+    const recentCommitCount =
+      (statements.getRecentCommitCountByRepo.get(row.repo_id) as { count: number })?.count || 0;
+    const openPrCount =
+      (statements.countOpenPullRequestsByRepo.get(row.repo_id) as { count: number })?.count || 0;
+    return {
+      ...repo,
+      contributor_count: contributorCount,
+      recent_commit_count: recentCommitCount,
+      open_pr_count: openPrCount,
+    };
+  },
+  getRepositoryBySource(
+    teamId: string,
+    sourceType: string,
+    sourceRepoId: string
+  ): Repository | undefined {
+    const row = statements.getRepositoryBySource.get(teamId, sourceType, sourceRepoId) as
+      | RepositoryRow
+      | undefined;
+    return row ? parseRepository(row) : undefined;
+  },
+  insertRepository(repo: Repository): void {
+    statements.insertRepository.run({
+      repo_id: repo.repo_id,
+      team_id: repo.team_id,
+      source_type: repo.source_type,
+      source_integration_id: repo.source_integration_id || null,
+      source_repo_id: repo.source_repo_id,
+      owner_type: repo.owner_type,
+      owner_name: repo.owner_name,
+      owner_id: repo.owner_id || null,
+      owner_avatar_url: repo.owner_avatar_url || null,
+      name: repo.name,
+      full_name: repo.full_name,
+      description: repo.description || null,
+      url: repo.url,
+      clone_url: repo.clone_url || null,
+      ssh_url: repo.ssh_url || null,
+      default_branch: repo.default_branch,
+      is_private: repo.is_private ? 1 : 0,
+      is_archived: repo.is_archived ? 1 : 0,
+      primary_language: repo.primary_language || null,
+      stargazers_count: repo.stargazers_count,
+      forks_count: repo.forks_count,
+      open_issues_count: repo.open_issues_count,
+      is_tracking: repo.is_tracking ? 1 : 0,
+      tracking_since: repo.tracking_since || null,
+      tracked_branches: JSON.stringify(repo.tracked_branches || []),
+      sync_status: repo.sync_status,
+      last_sync_at: repo.last_sync_at || null,
+      last_sync_error: repo.last_sync_error || null,
+      commits_synced_count: repo.commits_synced_count,
+      prs_synced_count: repo.prs_synced_count,
+      branches_synced_count: repo.branches_synced_count,
+      created_at_source: repo.created_at_source,
+      pushed_at_source: repo.pushed_at_source || null,
+      added_at: repo.added_at,
+      updated_at: repo.updated_at,
+    });
+  },
+  updateRepository(repo: Partial<Repository> & { repo_id: string }): void {
+    const existing = statements.getRepository.get(repo.repo_id) as RepositoryRow | undefined;
+    if (!existing) return;
+    statements.updateRepository.run({
+      repo_id: repo.repo_id,
+      is_tracking:
+        repo.is_tracking !== undefined ? (repo.is_tracking ? 1 : 0) : existing.is_tracking,
+      tracking_since:
+        repo.tracking_since !== undefined ? repo.tracking_since : existing.tracking_since,
+      tracked_branches: repo.tracked_branches
+        ? JSON.stringify(repo.tracked_branches)
+        : existing.tracked_branches,
+      sync_status: repo.sync_status || existing.sync_status,
+      last_sync_at: repo.last_sync_at !== undefined ? repo.last_sync_at : existing.last_sync_at,
+      last_sync_error:
+        repo.last_sync_error !== undefined ? repo.last_sync_error : existing.last_sync_error,
+      commits_synced_count: repo.commits_synced_count ?? existing.commits_synced_count,
+      prs_synced_count: repo.prs_synced_count ?? existing.prs_synced_count,
+      branches_synced_count: repo.branches_synced_count ?? existing.branches_synced_count,
+      pushed_at_source:
+        repo.pushed_at_source !== undefined ? repo.pushed_at_source : existing.pushed_at_source,
+      stargazers_count: repo.stargazers_count ?? existing.stargazers_count,
+      forks_count: repo.forks_count ?? existing.forks_count,
+      open_issues_count: repo.open_issues_count ?? existing.open_issues_count,
+      updated_at: repo.updated_at || new Date().toISOString(),
+    });
+  },
+  deleteRepository(repoId: string): void {
+    statements.deleteRepository.run(repoId);
+  },
+
+  // Branches
+  getBranches(repoId: string): Branch[] {
+    const rows = statements.getBranchesByRepo.all(repoId) as BranchRow[];
+    return rows.map(parseBranch);
+  },
+  upsertBranch(branch: Branch): void {
+    statements.upsertBranch.run({
+      branch_id: branch.branch_id,
+      repo_id: branch.repo_id,
+      team_id: branch.team_id,
+      name: branch.name,
+      sha: branch.sha,
+      is_default: branch.is_default ? 1 : 0,
+      is_protected: branch.is_protected ? 1 : 0,
+      protection_rules: branch.protection_rules ? JSON.stringify(branch.protection_rules) : null,
+      ahead_of_default: branch.ahead_of_default,
+      behind_default: branch.behind_default,
+      last_commit_at: branch.last_commit_at || null,
+      synced_at: branch.synced_at,
+    });
+  },
+
+  // Contributors
+  getContributors(teamId: string, filter?: ContributorListFilter): Contributor[] {
+    let rows = statements.getContributorsByTeam.all(teamId) as ContributorRow[];
+
+    if (filter) {
+      if (filter.search) {
+        const search = filter.search.toLowerCase();
+        rows = rows.filter(
+          (r) => r.name.toLowerCase().includes(search) || r.email.toLowerCase().includes(search)
+        );
+      }
+      if (filter.has_team_member !== undefined) {
+        rows = rows.filter((r) => (filter.has_team_member ? r.team_member_id : !r.team_member_id));
+      }
+      if (filter.repo_id) {
+        // Get contributors who have commits in this repo
+        const commitContributors = db
+          .prepare('SELECT DISTINCT contributor_id FROM commits WHERE repo_id = ?')
+          .all(filter.repo_id) as { contributor_id: string }[];
+        const contributorIds = new Set(commitContributors.map((c) => c.contributor_id));
+        rows = rows.filter((r) => contributorIds.has(r.contributor_id));
+      }
+    }
+
+    return rows.map(parseContributor);
+  },
+  getContributor(contributorId: string, teamId?: string): Contributor | undefined {
+    const row = teamId
+      ? (statements.getContributorWithTeam.get(contributorId, teamId) as ContributorRow | undefined)
+      : (statements.getContributor.get(contributorId) as ContributorRow | undefined);
+    return row ? parseContributor(row) : undefined;
+  },
+  getContributorByEmail(teamId: string, email: string): Contributor | undefined {
+    const row = statements.getContributorByEmail.get(teamId, email) as ContributorRow | undefined;
+    return row ? parseContributor(row) : undefined;
+  },
+  insertContributor(contributor: Contributor): void {
+    statements.insertContributor.run({
+      contributor_id: contributor.contributor_id,
+      team_id: contributor.team_id,
+      name: contributor.name,
+      email: contributor.email,
+      emails: JSON.stringify(contributor.emails || [contributor.email]),
+      team_member_id: contributor.team_member_id || null,
+      external_accounts: JSON.stringify(contributor.external_accounts || []),
+      total_commits: contributor.total_commits,
+      total_prs: contributor.total_prs,
+      first_commit_at: contributor.first_commit_at || null,
+      last_commit_at: contributor.last_commit_at || null,
+      created_at: contributor.created_at,
+      updated_at: contributor.updated_at,
+    });
+  },
+  updateContributor(contributor: Partial<Contributor> & { contributor_id: string }): void {
+    const existing = statements.getContributor.get(contributor.contributor_id) as
+      | ContributorRow
+      | undefined;
+    if (!existing) return;
+    statements.updateContributor.run({
+      contributor_id: contributor.contributor_id,
+      name: contributor.name || existing.name,
+      emails: contributor.emails ? JSON.stringify(contributor.emails) : existing.emails,
+      team_member_id:
+        contributor.team_member_id !== undefined
+          ? contributor.team_member_id
+          : existing.team_member_id,
+      external_accounts: contributor.external_accounts
+        ? JSON.stringify(contributor.external_accounts)
+        : existing.external_accounts,
+      total_commits: contributor.total_commits ?? existing.total_commits,
+      total_prs: contributor.total_prs ?? existing.total_prs,
+      first_commit_at:
+        contributor.first_commit_at !== undefined
+          ? contributor.first_commit_at
+          : existing.first_commit_at,
+      last_commit_at:
+        contributor.last_commit_at !== undefined
+          ? contributor.last_commit_at
+          : existing.last_commit_at,
+      updated_at: contributor.updated_at || new Date().toISOString(),
+    });
+  },
+
+  // Commits
+  getCommits(teamId: string, filter?: CommitListFilter): CommitWithRepo[] {
+    let rows: CommitRow[];
+
+    if (filter?.repo_id) {
+      rows = statements.getCommitsByRepo.all(filter.repo_id) as CommitRow[];
+    } else if (filter?.contributor_id) {
+      rows = statements.getCommitsByContributor.all(filter.contributor_id) as CommitRow[];
+    } else {
+      rows = statements.getCommitsByTeam.all(teamId) as CommitRow[];
+    }
+
+    // Apply additional filters
+    if (filter) {
+      if (filter.since) {
+        const since = filter.since;
+        rows = rows.filter((r) => r.authored_at >= since);
+      }
+      if (filter.until) {
+        const until = filter.until;
+        rows = rows.filter((r) => r.authored_at <= until);
+      }
+      if (filter.search) {
+        const search = filter.search.toLowerCase();
+        rows = rows.filter((r) => r.message.toLowerCase().includes(search));
+      }
+      if (filter.branch) {
+        rows = rows.filter((r) => r.branch_name === filter.branch);
+      }
+    }
+
+    return rows.map((row) => {
+      const commit = parseCommit(row);
+      const repoRow = statements.getRepository.get(row.repo_id) as RepositoryRow | undefined;
+      const contributorRow = statements.getContributor.get(row.contributor_id) as
+        | ContributorRow
+        | undefined;
+      return {
+        ...commit,
+        repository: repoRow
+          ? { repo_id: repoRow.repo_id, name: repoRow.name, full_name: repoRow.full_name }
+          : { repo_id: row.repo_id, name: '', full_name: '' },
+        contributor: contributorRow
+          ? {
+              contributor_id: contributorRow.contributor_id,
+              name: contributorRow.name,
+              avatar_url: JSON.parse(contributorRow.external_accounts || '[]')[0]?.avatar_url,
+            }
+          : { contributor_id: row.contributor_id, name: row.author_name },
+      };
+    });
+  },
+  getCommitBySha(teamId: string, sha: string): CommitWithRepo | undefined {
+    const row = statements.getCommitBySha.get(teamId, sha) as CommitRow | undefined;
+    if (!row) return undefined;
+    const commit = parseCommit(row);
+    const repoRow = statements.getRepository.get(row.repo_id) as RepositoryRow | undefined;
+    const contributorRow = statements.getContributor.get(row.contributor_id) as
+      | ContributorRow
+      | undefined;
+    return {
+      ...commit,
+      repository: repoRow
+        ? { repo_id: repoRow.repo_id, name: repoRow.name, full_name: repoRow.full_name }
+        : { repo_id: row.repo_id, name: '', full_name: '' },
+      contributor: contributorRow
+        ? {
+            contributor_id: contributorRow.contributor_id,
+            name: contributorRow.name,
+            avatar_url: JSON.parse(contributorRow.external_accounts || '[]')[0]?.avatar_url,
+          }
+        : { contributor_id: row.contributor_id, name: row.author_name },
+    };
+  },
+  getCommitById(teamId: string, commitId: string): CommitWithRepo | undefined {
+    const row = statements.getCommitById.get(teamId, commitId) as CommitRow | undefined;
+    if (!row) return undefined;
+    const commit = parseCommit(row);
+    const repoRow = statements.getRepository.get(row.repo_id) as RepositoryRow | undefined;
+    const contributorRow = statements.getContributor.get(row.contributor_id) as
+      | ContributorRow
+      | undefined;
+    return {
+      ...commit,
+      repository: repoRow
+        ? { repo_id: repoRow.repo_id, name: repoRow.name, full_name: repoRow.full_name }
+        : { repo_id: row.repo_id, name: '', full_name: '' },
+      contributor: contributorRow
+        ? {
+            contributor_id: contributorRow.contributor_id,
+            name: contributorRow.name,
+            avatar_url: JSON.parse(contributorRow.external_accounts || '[]')[0]?.avatar_url,
+          }
+        : { contributor_id: row.contributor_id, name: row.author_name },
+    };
+  },
+  insertCommit(commit: Commit): void {
+    statements.insertCommit.run({
+      commit_id: commit.commit_id,
+      repo_id: commit.repo_id,
+      team_id: commit.team_id,
+      sha: commit.sha,
+      short_sha: commit.short_sha,
+      branch_name: commit.branch_name || null,
+      is_on_default_branch: commit.is_on_default_branch ? 1 : 0,
+      contributor_id: commit.contributor_id,
+      author_name: commit.author_name,
+      author_email: commit.author_email,
+      authored_at: commit.authored_at,
+      committer_name: commit.committer_name || null,
+      committer_email: commit.committer_email || null,
+      committed_at: commit.committed_at,
+      message: commit.message,
+      message_headline: commit.message_headline,
+      stats: JSON.stringify(commit.stats),
+      source_type: commit.source_type,
+      html_url: commit.html_url,
+      parent_shas: JSON.stringify(commit.parent_shas || []),
+      pr_numbers: commit.pr_numbers ? JSON.stringify(commit.pr_numbers) : null,
+      tag_names: commit.tag_names ? JSON.stringify(commit.tag_names) : null,
+      is_merge_commit: commit.is_merge_commit ? 1 : 0,
+      synced_at: commit.synced_at,
+    });
+  },
+
+  // Pull Requests
+  getPullRequests(teamId: string, filter?: PullRequestListFilter): PullRequestWithDetails[] {
+    let rows: PullRequestRow[];
+
+    if (filter?.repo_id) {
+      rows = statements.getPullRequestsByRepo.all(filter.repo_id) as PullRequestRow[];
+    } else if (filter?.contributor_id) {
+      rows = statements.getPullRequestsByContributor.all(filter.contributor_id) as PullRequestRow[];
+    } else {
+      rows = statements.getPullRequestsByTeam.all(teamId) as PullRequestRow[];
+    }
+
+    // Apply additional filters
+    if (filter) {
+      if (filter.state) {
+        rows = rows.filter((r) => r.state === filter.state);
+      }
+      if (filter.search) {
+        const search = filter.search.toLowerCase();
+        rows = rows.filter((r) => r.title.toLowerCase().includes(search));
+      }
+    }
+
+    return rows.map((row) => {
+      const pr = parsePullRequest(row);
+      const repoRow = statements.getRepository.get(row.repo_id) as RepositoryRow | undefined;
+      const contributorRow = statements.getContributor.get(row.contributor_id) as
+        | ContributorRow
+        | undefined;
+
+      // Get labels and reviews
+      const labels = (statements.getLabelsByPR.all(row.pr_id) as PullRequestLabelRow[]).map(
+        parsePullRequestLabel
+      );
+      const reviews = (statements.getReviewsByPR.all(row.pr_id) as PullRequestReviewRow[]).map(
+        parsePullRequestReview
+      );
+
+      return {
+        ...pr,
+        labels,
+        reviews,
+        repository: repoRow
+          ? { repo_id: repoRow.repo_id, name: repoRow.name, full_name: repoRow.full_name }
+          : { repo_id: row.repo_id, name: '', full_name: '' },
+        contributor: contributorRow
+          ? {
+              contributor_id: contributorRow.contributor_id,
+              name: contributorRow.name,
+              avatar_url: JSON.parse(contributorRow.external_accounts || '[]')[0]?.avatar_url,
+            }
+          : { contributor_id: row.contributor_id, name: row.author_username },
+      };
+    });
+  },
+  getPullRequest(prId: string, teamId?: string): PullRequestWithDetails | undefined {
+    const row = teamId
+      ? (statements.getPullRequestWithTeam.get(prId, teamId) as PullRequestRow | undefined)
+      : (statements.getPullRequest.get(prId) as PullRequestRow | undefined);
+    if (!row) return undefined;
+
+    const pr = parsePullRequest(row);
+    const repoRow = statements.getRepository.get(row.repo_id) as RepositoryRow | undefined;
+    const contributorRow = statements.getContributor.get(row.contributor_id) as
+      | ContributorRow
+      | undefined;
+
+    const labels = (statements.getLabelsByPR.all(row.pr_id) as PullRequestLabelRow[]).map(
+      parsePullRequestLabel
+    );
+    const reviews = (statements.getReviewsByPR.all(row.pr_id) as PullRequestReviewRow[]).map(
+      parsePullRequestReview
+    );
+
+    return {
+      ...pr,
+      labels,
+      reviews,
+      repository: repoRow
+        ? { repo_id: repoRow.repo_id, name: repoRow.name, full_name: repoRow.full_name }
+        : { repo_id: row.repo_id, name: '', full_name: '' },
+      contributor: contributorRow
+        ? {
+            contributor_id: contributorRow.contributor_id,
+            name: contributorRow.name,
+            avatar_url: JSON.parse(contributorRow.external_accounts || '[]')[0]?.avatar_url,
+          }
+        : { contributor_id: row.contributor_id, name: row.author_username },
+    };
+  },
+  insertPullRequest(pr: PullRequest): void {
+    statements.insertPullRequest.run({
+      pr_id: pr.pr_id,
+      repo_id: pr.repo_id,
+      team_id: pr.team_id,
+      number: pr.number,
+      source_type: pr.source_type,
+      source_pr_id: pr.source_pr_id,
+      title: pr.title,
+      body: pr.body || null,
+      state: pr.state,
+      is_draft: pr.is_draft ? 1 : 0,
+      contributor_id: pr.contributor_id,
+      author_username: pr.author_username,
+      head_branch: pr.head_branch,
+      head_sha: pr.head_sha,
+      head_repo_full_name: pr.head_repo_full_name || null,
+      base_branch: pr.base_branch,
+      base_sha: pr.base_sha,
+      review_decision: pr.review_decision || null,
+      merged_at: pr.merged_at || null,
+      merged_by_contributor_id: pr.merged_by_contributor_id || null,
+      merge_commit_sha: pr.merge_commit_sha || null,
+      commits_count: pr.commits_count,
+      additions: pr.additions,
+      deletions: pr.deletions,
+      changed_files: pr.changed_files,
+      comments_count: pr.comments_count,
+      review_comments_count: pr.review_comments_count,
+      html_url: pr.html_url,
+      created_at: pr.created_at,
+      updated_at: pr.updated_at,
+      closed_at: pr.closed_at || null,
+      synced_at: pr.synced_at,
+    });
+
+    // Insert labels
+    for (const label of pr.labels || []) {
+      statements.insertLabel.run({
+        pr_id: pr.pr_id,
+        name: label.name,
+        color: label.color,
+        description: label.description || null,
+      });
+    }
+
+    // Insert reviews
+    for (const review of pr.reviews || []) {
+      statements.insertReview.run({
+        review_id: review.review_id,
+        pr_id: pr.pr_id,
+        team_id: pr.team_id,
+        contributor_id: review.contributor_id,
+        reviewer_username: review.reviewer_username,
+        reviewer_avatar_url: review.reviewer_avatar_url || null,
+        state: review.state,
+        body: review.body || null,
+        submitted_at: review.submitted_at,
+      });
+    }
+  },
+  getPullRequestCommits(prId: string): CommitWithRepo[] {
+    const rows = statements.getCommitsByPR.all(prId) as CommitRow[];
+    return rows.map((row) => {
+      const commit = parseCommit(row);
+      const repoRow = statements.getRepository.get(row.repo_id) as RepositoryRow | undefined;
+      const contributorRow = statements.getContributor.get(row.contributor_id) as
+        | ContributorRow
+        | undefined;
+      return {
+        ...commit,
+        repository: repoRow
+          ? { repo_id: repoRow.repo_id, name: repoRow.name, full_name: repoRow.full_name }
+          : { repo_id: row.repo_id, name: '', full_name: '' },
+        contributor: contributorRow
+          ? {
+              contributor_id: contributorRow.contributor_id,
+              name: contributorRow.name,
+              avatar_url: JSON.parse(contributorRow.external_accounts || '[]')[0]?.avatar_url,
+            }
+          : { contributor_id: row.contributor_id, name: row.author_name },
+      };
+    });
+  },
+
+  // Tags
+  getTags(repoId: string): Tag[] {
+    const rows = statements.getTagsByRepo.all(repoId) as TagRow[];
+    return rows.map(parseTag);
+  },
+  insertTag(tag: Tag): void {
+    statements.insertTag.run({
+      tag_id: tag.tag_id,
+      repo_id: tag.repo_id,
+      team_id: tag.team_id,
+      name: tag.name,
+      sha: tag.sha,
+      is_annotated: tag.is_annotated ? 1 : 0,
+      message: tag.message || null,
+      tagger_name: tag.tagger_name || null,
+      tagger_email: tag.tagger_email || null,
+      tagged_at: tag.tagged_at || null,
+      html_url: tag.html_url,
+      tarball_url: tag.tarball_url || null,
+      zipball_url: tag.zipball_url || null,
+      synced_at: tag.synced_at,
+    });
+  },
+
+  // Releases
+  getReleases(repoId: string): Release[] {
+    const rows = statements.getReleasesByRepo.all(repoId) as ReleaseRow[];
+    return rows.map(parseRelease);
+  },
+  insertRelease(release: Release): void {
+    statements.insertRelease.run({
+      release_id: release.release_id,
+      repo_id: release.repo_id,
+      team_id: release.team_id,
+      source_release_id: release.source_release_id,
+      tag_name: release.tag_name,
+      name: release.name,
+      body: release.body || null,
+      body_html: release.body_html || null,
+      is_draft: release.is_draft ? 1 : 0,
+      is_prerelease: release.is_prerelease ? 1 : 0,
+      contributor_id: release.contributor_id,
+      author_username: release.author_username,
+      assets: JSON.stringify(release.assets || []),
+      html_url: release.html_url,
+      created_at: release.created_at,
+      published_at: release.published_at || null,
+      synced_at: release.synced_at,
+    });
   },
 
   // Close database

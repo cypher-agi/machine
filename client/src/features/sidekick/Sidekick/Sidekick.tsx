@@ -12,6 +12,9 @@ import { DeploymentDetail } from '../details/DeploymentDetail';
 import { BootstrapDetail } from '../details/BootstrapDetail';
 import { TeamDetail } from '../details/TeamDetail';
 import { IntegrationDetail } from '../details/IntegrationDetail';
+import { MemberDetail } from '../details/MemberDetail';
+import { RepositoryDetail } from '../details/RepositoryDetail';
+import { CommitDetail } from '../details/CommitDetail';
 
 const SIDEKICK_MIN_WIDTH = 320;
 const SIDEKICK_MAX_WIDTH = 600;
@@ -153,6 +156,12 @@ export function Sidekick({ selection, onClose }: SidekickProps) {
         return <TeamDetail teamId={displayedSelection.id} {...commonProps} />;
       case 'integration':
         return <IntegrationDetail integrationId={displayedSelection.id} {...commonProps} />;
+      case 'member':
+        return <MemberDetail memberId={displayedSelection.id} {...commonProps} />;
+      case 'repository':
+        return <RepositoryDetail repositoryId={displayedSelection.id} {...commonProps} />;
+      case 'commit':
+        return <CommitDetail commitId={displayedSelection.id} {...commonProps} />;
       default:
         return (
           <div className={styles.loading}>
@@ -192,6 +201,7 @@ export function Sidekick({ selection, onClose }: SidekickProps) {
           )}
           <div
             className={clsx(styles.sidekickInner, currentWidth === 0 && styles.sidekickInnerHidden)}
+            style={{ width: currentWidth }}
           >
             {renderDetailView()}
           </div>

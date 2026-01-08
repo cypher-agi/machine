@@ -1,0 +1,105 @@
+/* Settings Tab Styles */
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sectionTitle {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* Form Rows */
+.formRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+}
+
+.formRowLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.formLabel {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.formLabelDesc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Theme Toggle */
+.themeToggle {
+  display: flex;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 2px;
+}
+
+.themeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.themeButton:hover {
+  color: var(--color-text-primary);
+}
+
+.themeButtonActive {
+  background: var(--color-elevated);
+  color: var(--color-accent);
+}
+
+.themeButtonActive:hover {
+  color: var(--color-accent);
+}
+
+/* Selects */
+.selectNarrow {
+  width: 120px;
+}
+
+.selectMedium {
+  width: 160px;
+}
+
+/* Toggle Rows */
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+}
+
+.toggleLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}

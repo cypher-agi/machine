@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { MachineListFilter, MachineListSort } from '@machina/shared';
 import type { Toast } from '@/shared/components';
+import type { ProfileSettingsTab } from '@/features/profile/types';
 
 // Item types that can be selected and shown in the Sidekick
 export type SidekickItemType =
@@ -10,7 +11,12 @@ export type SidekickItemType =
   | 'deployment'
   | 'bootstrap'
   | 'team'
-  | 'integration';
+  | 'integration'
+  | 'member'
+  | 'repository'
+  | 'commit'
+  | 'pull_request'
+  | 'contributor';
 
 export interface SidekickSelection {
   type: SidekickItemType;
@@ -38,6 +44,13 @@ interface AppState {
   // Deploy wizard state
   deployWizardOpen: boolean;
   setDeployWizardOpen: (open: boolean) => void;
+
+  // Profile settings modal
+  profileModalOpen: boolean;
+  profileModalTab: ProfileSettingsTab;
+  openProfileModal: (tab?: ProfileSettingsTab) => void;
+  closeProfileModal: () => void;
+  setProfileModalTab: (tab: ProfileSettingsTab) => void;
 
   // Toast notifications
   toasts: Toast[];
@@ -77,6 +90,13 @@ export const useAppStore = create<AppState>((set) => ({
   // Deploy wizard
   deployWizardOpen: false,
   setDeployWizardOpen: (open) => set({ deployWizardOpen: open }),
+
+  // Profile settings modal
+  profileModalOpen: false,
+  profileModalTab: 'profile',
+  openProfileModal: (tab = 'profile') => set({ profileModalOpen: true, profileModalTab: tab }),
+  closeProfileModal: () => set({ profileModalOpen: false }),
+  setProfileModalTab: (tab) => set({ profileModalTab: tab }),
 
   // Toasts
   toasts: [],

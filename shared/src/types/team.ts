@@ -75,6 +75,20 @@ export interface UpdateTeamMemberRequest {
   role: TeamRole;
 }
 
+// Filter options for member list
+export interface TeamMemberListFilter {
+  role?: TeamRole;
+  search?: string;
+}
+
+// Extended member info for detail view
+export interface TeamMemberDetail extends TeamMemberWithUser {
+  invited_by_user?: {
+    user_id: string;
+    display_name: string;
+  };
+}
+
 // API Response types
 export interface TeamDetailResponse {
   team: Team;
