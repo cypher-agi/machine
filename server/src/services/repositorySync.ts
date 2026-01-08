@@ -322,16 +322,9 @@ class RepositorySyncService {
     const now = new Date().toISOString();
 
     for (const listItem of commitList) {
-      // Check if commit already exists
+      // Check if commit already exists - if so, skip entirely (never refetch)
       const existingCommit = database.getCommitBySha(repo.team_id, listItem.sha);
-
-      // Skip if commit exists AND already has stats (not all zeros)
-      const hasStats =
-        existingCommit &&
-        (existingCommit.stats.additions > 0 ||
-          existingCommit.stats.deletions > 0 ||
-          existingCommit.stats.files_changed > 0);
-      if (hasStats) {
+      if (existingCommit) {
         continue;
       }
 
@@ -354,9 +347,8 @@ class RepositorySyncService {
       }
 
       const existingContributor = database.getContributorByEmail(repo.team_id, authorEmail);
-      const isNewCommit = !existingCommit;
 
-      if (!existingContributor && isNewCommit) {
+      if (!existingContributor) {
         contributorsCreated++;
       }
 
@@ -375,7 +367,7 @@ class RepositorySyncService {
       };
 
       const commit: Commit = {
-        commit_id: existingCommit?.commit_id || `cmt_${uuidv4().substring(0, 20)}`,
+        commit_id: `cmt_${uuidv4().substring(0, 20)}`,
         repo_id: repo.repo_id,
         team_id: repo.team_id,
         sha: ghCommit.sha,
@@ -399,18 +391,16 @@ class RepositorySyncService {
       };
 
       database.insertCommit(commit);
+      synced++;
 
-      if (isNewCommit) {
-        synced++;
-        // Update contributor stats only for new commits
-        database.updateContributor({
-          contributor_id: contributor.contributor_id,
-          total_commits: (contributor.total_commits || 0) + 1,
-          last_commit_at: ghCommit.commit.author.date,
-          first_commit_at: contributor.first_commit_at || ghCommit.commit.author.date,
-          updated_at: now,
-        });
-      }
+      // Update contributor stats
+      database.updateContributor({
+        contributor_id: contributor.contributor_id,
+        total_commits: (contributor.total_commits || 0) + 1,
+        last_commit_at: ghCommit.commit.author.date,
+        first_commit_at: contributor.first_commit_at || ghCommit.commit.author.date,
+        updated_at: now,
+      });
     }
 
     return { synced, contributorsCreated };
@@ -700,10 +690,6 @@ class RepositorySyncService {
         const result = await this.syncCommits(repo, accessToken, since);
         commitsSynced = result.synced;
         contributorsCreated += result.contributorsCreated;
-
-        // Backfill stats for existing commits that are missing them
-        const statsUpdated = await this.backfillCommitStats(repo, accessToken);
-        commitsSynced += statsUpdated;
       }
 
       // Sync PRs

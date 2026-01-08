@@ -43,7 +43,7 @@ import styles from './RepositoriesApp.module.css';
 type ViewMode = 'repositories' | 'commits' | 'pull-requests' | 'contributors';
 
 export function RepositoriesApp() {
-  const { setSidekickSelection, sidekickSelection } = useAppStore();
+  const { setSidekickSelection, sidekickSelection, addToast } = useAppStore();
   const { currentTeamId, getCurrentTeam } = useAuthStore();
   const [viewMode, setViewMode] = useState<ViewMode>('repositories');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -77,12 +77,63 @@ export function RepositoriesApp() {
 
   const syncMutation = useMutation({
     mutationFn: syncAllRepositories,
-    onSuccess: () => {
+    onMutate: async () => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['repositories', currentTeamId] });
+
+      // Snapshot the previous value
+      const previousRepositories = queryClient.getQueryData<RepositoryWithStats[]>(['repositories', currentTeamId]);
+
+      // Optimistically update all repositories to syncing status
+      queryClient.setQueryData(
+        ['repositories', currentTeamId],
+        (old: RepositoryWithStats[] | undefined) =>
+          old?.map((repo) => ({ ...repo, sync_status: 'syncing' as const }))
+      );
+
+      // Also update any individual repository queries that might be open in sidekick
+      previousRepositories?.forEach((repo) => {
+        queryClient.setQueryData(
+          ['repository', repo.repo_id],
+          (old: RepositoryWithStats | undefined) =>
+            old ? { ...old, sync_status: 'syncing' as const } : old
+        );
+      });
+
+      return { previousRepositories };
+    },
+    onSuccess: (data) => {
       // Invalidate all repository-related queries to refresh the data
       queryClient.invalidateQueries({ queryKey: ['repositories', currentTeamId] });
       queryClient.invalidateQueries({ queryKey: ['commits', currentTeamId] });
       queryClient.invalidateQueries({ queryKey: ['pull-requests', currentTeamId] });
       queryClient.invalidateQueries({ queryKey: ['contributors', currentTeamId] });
+      // Invalidate all individual repository queries
+      repositories?.forEach((repo) => {
+        queryClient.invalidateQueries({ queryKey: ['repository', repo.repo_id] });
+        queryClient.invalidateQueries({ queryKey: ['repository-commits', repo.repo_id] });
+      });
+      
+      addToast({
+        type: 'success',
+        title: 'Sync Complete',
+        message: `Synced ${data.total_commits_synced} commits and ${data.total_prs_synced} PRs from ${data.synced_repos} repositories`,
+      });
+    },
+    onError: (error: Error, _variables, context) => {
+      // Rollback on error
+      if (context?.previousRepositories) {
+        queryClient.setQueryData(['repositories', currentTeamId], context.previousRepositories);
+        // Also rollback individual repository queries
+        context.previousRepositories.forEach((repo) => {
+          queryClient.setQueryData(['repository', repo.repo_id], repo);
+        });
+      }
+      addToast({
+        type: 'error',
+        title: 'Sync Failed',
+        message: error.message,
+      });
     },
   });
 

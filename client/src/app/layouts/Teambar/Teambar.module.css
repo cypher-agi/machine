@@ -70,10 +70,10 @@
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-/* Selected state: 1px subtle border */
+/* Selected state: 1.5px subtle border */
 .teamButtonSelected .teamAvatar {
   background: black;
-  border-color: rgba(255, 255, 255, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
 }
 
 /* Inactive (non-selected) team avatars - no border by default */
