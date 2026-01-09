@@ -1,4 +1,5 @@
 // App barrel exports - for direct imports
+export { AgentsApp } from './agents';
 export { MachinesApp } from './machines';
 export { ProvidersApp } from './providers';
 export { KeysApp } from './keys';

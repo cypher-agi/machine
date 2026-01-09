@@ -5,6 +5,9 @@ import { PageLoader } from '@/shared/ui';
 import { LoginPage, AuthGuard } from '@/features/auth';
 
 // Lazy-loaded route components for code-splitting
+const AgentsApp = lazy(() =>
+  import('./apps/agents/AgentsApp').then((m) => ({ default: m.AgentsApp }))
+);
 const MachinesApp = lazy(() =>
   import('./apps/machines/MachinesApp').then((m) => ({ default: m.MachinesApp }))
 );
@@ -44,7 +47,15 @@ function App() {
           </AuthGuard>
         }
       >
-        <Route index element={<Navigate to="/machines" replace />} />
+        <Route index element={<Navigate to="/agents" replace />} />
+        <Route
+          path="agents"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <AgentsApp />
+            </Suspense>
+          }
+        />
         <Route
           path="machines"
           element={

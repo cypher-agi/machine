@@ -1,2 +1,2 @@
 // Terminal feature exports
-export { SSHTerminal, TerminalModal, TerminalPanel } from './components';
+export { SSHTerminal, TerminalModal, TerminalPanel, AgentTerminalPanel } from './components';

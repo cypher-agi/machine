@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import type { MachineListFilter, MachineListSort } from '@machina/shared';
+import type {
+  MachineListFilter,
+  MachineListSort,
+  AgentListFilter,
+  AgentListSort,
+} from '@machina/shared';
 import type { Toast } from '@/shared/components';
 import type { ProfileSettingsTab } from '@/features/profile/types';
 
@@ -16,7 +21,8 @@ export type SidekickItemType =
   | 'repository'
   | 'commit'
   | 'pull_request'
-  | 'contributor';
+  | 'contributor'
+  | 'agent';
 
 export interface SidekickSelection {
   type: SidekickItemType;
@@ -28,9 +34,13 @@ interface AppState {
   sidekickSelection: SidekickSelection | null;
   setSidekickSelection: (selection: SidekickSelection | null) => void;
 
-  // Terminal panel state
+  // Terminal panel state (machines)
   terminalMachineId: string | null;
   setTerminalMachineId: (id: string | null) => void;
+
+  // Terminal panel state (agents)
+  terminalAgentId: string | null;
+  setTerminalAgentId: (id: string | null) => void;
 
   // Machine list filters
   machineFilters: MachineListFilter;
@@ -44,6 +54,19 @@ interface AppState {
   // Deploy wizard state
   deployWizardOpen: boolean;
   setDeployWizardOpen: (open: boolean) => void;
+
+  // Agent list filters
+  agentFilters: AgentListFilter;
+  setAgentFilters: (filters: Partial<AgentListFilter>) => void;
+  clearAgentFilters: () => void;
+
+  // Agent list sort
+  agentSort: AgentListSort;
+  setAgentSort: (sort: AgentListSort) => void;
+
+  // Create agent wizard state
+  createAgentWizardOpen: boolean;
+  setCreateAgentWizardOpen: (open: boolean) => void;
 
   // Profile settings modal
   profileModalOpen: boolean;
@@ -61,19 +84,27 @@ interface AppState {
 const defaultFilters: MachineListFilter = {};
 const defaultSort: MachineListSort = { field: 'created_at', direction: 'desc' };
 
+const defaultAgentFilters: AgentListFilter = {};
+const defaultAgentSort: AgentListSort = { field: 'created_at', direction: 'desc' };
+
 export const useAppStore = create<AppState>((set) => ({
   // Sidekick selection (generic)
   sidekickSelection: null,
   setSidekickSelection: (selection) =>
     set({
       sidekickSelection: selection,
-      // Open terminal when selecting a machine
+      // Open terminal when selecting a machine or agent
       terminalMachineId: selection?.type === 'machine' ? selection.id : null,
+      terminalAgentId: selection?.type === 'agent' ? selection.id : null,
     }),
 
-  // Terminal panel
+  // Terminal panel (machines)
   terminalMachineId: null,
   setTerminalMachineId: (id) => set({ terminalMachineId: id }),
+
+  // Terminal panel (agents)
+  terminalAgentId: null,
+  setTerminalAgentId: (id) => set({ terminalAgentId: id }),
 
   // Machine filters
   machineFilters: defaultFilters,
@@ -90,6 +121,22 @@ export const useAppStore = create<AppState>((set) => ({
   // Deploy wizard
   deployWizardOpen: false,
   setDeployWizardOpen: (open) => set({ deployWizardOpen: open }),
+
+  // Agent filters
+  agentFilters: defaultAgentFilters,
+  setAgentFilters: (filters) =>
+    set((state) => ({
+      agentFilters: { ...state.agentFilters, ...filters },
+    })),
+  clearAgentFilters: () => set({ agentFilters: defaultAgentFilters }),
+
+  // Agent sort
+  agentSort: defaultAgentSort,
+  setAgentSort: (sort) => set({ agentSort: sort }),
+
+  // Create agent wizard
+  createAgentWizardOpen: false,
+  setCreateAgentWizardOpen: (open) => set({ createAgentWizardOpen: open }),
 
   // Profile settings modal
   profileModalOpen: false,

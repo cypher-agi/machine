@@ -2,6 +2,8 @@ export { Button } from './Button';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
 export { Input } from './Input';
 export type { InputProps, InputSize } from './Input';
+export { Textarea } from './Textarea';
+export type { TextareaProps, TextareaSize } from './Textarea';
 export { Select } from './Select';
 export type { SelectProps, SelectSize } from './Select';
 export { Card } from './Card';

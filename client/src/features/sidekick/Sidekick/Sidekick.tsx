@@ -15,6 +15,7 @@ import { IntegrationDetail } from '../details/IntegrationDetail';
 import { MemberDetail } from '../details/MemberDetail';
 import { RepositoryDetail } from '../details/RepositoryDetail';
 import { CommitDetail } from '../details/CommitDetail';
+import { AgentDetail } from '../details/AgentDetail';
 
 const SIDEKICK_MIN_WIDTH = 320;
 const SIDEKICK_MAX_WIDTH = 600;
@@ -162,6 +163,8 @@ export function Sidekick({ selection, onClose }: SidekickProps) {
         return <RepositoryDetail repositoryId={displayedSelection.id} {...commonProps} />;
       case 'commit':
         return <CommitDetail commitId={displayedSelection.id} {...commonProps} />;
+      case 'agent':
+        return <AgentDetail agentId={displayedSelection.id} {...commonProps} />;
       default:
         return (
           <div className={styles.loading}>
