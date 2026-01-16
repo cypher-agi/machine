@@ -87,6 +87,7 @@
   background: none;
   border: none;
   cursor: pointer;
+  user-select: none;
 }
 
 .headerButton:hover {
@@ -101,6 +102,7 @@
   background: none;
   border: none;
   cursor: pointer;
+  user-select: none;
 }
 
 .closeButton:hover {
@@ -136,6 +138,7 @@
   background: none;
   border: none;
   cursor: pointer;
+  user-select: none;
 }
 
 .copyButton:hover {

@@ -3,7 +3,7 @@ import { Camera, Trash2, Upload, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
-import { Button } from '@/shared/ui';
+import { Avatar, Button } from '@/shared/ui';
 import styles from './AvatarUpload.module.css';
 
 export function AvatarUpload() {
@@ -12,14 +12,6 @@ export function AvatarUpload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  const initials =
-    user?.display_name
-      ?.split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2) || '?';
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -74,25 +66,21 @@ export function AvatarUpload() {
   return (
     <div className={styles.container}>
       <div
-        className={clsx(styles.avatar, (uploading || deleting) && styles.avatarLoading)}
+        className={clsx(styles.avatarWrapper, (uploading || deleting) && styles.avatarLoading)}
         onClick={() => !uploading && !deleting && fileInputRef.current?.click()}
       >
         {uploading || deleting ? (
-          <Loader2 size={24} className={styles.spinner} />
-        ) : user?.profile_picture_url ? (
-          <>
-            <img
-              src={user.profile_picture_url}
-              alt={user.display_name}
-              className={styles.avatarImage}
-            />
-            <div className={styles.overlay}>
-              <Camera size={20} />
-            </div>
-          </>
+          <div className={styles.loadingState}>
+            <Loader2 size={24} className={styles.spinner} />
+          </div>
         ) : (
           <>
-            <span className={styles.initials}>{initials}</span>
+            <Avatar
+              name={user?.display_name || 'User'}
+              src={user?.profile_picture_url}
+              size="xl"
+              className={styles.avatar}
+            />
             <div className={styles.overlay}>
               <Camera size={20} />
             </div>

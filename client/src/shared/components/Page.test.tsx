@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '../../../test/test-utils';
 
-// Mock PageLayout component test
-describe('PageLayout', () => {
+// Mock Page component test
+describe('Page', () => {
   // Since we don't have the exact implementation, test basic structure
-  const MockPageLayout = ({
+  const MockPage = ({
     title,
     children,
     actions,
@@ -25,9 +25,9 @@ describe('PageLayout', () => {
   describe('header', () => {
     it('should render title', () => {
       render(
-        <MockPageLayout title="Test Page">
+        <MockPage title="Test Page">
           <div>Content</div>
-        </MockPageLayout>
+        </MockPage>
       );
 
       expect(screen.getByTestId('page-title')).toHaveTextContent('Test Page');
@@ -35,9 +35,9 @@ describe('PageLayout', () => {
 
     it('should render actions when provided', () => {
       render(
-        <MockPageLayout title="Test" actions={<button>Action</button>}>
+        <MockPage title="Test" actions={<button>Action</button>}>
           <div>Content</div>
-        </MockPageLayout>
+        </MockPage>
       );
 
       expect(screen.getByRole('button', { name: 'Action' })).toBeInTheDocument();
@@ -47,9 +47,9 @@ describe('PageLayout', () => {
   describe('content', () => {
     it('should render children in content area', () => {
       render(
-        <MockPageLayout title="Test">
+        <MockPage title="Test">
           <div data-testid="child">Child content</div>
-        </MockPageLayout>
+        </MockPage>
       );
 
       expect(screen.getByTestId('child')).toBeInTheDocument();

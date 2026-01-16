@@ -11,7 +11,7 @@ import { mockAgents, AGENT_STATUS_CONFIG, AI_PROVIDER_CONFIG } from '@/apps/agen
 export interface AgentDetailProps {
   agentId: string;
   onClose: () => void;
-  onMinimize: () => void;
+  onMinimize?: () => void;
 }
 
 type TabId = 'overview' | 'tools' | 'transactions';

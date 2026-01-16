@@ -24,7 +24,7 @@ import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { Button, RefreshButton } from '@/shared/ui';
 import {
-  PageLayout,
+  Page,
   PageEmptyState,
   PageList,
   ItemCard,
@@ -169,7 +169,7 @@ export function IntegrationsApp() {
   ].filter((g) => g.items.length > 0);
 
   return (
-    <PageLayout
+    <Page
       title="Integrations"
       count={connectedCount}
       isLoading={isLoading}
@@ -219,7 +219,7 @@ export function IntegrationsApp() {
           onClose={() => setConnectingIntegration(null)}
         />
       )}
-    </PageLayout>
+    </Page>
   );
 }
 

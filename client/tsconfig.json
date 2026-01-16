@@ -41,7 +41,9 @@
     "paths": {
       "@/*": ["./src/*"],
       "@machina/shared": ["../shared/src/index.ts"],
-      "@machina/shared/*": ["../shared/src/*"]
+      "@machina/shared/*": ["../shared/src/*"],
+      "@machina/zui": ["../zui/src/index.ts"],
+      "@machina/zui/*": ["../zui/src/*"]
     }
   },
   "include": ["src"],

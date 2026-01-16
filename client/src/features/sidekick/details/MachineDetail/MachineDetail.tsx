@@ -16,7 +16,7 @@ import { MachineDetailsTab } from './MachineDetailsTab';
 export interface MachineDetailProps {
   machineId: string;
   onClose: () => void;
-  onMinimize: () => void;
+  onMinimize?: () => void;
 }
 
 type TabId = 'overview' | 'deployments' | 'networking' | 'services' | 'details';

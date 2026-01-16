@@ -4,7 +4,7 @@ import type { TeamMemberWithUser } from '@machina/shared';
 import { removeTeamMember, updateTeamMemberRole } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button } from '@/shared/ui';
+import { Avatar, Button } from '@/shared/ui';
 import { SidekickSection } from '../../components';
 import styles from './TeamDetail.module.css';
 
@@ -43,15 +43,6 @@ export function TeamMembers({ teamId, members, isAdmin }: TeamMembersProps) {
     },
   });
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const handleToggleRole = (member: TeamMemberWithUser) => {
     const newRole = member.role === 'admin' ? 'member' : 'admin';
     roleMutation.mutate({ memberId: member.team_member_id, role: newRole });
@@ -66,17 +57,12 @@ export function TeamMembers({ teamId, members, isAdmin }: TeamMembersProps) {
 
           return (
             <div key={member.team_member_id} className={styles.memberItem}>
-              <div className={styles.memberAvatar}>
-                {member.user.profile_picture_url ? (
-                  <img
-                    src={member.user.profile_picture_url}
-                    alt={member.user.display_name}
-                    className={styles.avatarImage}
-                  />
-                ) : (
-                  getInitials(member.user.display_name)
-                )}
-              </div>
+              <Avatar
+                name={member.user.display_name}
+                src={member.user.profile_picture_url}
+                size="md"
+                className={styles.memberAvatar}
+              />
               <div className={styles.memberInfo}>
                 <div className={styles.memberName}>
                   {member.user.display_name}

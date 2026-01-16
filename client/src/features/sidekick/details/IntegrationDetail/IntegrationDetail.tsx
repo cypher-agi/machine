@@ -28,7 +28,7 @@ import styles from './IntegrationDetail.module.css';
 export interface IntegrationDetailProps {
   integrationId: string; // This is the integration type like 'github'
   onClose: () => void;
-  onMinimize: () => void;
+  onMinimize?: () => void;
 }
 
 type TabId = 'overview' | 'repositories' | 'members' | 'activity';

@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus, Users, UserPlus } from 'lucide-react';
 import { getTeams } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
-import { Button, RefreshButton } from '@/shared/ui';
-import { PageLayout, PageEmptyState, PageList, ItemCard, ItemCardMeta } from '@/shared/components';
+import { Avatar, Button, RefreshButton } from '@/shared/ui';
+import { Page, PageEmptyState, PageList, ItemCard, ItemCardMeta } from '@/shared/components';
 import { CreateTeamModal } from './components/CreateTeamModal';
 import { JoinTeamModal } from './components/JoinTeamModal';
 import styles from './TeamsApp.module.css';
@@ -28,18 +28,8 @@ export function TeamsApp() {
     setSidekickSelection({ type: 'team', id: teamId });
   };
 
-  // Generate initials from team name
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
-    <PageLayout
+    <Page
       title="Teams"
       count={teams?.length ?? 0}
       isLoading={isLoading}
@@ -69,13 +59,13 @@ export function TeamsApp() {
                 selected={isSelected}
                 onClick={() => handleSelectTeam(team.team_id)}
                 iconBadge={
-                  <div className={styles.avatarBadge}>
-                    {team.avatar_url ? (
-                      <img src={team.avatar_url} alt={team.name} className={styles.avatarImage} />
-                    ) : (
-                      getInitials(team.name)
-                    )}
-                  </div>
+                  <Avatar
+                    name={team.name}
+                    src={team.avatar_url}
+                    size="lg"
+                    square
+                    className={styles.avatarBadge}
+                  />
                 }
                 title={team.name}
                 titleSans
@@ -120,6 +110,6 @@ export function TeamsApp() {
       {/* Modals */}
       {showCreateModal && <CreateTeamModal onClose={() => setShowCreateModal(false)} />}
       {showJoinModal && <JoinTeamModal onClose={() => setShowJoinModal(false)} />}
-    </PageLayout>
+    </Page>
   );
 }

@@ -7,7 +7,7 @@ import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { Button, RefreshButton } from '@/shared/ui';
 import {
-  PageLayout,
+  Page,
   PageEmptyState,
   PageList,
   ItemCard,
@@ -40,7 +40,7 @@ export function KeysApp() {
   };
 
   return (
-    <PageLayout
+    <Page
       title="SSH Keys"
       count={keys?.length ?? 0}
       isLoading={isLoading}
@@ -122,6 +122,6 @@ export function KeysApp() {
       {/* Modals */}
       {showGenerateModal && <GenerateKeyModal onClose={() => setShowGenerateModal(false)} />}
       {showImportModal && <ImportKeyModal onClose={() => setShowImportModal(false)} />}
-    </PageLayout>
+    </Page>
   );
 }

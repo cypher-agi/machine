@@ -28,7 +28,7 @@ import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { Button, RefreshButton } from '@/shared/ui';
 import {
-  PageLayout,
+  Page,
   PageEmptyState,
   PageList,
   ItemCard,
@@ -82,7 +82,10 @@ export function RepositoriesApp() {
       await queryClient.cancelQueries({ queryKey: ['repositories', currentTeamId] });
 
       // Snapshot the previous value
-      const previousRepositories = queryClient.getQueryData<RepositoryWithStats[]>(['repositories', currentTeamId]);
+      const previousRepositories = queryClient.getQueryData<RepositoryWithStats[]>([
+        'repositories',
+        currentTeamId,
+      ]);
 
       // Optimistically update all repositories to syncing status
       queryClient.setQueryData(
@@ -113,7 +116,7 @@ export function RepositoriesApp() {
         queryClient.invalidateQueries({ queryKey: ['repository', repo.repo_id] });
         queryClient.invalidateQueries({ queryKey: ['repository-commits', repo.repo_id] });
       });
-      
+
       addToast({
         type: 'success',
         title: 'Sync Complete',
@@ -165,7 +168,7 @@ export function RepositoriesApp() {
           : contributorsLoading;
 
   return (
-    <PageLayout
+    <Page
       title="Repositories"
       count={repoCount}
       isLoading={isLoading}
@@ -256,7 +259,7 @@ export function RepositoriesApp() {
       {viewMode === 'contributors' && <ContributorListView contributors={contributors || []} />}
 
       {showAddModal && <AddRepositoryModal onClose={() => setShowAddModal(false)} />}
-    </PageLayout>
+    </Page>
   );
 }
 

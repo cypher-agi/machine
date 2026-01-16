@@ -4,7 +4,7 @@ import { Shield, User, UserMinus } from 'lucide-react';
 import { getMember, getMembers, updateTeamMemberRole, removeTeamMember } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, Modal } from '@/shared/ui';
+import { Avatar, Button, Modal } from '@/shared/ui';
 import {
   SidekickHeader,
   SidekickContent,
@@ -17,7 +17,7 @@ import styles from './MemberDetail.module.css';
 export interface MemberDetailProps {
   memberId: string;
   onClose: () => void;
-  onMinimize: () => void;
+  onMinimize?: () => void;
 }
 
 export function MemberDetail({ memberId, onClose, onMinimize }: MemberDetailProps) {
@@ -93,30 +93,17 @@ export function MemberDetail({ memberId, onClose, onMinimize }: MemberDetailProp
     setShowRemoveConfirm(false);
   };
 
-  // Generate initials from name
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <>
       <SidekickHeader
-        {...(member.user.profile_picture_url
-          ? {
-              icon: (
-                <img
-                  src={member.user.profile_picture_url}
-                  alt={member.user.display_name}
-                  className={styles.avatarLarge}
-                />
-              ),
-            }
-          : { iconText: getInitials(member.user.display_name) })}
+        icon={
+          <Avatar
+            name={member.user.display_name}
+            src={member.user.profile_picture_url}
+            size="xl"
+            className={styles.avatarLarge}
+          />
+        }
         name={member.user.display_name}
         nameSans
         subtitle={member.user.email}

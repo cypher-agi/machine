@@ -1,15 +1,15 @@
 import { NavLink } from 'react-router-dom';
 import { Server, Cloud, GitBranch, Package, Key, Plug, Users, FolderGit2, Bot } from 'lucide-react';
-import clsx from 'clsx';
+import { NavItem, NavList } from '@/shared/ui';
 import styles from './Appbar.module.css';
 
-interface NavItem {
+interface NavItemData {
   to: string;
   icon: typeof Server;
   label: string;
 }
 
-const navItems: NavItem[] = [
+const navItems: NavItemData[] = [
   { to: '/agents', icon: Bot, label: 'Agents' },
   { to: '/machines', icon: Server, label: 'Machines' },
   { to: '/providers', icon: Cloud, label: 'Providers' },
@@ -23,24 +23,14 @@ const navItems: NavItem[] = [
 
 export function Appbar() {
   return (
-    <nav className={styles.appbar}>
+    <NavList className={styles.appbar}>
       {navItems.map((item) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          className={({ isActive }) => clsx(styles.navLink, isActive && styles.navLinkActive)}
-        >
+        <NavLink key={item.to} to={item.to} className={styles.navLinkWrapper}>
           {({ isActive }) => (
-            <>
-              <item.icon
-                size={16}
-                className={clsx(styles.navIcon, isActive && styles.navIconActive)}
-              />
-              <span>{item.label}</span>
-            </>
+            <NavItem icon={<item.icon size={16} />} label={item.label} active={isActive} />
           )}
         </NavLink>
       ))}
-    </nav>
+    </NavList>
   );
 }

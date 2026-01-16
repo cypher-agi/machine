@@ -1,63 +1,6 @@
-/* TerminalPanel - Cursor-like bottom panel */
+/* TerminalPanel - Drawer handles the sliding/resizing */
 .panel {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-bg);
-  border-top: 1px solid var(--color-border);
-  position: relative;
-  transition: height 200ms ease-out;
-  flex-shrink: 0;
-  z-index: 1;
-}
-
-.panelResizing {
-  transition: none;
-}
-
-/* Overlay mode - panel overlaps the machine list */
-.panelOverlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 20;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-}
-
-/* Drag handle - matches Sidekick style */
-.dragHandle {
-  position: absolute;
-  top: -4px;
-  left: 0;
-  right: 0;
-  height: 8px;
-  cursor: ns-resize;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.dragHandle:hover .dragHandleLine,
-.dragHandle:active .dragHandleLine {
-  opacity: 1;
-  background-color: var(--color-text-primary);
-}
-
-.dragHandleLine {
-  width: 48px;
-  max-width: 10%;
-  height: 2px;
-  background-color: var(--color-text-secondary);
-  border-radius: 1px;
-  opacity: 0;
-  transition:
-    opacity 150ms ease,
-    background-color 150ms ease;
-}
-
-.dragIcon {
-  display: none;
+  /* Additional panel-specific styling if needed */
 }
 
 /* Header */
@@ -121,31 +64,6 @@
   border-radius: var(--radius-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-}
-
-.headerRight {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.headerButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.headerButton:hover {
-  background-color: var(--color-elevated);
-  color: var(--color-text-secondary);
 }
 
 /* Content */

@@ -20,7 +20,7 @@ import styles from './TeamDetail.module.css';
 export interface TeamDetailProps {
   teamId: string;
   onClose: () => void;
-  onMinimize: () => void;
+  onMinimize?: () => void;
 }
 
 type TabId = 'overview' | 'members' | 'settings';

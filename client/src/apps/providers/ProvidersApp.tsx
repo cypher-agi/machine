@@ -7,7 +7,7 @@ import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { Button, RefreshButton } from '@/shared/ui';
 import {
-  PageLayout,
+  Page,
   PageEmptyState,
   PageList,
   ItemCard,
@@ -52,7 +52,7 @@ export function ProvidersApp() {
   };
 
   return (
-    <PageLayout
+    <Page
       title="Providers"
       count={accounts?.length ?? 0}
       isLoading={isLoading}
@@ -139,6 +139,6 @@ export function ProvidersApp() {
 
       {/* Add Provider Modal */}
       {showAddModal && <AddProviderModal onClose={() => setShowAddModal(false)} />}
-    </PageLayout>
+    </Page>
   );
 }

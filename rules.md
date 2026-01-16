@@ -4,6 +4,17 @@ This document outlines the code quality toolchain and conventions for the Machin
 
 ---
 
+## 📚 Documentation Policy
+
+**IMPORTANT: Do not create documentation files (`.md`, README, etc.) unless explicitly requested by the user.**
+
+- Documentation should only be written when the user specifically asks for it
+- Do not proactively create docs, guides, or README files
+- Focus on code implementation first
+- If clarification is needed about documentation, ask the user
+
+---
+
 ## 🛠️ Toolchain Overview
 
 | Tool | Purpose | Config File |

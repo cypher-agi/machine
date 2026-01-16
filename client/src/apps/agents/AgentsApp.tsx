@@ -8,7 +8,7 @@ import { useAgentGroups } from './hooks';
 import { mockAgents } from './mock';
 import { AgentTerminalPanel } from '@/features/terminal';
 import { Button, Input, RefreshButton } from '@/shared/ui';
-import { PageLayout, PageEmptyState, PageList, CollapsibleGroup } from '@/shared/components';
+import { Page, PageEmptyState, PageList, CollapsibleGroup } from '@/shared/components';
 import styles from './AgentsApp.module.css';
 
 export function AgentsApp() {
@@ -131,7 +131,7 @@ export function AgentsApp() {
     <div className={styles.pageContainer}>
       {/* Main content area */}
       <div className={styles.mainArea}>
-        <PageLayout
+        <Page
           title="Agents"
           count={filteredAgents.length}
           isLoading={false}
@@ -263,7 +263,7 @@ export function AgentsApp() {
               }
             />
           )}
-        </PageLayout>
+        </Page>
       </div>
 
       {/* Create Agent Wizard Modal */}

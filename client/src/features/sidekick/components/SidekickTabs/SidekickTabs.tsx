@@ -1,4 +1,4 @@
-import { AnimatedTabs } from '@/shared/ui';
+import { Tabs } from '@/shared/ui';
 import type { Tab } from '@/shared/ui';
 import styles from './SidekickTabs.module.css';
 
@@ -10,7 +10,7 @@ export interface SidekickTabsProps {
 
 export function SidekickTabs({ tabs, activeTab, onTabChange }: SidekickTabsProps) {
   return (
-    <AnimatedTabs
+    <Tabs
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={onTabChange}

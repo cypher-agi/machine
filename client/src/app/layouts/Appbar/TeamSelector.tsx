@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Check, Plus, Users } from 'lucide-react';
 import clsx from 'clsx';
+import { Avatar } from '@/shared/ui';
 import { useAuthStore } from '@/store/authStore';
 import styles from './TeamSelector.module.css';
 
@@ -50,15 +51,6 @@ export function TeamSelector() {
     window.dispatchEvent(new CustomEvent('team-changed', { detail: { teamId } }));
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   if (teamsLoading || !currentTeam) {
     return (
       <div className={styles.teamSelector}>
@@ -80,17 +72,13 @@ export function TeamSelector() {
         aria-expanded={menuOpen}
         aria-haspopup="listbox"
       >
-        <div className={styles.teamAvatar}>
-          {currentTeam.avatar_url ? (
-            <img
-              src={currentTeam.avatar_url}
-              alt={currentTeam.name}
-              className={styles.avatarImage}
-            />
-          ) : (
-            <span className={styles.avatarInitials}>{getInitials(currentTeam.name)}</span>
-          )}
-        </div>
+        <Avatar
+          name={currentTeam.name}
+          src={currentTeam.avatar_url}
+          size="md"
+          square
+          className={styles.teamAvatar}
+        />
         <div className={styles.teamInfo}>
           <span className={styles.teamName}>{currentTeam.name}</span>
           <span className={styles.teamHandle}>@{currentTeam.handle}</span>
@@ -115,13 +103,13 @@ export function TeamSelector() {
                 role="option"
                 aria-selected={team.team_id === currentTeamId}
               >
-                <div className={styles.teamAvatar}>
-                  {team.avatar_url ? (
-                    <img src={team.avatar_url} alt={team.name} className={styles.avatarImage} />
-                  ) : (
-                    <span className={styles.avatarInitials}>{getInitials(team.name)}</span>
-                  )}
-                </div>
+                <Avatar
+                  name={team.name}
+                  src={team.avatar_url}
+                  size="md"
+                  square
+                  className={styles.teamAvatar}
+                />
                 <div className={styles.teamItemInfo}>
                   <span className={styles.teamItemName}>{team.name}</span>
                   <span className={styles.teamItemMeta}>@{team.handle}</span>

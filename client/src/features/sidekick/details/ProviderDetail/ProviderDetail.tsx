@@ -30,7 +30,7 @@ import styles from './ProviderDetail.module.css';
 export interface ProviderDetailProps {
   providerId: string;
   onClose: () => void;
-  onMinimize: () => void;
+  onMinimize?: () => void;
 }
 
 type TabId = 'overview' | 'machines' | 'details';

@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@cypher-agi/zui": "file:../zui",
     "@machina/shared": "*",
     "@tanstack/react-query": "^5.17.9",
     "@xterm/addon-fit": "^0.11.0",

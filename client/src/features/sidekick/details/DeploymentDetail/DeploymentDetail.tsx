@@ -25,7 +25,7 @@ import styles from './DeploymentDetail.module.css';
 export interface DeploymentDetailProps {
   deploymentId: string;
   onClose: () => void;
-  onMinimize: () => void;
+  onMinimize?: () => void;
 }
 
 type TabId = 'overview' | 'plan' | 'logs' | 'details';

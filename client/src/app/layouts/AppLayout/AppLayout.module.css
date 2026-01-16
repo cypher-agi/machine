@@ -13,64 +13,16 @@
   overflow: hidden;
 }
 
-/* Left Sidebar - contains teambar, navigation, and selectors */
-.sidebar {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--color-bg);
-  border-right: 1px solid var(--color-border);
-  user-select: none;
-  flex-shrink: 0;
-  overflow: hidden;
-  transition: width 200ms ease-out;
-}
-
-.sidebarResizing {
-  transition: none;
-}
-
-/* Resize Handle */
-.resizeHandle {
-  position: absolute;
-  right: -4px;
-  top: 0;
-  bottom: 0;
-  width: 8px;
-  cursor: ew-resize;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.resizeHandle:hover .resizeHandleLine,
-.resizeHandle:active .resizeHandleLine {
-  opacity: 1;
-  background-color: var(--color-text-primary);
-}
-
-.resizeHandleLine {
-  width: 2px;
-  height: 48px;
-  max-height: 30%;
-  background-color: var(--color-text-secondary);
-  border-radius: 1px;
-  opacity: 0;
-  transition:
-    opacity 150ms ease,
-    background-color 150ms ease;
-}
-
+/* Sidebar sections - specific to machina layout */
 /* Top section: Teambar + Navigation side by side */
-.sidebarTop {
+.sidebar-top {
   flex: 1;
   display: flex;
   min-height: 0;
 }
 
 /* Bottom section: Selectors spanning full width */
-.sidebarBottom {
+.sidebar-bottom {
   flex-shrink: 0;
 }
 

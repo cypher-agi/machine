@@ -1,5 +1,5 @@
-import { Users } from 'lucide-react';
 import clsx from 'clsx';
+import { Avatar } from '@/shared/ui';
 import { useAuthStore } from '@/store/authStore';
 import styles from './Teambar.module.css';
 
@@ -18,15 +18,6 @@ export function Teambar() {
     window.dispatchEvent(new CustomEvent('team-changed', { detail: { teamId } }));
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <aside className={styles.teambar}>
       <div className={styles.teamList}>
@@ -41,15 +32,13 @@ export function Teambar() {
               aria-label={`Switch to ${team.name}`}
               aria-pressed={isSelected}
             >
-              <div className={clsx(styles.teamAvatar, !isSelected && styles.teamAvatarInactive)}>
-                {team.avatar_url ? (
-                  <img src={team.avatar_url} alt={team.name} className={styles.avatarImage} />
-                ) : (
-                  <span className={styles.avatarInitials}>
-                    {team.name ? getInitials(team.name) : <Users size={14} />}
-                  </span>
-                )}
-              </div>
+              <Avatar
+                name={team.name || 'Team'}
+                src={team.avatar_url}
+                size="lg"
+                square
+                className={clsx(styles.teamAvatar, !isSelected && styles.teamAvatarInactive)}
+              />
             </button>
           );
         })}

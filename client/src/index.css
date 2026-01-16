@@ -1,4 +1,2 @@
-/* Global styles - import order matters */
-@import './shared/styles/reset.css';
-@import './shared/styles/tokens.css';
-@import './shared/styles/base.css';
+/* Global styles - import ZUI design system */
+@import '@cypher-agi/zui/styles';

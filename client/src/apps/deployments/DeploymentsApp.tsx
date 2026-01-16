@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { Select, RefreshButton } from '@/shared/ui';
 import {
-  PageLayout,
+  Page,
   PageEmptyState,
   PageList,
   ItemCard,
@@ -74,7 +74,7 @@ export function DeploymentsApp() {
   };
 
   return (
-    <PageLayout
+    <Page
       title="Deployments"
       count={deployments?.length ?? 0}
       isLoading={isLoading}
@@ -172,6 +172,6 @@ export function DeploymentsApp() {
           title={filterState || filterType ? 'No matching deployments' : 'No deployments yet'}
         />
       )}
-    </PageLayout>
+    </Page>
   );
 }

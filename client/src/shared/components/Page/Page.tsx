@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import { PageHeader } from '@cypher-agi/zui';
-import styles from './PageLayout.module.css';
+import styles from './Page.module.css';
 
-export interface PageLayoutProps {
+export interface PageProps {
   /** Page title */
   title: string;
   /** Optional subtitle or description */
@@ -22,7 +22,7 @@ export interface PageLayoutProps {
   className?: string;
 }
 
-export function PageLayout({
+export function Page({
   title,
   subtitle,
   count,
@@ -31,7 +31,7 @@ export function PageLayout({
   loadingText = 'Loading...',
   children,
   className,
-}: PageLayoutProps) {
+}: PageProps) {
   return (
     <div className={clsx(styles.page, className)}>
       <PageHeader title={title} subtitle={subtitle} count={count} actions={actions} />

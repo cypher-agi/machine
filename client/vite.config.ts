@@ -7,6 +7,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@machina/zui': path.resolve(__dirname, '../zui/src'),
+      '@cypher-agi/zui': path.resolve(__dirname, '../zui/src'),
     },
   },
   server: {

@@ -30,7 +30,7 @@ import styles from './CommitDetail.module.css';
 export interface CommitDetailProps {
   commitId: string;
   onClose: () => void;
-  onMinimize: () => void;
+  onMinimize?: () => void;
 }
 
 // Parse conventional commit type from message

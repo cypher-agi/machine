@@ -17,10 +17,11 @@ A modern web application for provisioning and managing compute infrastructure ac
 ## Architecture
 
 ```
-machine/
+machina/
 ├── client/          # React + TypeScript frontend (Vite)
 ├── server/          # Node.js + Express backend
 ├── shared/          # Shared TypeScript types
+├── zui/             # ZUI - Reusable UI kit (design system)
 └── terraform/       # Terraform modules (future)
 ```
 
@@ -162,17 +163,27 @@ TypeScript interfaces for:
 - **Zod** - Validation
 - **SSE** - Real-time log streaming
 
-## Design System
+## Design System (ZUI)
 
-The UI uses a dark, terminal-inspired theme with:
+The UI is built with **ZUI (Zenith UI)** - a canonical, reusable design system:
 
-- **Background**: Deep navy (`#0a0e14`)
-- **Surface**: Elevated dark (`#0d1117`)
-- **Primary accent**: Neon cyan (`#00ffff`)
-- **Success**: Neon green (`#00ff88`)
-- **Warning**: Orange (`#ff9500`)
-- **Error**: Red (`#ff3366`)
-- **Font**: JetBrains Mono (code), DM Sans (UI)
+- **Monochromatic dark theme** with 95% grayscale
+- **Professional aesthetic** inspired by developer tools
+- **14 primitive components** (Button, Input, Card, etc.)
+- **7 composite components** (PageLayout, PageList, etc.)
+- **Full TypeScript support** with exported types
+- **CSS Modules** for optimal performance
+- **Design tokens** for consistent styling
+
+See [`zui/README.md`](./zui/README.md) for complete documentation.
+
+### Color Palette
+- **Background**: Ultra dark (`#09090b`)
+- **Surface**: Elevated dark (`#0e0e10`)
+- **Accent**: Neon cyan (`#01a4f4`)
+- **Success**: Neon cyan-green (`#01f4cb`)
+- **Error**: Neon red (`#f4012a`)
+- **Font**: Inter (UI), JetBrains Mono (code)
 
 ## Production Deployment
 

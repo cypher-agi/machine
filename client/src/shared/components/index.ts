@@ -1,3 +1,7 @@
+// Re-export from zui
+export { Sidebar } from '@cypher-agi/zui';
+export type { SidebarProps } from '@cypher-agi/zui';
+
 export { Toasts } from './Toasts';
 export type { Toast, ToastsProps } from './Toasts';
 export {
@@ -9,8 +13,8 @@ export {
   ItemCardStatus,
 } from './ItemCard';
 export type { ItemCardProps } from './ItemCard';
-export { PageLayout } from './PageLayout';
-export type { PageLayoutProps } from './PageLayout';
+export { Page } from './Page';
+export type { PageProps } from './Page';
 export { PageEmptyState } from './PageEmptyState';
 export type { PageEmptyStateProps } from './PageEmptyState';
 export { PageList } from './PageList';

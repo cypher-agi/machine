@@ -22,7 +22,7 @@ import styles from './BootstrapDetail.module.css';
 export interface BootstrapDetailProps {
   profileId: string;
   onClose: () => void;
-  onMinimize: () => void;
+  onMinimize?: () => void;
 }
 
 type TabId = 'overview' | 'template' | 'machines' | 'details';

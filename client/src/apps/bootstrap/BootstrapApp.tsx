@@ -5,7 +5,7 @@ import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
 import { Button, Badge, RefreshButton } from '@/shared/ui';
 import {
-  PageLayout,
+  Page,
   PageEmptyState,
   PageList,
   ItemCard,
@@ -35,7 +35,7 @@ export function BootstrapApp() {
   };
 
   return (
-    <PageLayout
+    <Page
       title="Bootstrap Profiles"
       count={profiles?.length ?? 0}
       isLoading={isLoading}
@@ -107,6 +107,6 @@ export function BootstrapApp() {
           }
         />
       )}
-    </PageLayout>
+    </Page>
   );
 }

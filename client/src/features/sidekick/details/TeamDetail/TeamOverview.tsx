@@ -6,6 +6,7 @@ import type { Team } from '@machina/shared';
 import { uploadTeamAvatar, deleteTeamAvatar } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
+import { Avatar } from '@/shared/ui';
 import { SidekickSection, SidekickRow } from '../../components';
 import styles from './TeamDetail.module.css';
 
@@ -65,25 +66,12 @@ export function TeamOverview({ team, memberCount, isAdmin }: TeamOverviewProps) 
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
     <>
       {/* Avatar Section */}
       <div className={styles.avatarSection}>
         <div className={styles.avatarLarge}>
-          {team.avatar_url ? (
-            <img src={team.avatar_url} alt={team.name} className={styles.avatarImage} />
-          ) : (
-            getInitials(team.name)
-          )}
+          <Avatar name={team.name} src={team.avatar_url} size="xl" square />
           {isAdmin && (
             <div className={styles.avatarOverlay}>
               <button

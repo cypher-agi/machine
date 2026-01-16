@@ -8,7 +8,7 @@ import { MachineCard, DeployWizard, MachineFilters } from './components';
 import { useMachineGroups } from './hooks';
 import { TerminalPanel } from '@/features/terminal';
 import { Button, Input, RefreshButton } from '@/shared/ui';
-import { PageLayout, PageEmptyState, PageList, CollapsibleGroup } from '@/shared/components';
+import { Page, PageEmptyState, PageList, CollapsibleGroup } from '@/shared/components';
 import clsx from 'clsx';
 import styles from './MachinesApp.module.css';
 
@@ -76,7 +76,7 @@ export function MachinesApp() {
     <div className={styles.pageContainer}>
       {/* Main content area */}
       <div className={styles.mainArea}>
-        <PageLayout
+        <Page
           title="Machines"
           count={machines?.length ?? 0}
           isLoading={isLoading}
@@ -181,7 +181,7 @@ export function MachinesApp() {
               }
             />
           )}
-        </PageLayout>
+        </Page>
       </div>
 
       {/* Terminal Panel */}

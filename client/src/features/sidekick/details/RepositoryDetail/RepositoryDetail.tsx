@@ -20,7 +20,7 @@ import styles from './RepositoryDetail.module.css';
 export interface RepositoryDetailProps {
   repositoryId: string;
   onClose: () => void;
-  onMinimize: () => void;
+  onMinimize?: () => void;
 }
 
 type TabId = 'overview' | 'commits' | 'contributors';

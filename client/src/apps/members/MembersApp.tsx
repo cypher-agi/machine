@@ -5,8 +5,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { getMembers, getCurrentUserRole } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, Input, RefreshButton } from '@/shared/ui';
-import { PageLayout, PageEmptyState, PageList, ItemCard, ItemCardMeta } from '@/shared/components';
+import { Avatar, Button, Input, RefreshButton } from '@/shared/ui';
+import { Page, PageEmptyState, PageList, ItemCard, ItemCardMeta } from '@/shared/components';
 import type { TeamRole } from '@machina/shared';
 import clsx from 'clsx';
 import styles from './MembersApp.module.css';
@@ -47,18 +47,8 @@ export function MembersApp() {
     setSidekickSelection({ type: 'member', id: memberId });
   };
 
-  // Generate initials from name
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   return (
-    <PageLayout
+    <Page
       title="Members"
       count={members?.length ?? 0}
       isLoading={isLoading}
@@ -149,17 +139,12 @@ export function MembersApp() {
                 selected={isSelected}
                 onClick={() => handleSelectMember(member.team_member_id)}
                 iconBadge={
-                  <div className={styles.avatarBadge}>
-                    {member.user.profile_picture_url ? (
-                      <img
-                        src={member.user.profile_picture_url}
-                        alt={member.user.display_name}
-                        className={styles.avatarImage}
-                      />
-                    ) : (
-                      getInitials(member.user.display_name)
-                    )}
-                  </div>
+                  <Avatar
+                    name={member.user.display_name}
+                    src={member.user.profile_picture_url}
+                    size="lg"
+                    className={styles.avatarBadge}
+                  />
                 }
                 title={
                   isCurrentUser ? `${member.user.display_name} (you)` : member.user.display_name
@@ -196,6 +181,6 @@ export function MembersApp() {
           title={searchQuery || roleFilter !== 'all' ? 'No members found' : 'No members yet'}
         />
       )}
-    </PageLayout>
+    </Page>
   );
 }

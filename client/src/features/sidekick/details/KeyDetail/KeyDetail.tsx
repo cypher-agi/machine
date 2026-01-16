@@ -22,7 +22,7 @@ import styles from './KeyDetail.module.css';
 export interface KeyDetailProps {
   keyId: string;
   onClose: () => void;
-  onMinimize: () => void;
+  onMinimize?: () => void;
 }
 
 type TabId = 'overview' | 'sync' | 'details';

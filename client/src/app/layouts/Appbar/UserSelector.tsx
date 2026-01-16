@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Settings, LogOut, ChevronUp } from 'lucide-react';
 import clsx from 'clsx';
+import { Avatar } from '@/shared/ui';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
 import styles from './UserSelector.module.css';
@@ -47,14 +48,6 @@ export function UserSelector() {
     navigate('/login');
   };
 
-  const initials =
-    user?.display_name
-      ?.split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2) || '?';
-
   return (
     <div className={styles.userSelector} ref={menuRef}>
       <button
@@ -63,17 +56,12 @@ export function UserSelector() {
         aria-expanded={menuOpen}
         aria-haspopup="menu"
       >
-        <div className={styles.avatar}>
-          {user?.profile_picture_url ? (
-            <img
-              src={user.profile_picture_url}
-              alt={user.display_name}
-              className={styles.avatarImage}
-            />
-          ) : (
-            <span className={styles.avatarInitials}>{initials}</span>
-          )}
-        </div>
+        <Avatar
+          name={user?.display_name || 'User'}
+          src={user?.profile_picture_url}
+          size="md"
+          className={styles.avatar}
+        />
         <div className={styles.userInfo}>
           <span className={styles.userName}>{user?.display_name || 'User'}</span>
           <span className={styles.userRole}>{user?.role || 'user'}</span>

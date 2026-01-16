@@ -29,19 +29,21 @@ export function CollapsibleGroup({
 
   return (
     <div className={`${styles.group} ${className || ''}`}>
-      <div className={styles.header}>
+      <button
+        className={styles.header}
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        title={isCollapsed ? 'Expand' : 'Collapse'}
+        type="button"
+      >
         <span className={styles.label}>{label}</span>
         {count !== undefined && <span className={styles.count}>{count}</span>}
         {stats && <div className={styles.stats}>{stats}</div>}
-        <button
-          className={`${styles.toggle} ${isCollapsed ? styles.toggleCollapsed : ''}`}
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? 'Expand' : 'Collapse'}
-          type="button"
+        <span
+          className={`${styles.toggle} ${isCollapsed ? styles.toggleCollapsed : ''} ${!stats ? styles.toggleNoStats : ''}`}
         >
           <ChevronDown size={16} />
-        </button>
-      </div>
+        </span>
+      </button>
       <div className={`${styles.content} ${isCollapsed ? styles.contentCollapsed : ''}`}>
         <div className={styles.contentInner}>{children}</div>
       </div>
