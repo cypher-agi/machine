@@ -3,7 +3,7 @@ import { Plus, ShieldCheck, ShieldAlert, Trash2, RefreshCw, Pencil } from 'lucid
 import clsx from 'clsx';
 import type { AIProviderAccount } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
-import { Modal, Button } from '@/shared/ui';
+import { Modal, Button } from '@/shared';
 import { mockAIProviderAccounts, AI_PROVIDER_CONFIG } from '../../mock';
 import { AddAIProviderModal } from './AddAIProviderModal';
 import styles from './AIProvidersModal.module.css';

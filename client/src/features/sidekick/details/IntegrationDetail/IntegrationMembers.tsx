@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { User, Building2 } from 'lucide-react';
 import { getGitHubMembers } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { Input } from '@/shared/ui';
+import { Input } from '@/shared';
 import { SidekickPanel, SidekickLoading, SidekickSection } from '../../components';
 import styles from './IntegrationDetail.module.css';
 

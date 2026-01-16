@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
-import { PageLoader } from '@/shared/ui';
+import { PageLoader } from '@/shared';
 
 interface AuthGuardProps {
   children: React.ReactNode;

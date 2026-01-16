@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Settings, LogOut, ChevronUp } from 'lucide-react';
 import clsx from 'clsx';
-import { Avatar } from '@/shared/ui';
+import { Avatar } from '@/shared';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
 import styles from './UserSelector.module.css';

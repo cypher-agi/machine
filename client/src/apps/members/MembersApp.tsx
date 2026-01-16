@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { getMembers, getCurrentUserRole } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Avatar, Button, Input, RefreshButton } from '@/shared/ui';
+import { Avatar, Button, Input, RefreshButton } from '@/shared';
 import { Page, PageEmptyState, PageList, ItemCard, ItemCardMeta } from '@/shared/components';
 import type { TeamRole } from '@machina/shared';
 import clsx from 'clsx';

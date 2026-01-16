@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import type { AIProviderAccount, ReasoningProvider } from '@machina/shared';
-import { Modal, Button, Input } from '@/shared/ui';
+import { Modal, Button, Input } from '@/shared';
 import { AI_PROVIDER_CONFIG } from '../../mock';
 import styles from './AIProvidersModal.module.css';
 

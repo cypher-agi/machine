@@ -14,7 +14,7 @@ import {
 import { getGitHubRepositories } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import type { GitHubRepository } from '@machina/shared';
-import { Input } from '@/shared/ui';
+import { Input } from '@/shared';
 import { SidekickPanel, SidekickLoading } from '../../components';
 import styles from './IntegrationDetail.module.css';
 

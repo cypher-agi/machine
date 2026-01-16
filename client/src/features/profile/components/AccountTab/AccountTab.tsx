@@ -3,7 +3,7 @@ import { Save, Monitor, Smartphone, Globe, Trash2, Loader2 } from 'lucide-react'
 import clsx from 'clsx';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
-import { Button, Input } from '@/shared/ui';
+import { Button, Input } from '@/shared';
 import * as authApi from '@/lib/authApi';
 import type { Session } from '@machina/shared';
 import styles from './AccountTab.module.css';

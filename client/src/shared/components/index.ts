@@ -1,23 +1,26 @@
-// Re-export from zui
-export { Sidebar } from '@cypher-agi/zui';
-export type { SidebarProps } from '@cypher-agi/zui';
-
-export { Toasts } from './Toasts';
-export type { Toast, ToastsProps } from './Toasts';
+// Re-export from zui (these are canonical versions)
 export {
+  Sidebar,
+  Toasts,
   ItemCard,
   ItemCardMeta,
   ItemCardCode,
   ItemCardBadge,
   ItemCardTypeBadge,
   ItemCardStatus,
-} from './ItemCard';
-export type { ItemCardProps } from './ItemCard';
-export { Page } from './Page';
-export type { PageProps } from './Page';
-export { PageEmptyState } from './PageEmptyState';
-export type { PageEmptyStateProps } from './PageEmptyState';
-export { PageList } from './PageList';
-export type { PageListProps } from './PageList';
-export { CollapsibleGroup } from './CollapsibleGroup';
-export type { CollapsibleGroupProps } from './CollapsibleGroup';
+  PageEmptyState,
+  PageList,
+  CollapsibleGroup,
+  Page,
+} from '@cypher-agi/zui';
+
+export type {
+  SidebarProps,
+  Toast,
+  ToastsProps,
+  ItemCardProps,
+  PageEmptyStateProps,
+  PageListProps,
+  CollapsibleGroupProps,
+  PageProps,
+} from '@cypher-agi/zui';

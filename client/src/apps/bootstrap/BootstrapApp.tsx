@@ -3,7 +3,7 @@ import { Plus, Lock } from 'lucide-react';
 import { getBootstrapProfiles } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, Badge, RefreshButton } from '@/shared/ui';
+import { Button, Badge, RefreshButton } from '@/shared';
 import {
   Page,
   PageEmptyState,

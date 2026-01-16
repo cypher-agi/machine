@@ -1,7 +1,7 @@
 import { formatDistanceToNow } from 'date-fns';
 import type { Deployment } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
-import { Badge } from '@/shared/ui';
+import { Badge } from '@/shared';
 import { DEPLOYMENT_STATE_BADGE_CONFIG, DEPLOYMENT_TYPE_FULL_LABELS } from '@/shared/constants';
 import { SidekickPanel, SidekickEmpty } from '../../components';
 import styles from './MachineDetail.module.css';

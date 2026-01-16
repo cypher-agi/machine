@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Cloud, RefreshCw } from 'lucide-react';
 import { syncSSHKeyToProvider, unsyncSSHKeyFromProvider } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
-import { Button } from '@/shared/ui';
+import { Button } from '@/shared';
 import { PROVIDER_FULL_LABELS } from '@/shared/constants';
 import type { SSHKey, ProviderAccount } from '@machina/shared';
 import { SidekickPanel, SidekickSection } from '../../components';

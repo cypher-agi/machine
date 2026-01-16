@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Play, Pause, Square } from 'lucide-react';
-import { Badge, Button } from '@/shared/ui';
+import { Badge, Button } from '@/shared';
 import { SidekickHeader, SidekickTabs, SidekickContent, SidekickLoading } from '../../components';
 import { AgentOverviewTab } from './AgentOverviewTab';
 import { AgentToolsTab } from './AgentToolsTab';

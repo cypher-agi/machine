@@ -3,7 +3,7 @@ import { Users, ExternalLink, GitCommit, GitPullRequest } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import type { Contributor } from '@machina/shared';
 import { getContributors } from '@/lib/api';
-import { Button } from '@/shared/ui';
+import { Button } from '@/shared';
 import { SidekickPanel, SidekickLoading } from '../../components';
 import styles from './RepositoryDetail.module.css';
 

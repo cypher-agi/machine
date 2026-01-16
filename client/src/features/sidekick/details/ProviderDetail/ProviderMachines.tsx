@@ -1,5 +1,5 @@
 import { useAppStore } from '@/store/appStore';
-import { Badge } from '@/shared/ui';
+import { Badge } from '@/shared';
 import type { Machine } from '@machina/shared';
 import { SidekickPanel, SidekickEmpty } from '../../components';
 import styles from './ProviderDetail.module.css';

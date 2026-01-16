@@ -13,7 +13,7 @@ import {
 import type { RepositoryWithStats } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
 import { copyToClipboard } from '@/shared/lib';
-import { Button } from '@/shared/ui';
+import { Button } from '@/shared';
 import { SidekickPanel, SidekickSection, SidekickRow } from '../../components';
 import styles from './RepositoryDetail.module.css';
 

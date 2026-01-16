@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Terminal } from 'lucide-react';
 import { getMachine, getMachineServices, getMachineNetworking, getDeployments } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { Badge, Button } from '@/shared/ui';
+import { Badge, Button } from '@/shared';
 import { TerminalModal } from '@/features/terminal';
 import { PROVIDER_LABELS, MACHINE_STATUS_CONFIG } from '@/shared/constants';
 import { SidekickHeader, SidekickTabs, SidekickContent, SidekickLoading } from '../../components';

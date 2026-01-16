@@ -23,7 +23,7 @@ import type {
   AgentPersonality,
 } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
-import { Modal, Button, Input, Select, Textarea } from '@/shared/ui';
+import { Modal, Button, Input, Select, Textarea } from '@/shared';
 import {
   mockAIProviderAccounts,
   mockSwarms,

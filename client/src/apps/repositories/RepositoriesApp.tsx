@@ -26,7 +26,7 @@ import {
 } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, RefreshButton } from '@/shared/ui';
+import { Button, RefreshButton } from '@/shared';
 import {
   Page,
   PageEmptyState,

@@ -6,7 +6,7 @@ import type { Team, TeamInvite } from '@machina/shared';
 import { updateTeam, createTeamInvite, revokeTeamInvite, checkHandleAvailability } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, Input } from '@/shared/ui';
+import { Button, Input } from '@/shared';
 import { SidekickSection } from '../../components';
 import styles from './TeamDetail.module.css';
 

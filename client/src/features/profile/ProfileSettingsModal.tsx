@@ -1,6 +1,6 @@
 import { User, Shield, Settings } from 'lucide-react';
 import clsx from 'clsx';
-import { Modal } from '@/shared/ui';
+import { Modal } from '@/shared';
 import { useAppStore } from '@/store/appStore';
 import { ProfileTab } from './components/ProfileTab';
 import { AccountTab } from './components/AccountTab';

@@ -1,8 +1,0 @@
-/* Page list styles */
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding-bottom: var(--space-4);
-}

@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { MachineCard, DeployWizard, MachineFilters } from './components';
 import { useMachineGroups } from './hooks';
 import { TerminalPanel } from '@/features/terminal';
-import { Button, Input, RefreshButton } from '@/shared/ui';
+import { Button, Input, RefreshButton } from '@/shared';
 import { Page, PageEmptyState, PageList, CollapsibleGroup } from '@/shared/components';
 import clsx from 'clsx';
 import styles from './MachinesApp.module.css';

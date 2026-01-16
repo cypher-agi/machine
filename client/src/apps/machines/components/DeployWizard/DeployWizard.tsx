@@ -26,7 +26,7 @@ import {
 import type { MachineCreateRequest } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Modal, Button, Input, Select } from '@/shared/ui';
+import { Modal, Button, Input, Select } from '@/shared';
 import styles from './DeployWizard.module.css';
 
 interface DeployWizardProps {

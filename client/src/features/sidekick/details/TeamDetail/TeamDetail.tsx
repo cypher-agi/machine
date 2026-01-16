@@ -4,7 +4,7 @@ import { Trash2, Users } from 'lucide-react';
 import { getTeam, deleteTeam } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, Modal } from '@/shared/ui';
+import { Button, Modal } from '@/shared';
 import {
   SidekickHeader,
   SidekickTabs,

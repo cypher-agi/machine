@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
-import { Select } from '@/shared/ui';
+import { Select } from '@/shared';
 import type { AgentStatus, ReasoningProvider } from '@machina/shared';
 import { mockSwarms, AGENT_STATUS_CONFIG, AI_PROVIDER_CONFIG } from '../../mock';
 import styles from './AgentFilters.module.css';

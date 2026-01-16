@@ -2,7 +2,7 @@ import { Moon, Sun, Monitor } from 'lucide-react';
 import clsx from 'clsx';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import { useAppStore } from '@/store/appStore';
-import { Select, Toggle } from '@/shared/ui';
+import { Select, Toggle } from '@/shared';
 import styles from './SettingsTab.module.css';
 
 export function SettingsTab() {

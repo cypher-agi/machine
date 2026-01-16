@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import type { CommitWithRepo } from '@machina/shared';
 import { getRepositoryCommits } from '@/lib/api';
-import { Button } from '@/shared/ui';
+import { Button } from '@/shared';
 import { SidekickPanel, SidekickLoading } from '../../components';
 import styles from './RepositoryDetail.module.css';
 

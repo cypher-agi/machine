@@ -4,7 +4,7 @@ import { Loader2, Check, X, AtSign } from 'lucide-react';
 import { createTeam, checkHandleAvailability } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Modal, Button, Input } from '@/shared/ui';
+import { Modal, Button, Input } from '@/shared';
 import styles from './CreateTeamModal.module.css';
 
 export interface CreateTeamModalProps {

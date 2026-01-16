@@ -7,7 +7,7 @@ import { AgentCard, AgentFilters, CreateAgentWizard, AIProvidersModal } from './
 import { useAgentGroups } from './hooks';
 import { mockAgents } from './mock';
 import { AgentTerminalPanel } from '@/features/terminal';
-import { Button, Input, RefreshButton } from '@/shared/ui';
+import { Button, Input, RefreshButton } from '@/shared';
 import { Page, PageEmptyState, PageList, CollapsibleGroup } from '@/shared/components';
 import styles from './AgentsApp.module.css';
 

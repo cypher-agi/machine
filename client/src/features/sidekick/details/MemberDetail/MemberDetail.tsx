@@ -4,7 +4,7 @@ import { Shield, User, UserMinus } from 'lucide-react';
 import { getMember, getMembers, updateTeamMemberRole, removeTeamMember } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Avatar, Button, Modal } from '@/shared/ui';
+import { Avatar, Button, Modal } from '@/shared';
 import {
   SidekickHeader,
   SidekickContent,

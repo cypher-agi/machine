@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Eye, EyeOff, Loader2, Check } from 'lucide-react';
 import { createProviderAccount } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
-import { Modal, Button, Input } from '@/shared/ui';
+import { Modal, Button, Input } from '@/shared';
 import type { ProviderType, ProviderCredentials } from '@machina/shared';
 import clsx from 'clsx';
 import styles from './AddProviderModal.module.css';

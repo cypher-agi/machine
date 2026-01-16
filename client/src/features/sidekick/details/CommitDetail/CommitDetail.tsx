@@ -15,7 +15,7 @@ import type { CommitWithRepo as _CommitWithRepo } from '@machina/shared';
 import { getCommit } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { copyToClipboard } from '@/shared/lib';
-import { Badge, Button } from '@/shared/ui';
+import { Badge, Button } from '@/shared';
 import {
   SidekickHeader,
   SidekickContent,

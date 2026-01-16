@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { Server, Cloud, GitBranch, Package, Key, Plug, Users, FolderGit2, Bot } from 'lucide-react';
-import { NavItem, NavList } from '@/shared/ui';
+import { NavItem, NavList } from '@/shared';
 import styles from './Appbar.module.css';
 
 interface NavItemData {

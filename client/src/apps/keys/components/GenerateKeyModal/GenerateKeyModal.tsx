@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Key, Copy, Download, Check, AlertTriangle, Loader2 } from 'lucide-react';
 import { generateSSHKey } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
-import { Modal, Button, Input, Select } from '@/shared/ui';
+import { Modal, Button, Input, Select } from '@/shared';
 import type { SSHKeyType, SSHKeyGenerateResponse } from '@machina/shared';
 import clsx from 'clsx';
 import styles from './GenerateKeyModal.module.css';

@@ -4,7 +4,7 @@ import { FolderGit2, RefreshCw, Trash2 } from 'lucide-react';
 import { getRepository, syncRepository, deleteRepository } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, ConfirmModal } from '@/shared/ui';
+import { Button, ConfirmModal } from '@/shared';
 import {
   SidekickHeader,
   SidekickTabs,

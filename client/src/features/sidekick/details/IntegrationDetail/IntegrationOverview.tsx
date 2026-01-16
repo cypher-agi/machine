@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ExternalLink, Building2, Copy, ChevronDown, ChevronUp } from 'lucide-react';
 import type { TeamIntegration, IntegrationDefinition } from '@machina/shared';
-import { Button } from '@/shared/ui';
+import { Button } from '@/shared';
 import { copyToClipboard } from '@/shared/lib';
 import { useAppStore } from '@/store/appStore';
 import { SidekickPanel, SidekickSection, SidekickRow } from '../../components';

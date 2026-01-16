@@ -4,7 +4,7 @@ import { Lock, Trash2, Edit } from 'lucide-react';
 import { getBootstrapProfiles, deleteBootstrapProfile, getMachines } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Badge, Button, ConfirmModal } from '@/shared/ui';
+import { Badge, Button, ConfirmModal } from '@/shared';
 import { BOOTSTRAP_METHOD_ICONS } from '@/shared/constants';
 import {
   SidekickHeader,

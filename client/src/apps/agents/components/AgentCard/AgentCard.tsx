@@ -2,7 +2,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Play, Pause, Square, Terminal } from 'lucide-react';
 import type { Agent } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
-import { Badge, Button } from '@/shared/ui';
+import { Badge, Button } from '@/shared';
 import { ItemCard, ItemCardMeta } from '@/shared/components';
 import { AGENT_STATUS_CONFIG, AI_PROVIDER_CONFIG, EXPERTISE_CONFIG } from '../../mock';
 import styles from './AgentCard.module.css';

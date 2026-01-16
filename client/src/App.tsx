@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AppLayout } from './app/layouts';
-import { PageLoader } from '@/shared/ui';
+import { PageLoader } from '@/shared';
 import { LoginPage, AuthGuard } from '@/features/auth';
 
 // Lazy-loaded route components for code-splitting

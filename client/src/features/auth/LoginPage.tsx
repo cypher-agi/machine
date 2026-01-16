@@ -2,9 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, useLocation, type Location } from 'react-router-dom';
 import { Eye, EyeOff, Zap, AlertTriangle } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { Input } from '@/shared/ui/Input';
-import { Button } from '@/shared/ui/Button';
-import { Toggle } from '@/shared/ui/Toggle';
+import { Input, Button, Toggle } from '@/shared';
 import styles from './LoginPage.module.css';
 
 type AuthMode = 'login' | 'register';

@@ -5,7 +5,7 @@ import { getSSHKeys, deleteSSHKey, getSSHKeyPrivate, getProviderAccounts } from 
 import { copyToClipboard, downloadTextFile } from '@/shared/lib';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Badge, Button, ConfirmModal } from '@/shared/ui';
+import { Badge, Button, ConfirmModal } from '@/shared';
 import { KEY_TYPE_LABELS } from '@/shared/constants';
 import {
   SidekickHeader,

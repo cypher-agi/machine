@@ -6,7 +6,7 @@ import type { Team } from '@machina/shared';
 import { uploadTeamAvatar, deleteTeamAvatar } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Avatar } from '@/shared/ui';
+import { Avatar } from '@/shared';
 import { SidekickSection, SidekickRow } from '../../components';
 import styles from './TeamDetail.module.css';
 

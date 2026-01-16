@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Upload, Loader2, Key } from 'lucide-react';
 import { importSSHKey } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
-import { Modal, Button, Input } from '@/shared/ui';
+import { Modal, Button, Input } from '@/shared';
 import styles from './ImportKeyModal.module.css';
 
 export interface ImportKeyModalProps {

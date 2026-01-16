@@ -5,7 +5,7 @@ import type { GitHubRepository } from '@machina/shared';
 import { getGitHubRepositories, addRepositoriesFromGitHub } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Modal, Button, Input } from '@/shared/ui';
+import { Modal, Button, Input } from '@/shared';
 import styles from './AddRepositoryModal.module.css';
 
 interface AddRepositoryModalProps {

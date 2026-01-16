@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Plus, Users, UserPlus } from 'lucide-react';
 import { getTeams } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
-import { Avatar, Button, RefreshButton } from '@/shared/ui';
+import { Avatar, Button, RefreshButton } from '@/shared';
 import { Page, PageEmptyState, PageList, ItemCard, ItemCardMeta } from '@/shared/components';
 import { CreateTeamModal } from './components/CreateTeamModal';
 import { JoinTeamModal } from './components/JoinTeamModal';

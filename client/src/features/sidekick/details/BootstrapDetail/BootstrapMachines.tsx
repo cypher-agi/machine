@@ -1,7 +1,7 @@
 import { Server } from 'lucide-react';
 import type { Machine } from '@machina/shared';
 import { useAppStore } from '@/store/appStore';
-import { Badge } from '@/shared/ui';
+import { Badge } from '@/shared';
 import { SidekickPanel, SidekickEmpty } from '../../components';
 import styles from './BootstrapDetail.module.css';
 

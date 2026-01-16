@@ -5,7 +5,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { getDeployments, getMachines, getMembers } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Badge } from '@/shared/ui';
+import { Badge } from '@/shared';
 import { DEPLOYMENT_STATE_BADGE_CONFIG, DEPLOYMENT_TYPE_FULL_LABELS } from '@/shared/constants';
 import type { Deployment, Machine } from '@machina/shared';
 import {

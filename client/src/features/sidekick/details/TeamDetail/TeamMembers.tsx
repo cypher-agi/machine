@@ -4,7 +4,7 @@ import type { TeamMemberWithUser } from '@machina/shared';
 import { removeTeamMember, updateTeamMemberRole } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Avatar, Button } from '@/shared/ui';
+import { Avatar, Button } from '@/shared';
 import { SidekickSection } from '../../components';
 import styles from './TeamDetail.module.css';
 

@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { useAppStore } from '@/store/appStore';
 import type { MachineStatus, ProviderType } from '@machina/shared';
-import { Input, Select, Button } from '@/shared/ui';
+import { Input, Select, Button } from '@/shared';
 import clsx from 'clsx';
 import styles from './MachineFilters.module.css';
 

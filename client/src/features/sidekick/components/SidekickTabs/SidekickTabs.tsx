@@ -1,5 +1,5 @@
-import { Tabs } from '@/shared/ui';
-import type { Tab } from '@/shared/ui';
+import { Tabs } from '@/shared';
+import type { Tab } from '@/shared';
 import styles from './SidekickTabs.module.css';
 
 export interface SidekickTabsProps {

@@ -11,7 +11,7 @@ import {
 } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Badge, Button, ConfirmModal } from '@/shared/ui';
+import { Badge, Button, ConfirmModal } from '@/shared';
 import {
   SidekickHeader,
   SidekickTabs,

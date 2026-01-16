@@ -4,7 +4,7 @@ import { Loader2, UserPlus } from 'lucide-react';
 import { joinTeam } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Modal, Button, Input } from '@/shared/ui';
+import { Modal, Button, Input } from '@/shared';
 import styles from './JoinTeamModal.module.css';
 
 export interface JoinTeamModalProps {

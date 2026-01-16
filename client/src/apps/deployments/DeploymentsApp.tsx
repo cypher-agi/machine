@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { getDeployments, getMachines, getMembers } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Select, RefreshButton } from '@/shared/ui';
+import { Select, RefreshButton } from '@/shared';
 import {
   Page,
   PageEmptyState,

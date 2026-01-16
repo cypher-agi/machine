@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Save } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
-import { Button, Input } from '@/shared/ui';
+import { Button, Input } from '@/shared';
 import { AvatarUpload } from '../AvatarUpload';
 import styles from './ProfileTab.module.css';
 

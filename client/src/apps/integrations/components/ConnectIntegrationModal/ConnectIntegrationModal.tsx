@@ -16,7 +16,7 @@ import type { IntegrationType } from '@machina/shared';
 import { getIntegrationSetupInfo, configureIntegration, startIntegrationConnect } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Modal, Button, Input } from '@/shared/ui';
+import { Modal, Button, Input } from '@/shared';
 import styles from './ConnectIntegrationModal.module.css';
 
 interface ConnectIntegrationModalProps {

@@ -1,27 +1,34 @@
-# ⚠️ DEPRECATED
+# Shared Components
 
-This folder has been moved to the **ZUI** package.
+This folder re-exports ZUI components for use in the Machina client application.
 
-## Migration
+## ZUI Components
 
-Please use `@cypher-agi/zui` instead:
+All UI components are imported from `@cypher-agi/zui`. The following components are re-exported through `@/shared`:
+
+- `Sidebar`
+- `Toasts`
+- `ItemCard` (and sub-components)
+- `Page`
+- `PageHeader`
+- `PageEmptyState`
+- `PageList`
+- `CollapsibleGroup`
+- All atomic components (Button, Input, etc.)
+- All other ZUI components
+
+## Usage
 
 ```tsx
-// Old (deprecated)
-import { PageLayout } from '@/shared/components';
+// Import from shared (recommended for Machina)
+import { Button, Card, Modal, Page } from '@/shared';
 
-// New (preferred)
-import { PageLayout } from '@cypher-agi/zui';
+// Or import directly from ZUI
+import { Button, Card, Modal, Page } from '@cypher-agi/zui';
 ```
 
 ## Documentation
 
-See the following files in the `zui/` folder:
+See the ZUI package for component documentation:
 - `zui/README.md` - Usage guide
-- `zui/MIGRATION.md` - Migration guide
-- `zui/COMPONENTS.md` - Component reference
-- `zui/ARCHITECTURE.md` - Architecture details
-
-## Backward Compatibility
-
-Old imports still work through re-exports in `client/src/shared/index.ts`, but will be removed in a future version.
+- `zui/src/components/` - Component source code

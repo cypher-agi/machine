@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Terminal, Key, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react';
 import { SSHTerminal } from '../SSHTerminal';
 import { getSSHKeys } from '@/lib/api';
-import { Modal, Button } from '@/shared/ui';
+import { Modal, Button } from '@/shared';
 import type { Machine } from '@machina/shared';
 import clsx from 'clsx';
 import styles from './TerminalModal.module.css';

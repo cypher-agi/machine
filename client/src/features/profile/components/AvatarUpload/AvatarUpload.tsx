@@ -3,7 +3,7 @@ import { Camera, Trash2, Upload, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
-import { Avatar, Button } from '@/shared/ui';
+import { Avatar, Button } from '@/shared';
 import styles from './AvatarUpload.module.css';
 
 export function AvatarUpload() {

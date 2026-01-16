@@ -1,2 +1,2 @@
-export { copyToClipboard } from './clipboard';
-export { downloadTextFile } from './download';
+// Re-export utilities from zui
+export { copyToClipboard, downloadTextFile } from '@cypher-agi/zui';

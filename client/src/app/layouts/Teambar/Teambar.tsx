@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Avatar } from '@/shared/ui';
+import { Avatar } from '@/shared';
 import { useAuthStore } from '@/store/authStore';
 import styles from './Teambar.module.css';
 

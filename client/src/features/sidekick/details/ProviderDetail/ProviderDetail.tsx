@@ -9,7 +9,7 @@ import {
 } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Badge, Button, Modal } from '@/shared/ui';
+import { Badge, Button, Modal } from '@/shared';
 import {
   PROVIDER_LABELS,
   PROVIDER_FULL_LABELS,
