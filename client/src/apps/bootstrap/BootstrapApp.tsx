@@ -3,7 +3,7 @@ import { Plus, Lock } from 'lucide-react';
 import { getBootstrapProfiles } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, Badge, RefreshButton } from '@/shared';
+import { Button, Badge, RefreshButton } from '@/shared/ui';
 import {
   Page,
   PageEmptyState,
@@ -12,7 +12,7 @@ import {
   ItemCardMeta,
   ItemCardBadge,
   ItemCardTypeBadge,
-} from '@/shared/components';
+} from '@/shared';
 import { BOOTSTRAP_METHOD_ICONS, BOOTSTRAP_METHOD_LABELS } from '@/shared/constants';
 import styles from './BootstrapApp.module.css';
 

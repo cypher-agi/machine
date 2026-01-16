@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { getSSHKeys } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, RefreshButton } from '@/shared';
+import { Button, RefreshButton } from '@/shared/ui';
 import {
   Page,
   PageEmptyState,
@@ -14,7 +14,7 @@ import {
   ItemCardMeta,
   ItemCardBadge,
   ItemCardTypeBadge,
-} from '@/shared/components';
+} from '@/shared';
 import { GenerateKeyModal } from './components/GenerateKeyModal';
 import { ImportKeyModal } from './components/ImportKeyModal';
 import { KEY_TYPE_LABELS, PROVIDER_LABELS } from '@/shared/constants';

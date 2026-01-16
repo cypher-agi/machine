@@ -6,7 +6,7 @@ import { useAppStore } from '@/store/appStore';
 import { useMachineActions } from '../../hooks';
 import { Badge, Button, DropdownMenu, ConfirmModal } from '@/shared';
 import type { DropdownMenuItem } from '@/shared';
-import { ItemCard, ItemCardMeta, ItemCardCode } from '@/shared/components';
+import { ItemCard, ItemCardMeta, ItemCardCode } from '@/shared';
 import { PROVIDER_LABELS, MACHINE_STATUS_CONFIG } from '@/shared/constants';
 import { copyToClipboard } from '@/shared/lib';
 import styles from './MachineCard.module.css';

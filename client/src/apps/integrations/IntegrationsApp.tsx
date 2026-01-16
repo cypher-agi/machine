@@ -22,7 +22,7 @@ import {
 } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, RefreshButton } from '@/shared';
+import { Button, RefreshButton } from '@/shared/ui';
 import {
   Page,
   PageEmptyState,
@@ -32,7 +32,7 @@ import {
   ItemCardStatus,
   ItemCardBadge,
   CollapsibleGroup,
-} from '@/shared/components';
+} from '@/shared';
 import { ConnectIntegrationModal } from './components';
 
 const INTEGRATION_ICONS: Record<string, typeof Github> = {

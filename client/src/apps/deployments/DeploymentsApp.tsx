@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { getDeployments, getMachines, getMembers } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Select, RefreshButton } from '@/shared';
+import { Select, RefreshButton } from '@/shared/ui';
 import {
   Page,
   PageEmptyState,
@@ -12,7 +12,7 @@ import {
   ItemCard,
   ItemCardMeta,
   ItemCardStatus,
-} from '@/shared/components';
+} from '@/shared';
 import { DEPLOYMENT_STATE_CONFIG, DEPLOYMENT_TYPE_LABELS } from '@/shared/constants';
 import type { DeploymentState, DeploymentType } from '@machina/shared';
 import styles from './DeploymentsApp.module.css';

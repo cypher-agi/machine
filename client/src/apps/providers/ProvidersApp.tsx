@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { getProviderAccounts, verifyProviderAccount } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, RefreshButton } from '@/shared';
+import { Button, RefreshButton } from '@/shared/ui';
 import {
   Page,
   PageEmptyState,
@@ -13,7 +13,7 @@ import {
   ItemCard,
   ItemCardMeta,
   ItemCardStatus,
-} from '@/shared/components';
+} from '@/shared';
 import { AddProviderModal } from './components/AddProviderModal';
 import { PROVIDER_LABELS, CREDENTIAL_STATUS_CONFIG } from '@/shared/constants';
 

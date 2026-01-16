@@ -26,7 +26,7 @@ import {
 } from '@/lib/api';
 import { useAppStore } from '@/store/appStore';
 import { useAuthStore } from '@/store/authStore';
-import { Button, RefreshButton } from '@/shared';
+import { Button, RefreshButton } from '@/shared/ui';
 import {
   Page,
   PageEmptyState,
@@ -36,7 +36,7 @@ import {
   ItemCardStatus,
   ItemCardBadge,
   CollapsibleGroup,
-} from '@/shared/components';
+} from '@/shared';
 import { AddRepositoryModal } from './components';
 import styles from './RepositoriesApp.module.css';
 
@@ -82,10 +82,7 @@ export function RepositoriesApp() {
       await queryClient.cancelQueries({ queryKey: ['repositories', currentTeamId] });
 
       // Snapshot the previous value
-      const previousRepositories = queryClient.getQueryData<RepositoryWithStats[]>([
-        'repositories',
-        currentTeamId,
-      ]);
+      const previousRepositories = queryClient.getQueryData<RepositoryWithStats[]>(['repositories', currentTeamId]);
 
       // Optimistically update all repositories to syncing status
       queryClient.setQueryData(
@@ -116,7 +113,7 @@ export function RepositoriesApp() {
         queryClient.invalidateQueries({ queryKey: ['repository', repo.repo_id] });
         queryClient.invalidateQueries({ queryKey: ['repository-commits', repo.repo_id] });
       });
-
+      
       addToast({
         type: 'success',
         title: 'Sync Complete',

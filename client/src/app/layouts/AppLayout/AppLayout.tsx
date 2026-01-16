@@ -5,7 +5,7 @@ import { Appbar, TeamSelector, UserSelector } from '../Appbar';
 import { useAppStore } from '@/store/appStore';
 import { Sidekick } from '@/features/sidekick';
 import { ProfileSettingsModal } from '@/features/profile';
-import { Toasts, Sidebar } from '@/shared/components';
+import { Toasts, Sidebar } from '@/shared';
 import styles from './AppLayout.module.css';
 
 export function AppLayout() {

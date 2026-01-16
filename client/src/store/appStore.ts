@@ -5,7 +5,7 @@ import type {
   AgentListFilter,
   AgentListSort,
 } from '@machina/shared';
-import type { Toast } from '@/shared/components';
+import type { Toast } from '@/shared';
 import type { ProfileSettingsTab } from '@/features/profile/types';
 
 // Item types that can be selected and shown in the Sidekick
